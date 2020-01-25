@@ -1,0 +1,107 @@
+GINA++
+======
+
+This software is the GINA++ Application Framework. 
+
+The software is publicly available by anonymous ftp from ftp.gmd.de
+The complete system is stored in /gmd/gina/GINA++1.x.tar.Z
+Please read the COPYRIGHT file for details.
+
+The directory contains sources, documentation and papers related to GINA++:
+
+	name		       status		contents
+------------------------------+------+-----------------------------------------
+
+GINA++1.7.beta.tar.Z		BETA  *Experimental* beta test version 1.7
+				      of GINA++. Compiles with Cfront 3.0
+				      on SUN and (some) HP systems. Requires
+				      X11R5
+
+GINA++1.6.tar.Z                 REL   Version 1.6 of GINA++
+
+USER-GUIDE-1.6.ps.Z                   A draft of the User Guide in compressed
+USER-GUIDE-1.6.dvi.tar.Z              PostScript and DVI format. ca. 115 pages.
+
+-------------------------------------------------------------------------------
+PAPERS (Do not publish - only for personal use)
+-------------------------------------------------------------------------------
+
+MotifBindings++.ps.Z                  Andreas Baecker
+                                      "Designing Reusable Widget Classes
+                                       with C++ and OSF/Motif", 1991, 24 pp.
+
+Overview.PS.Z                         Andreas Baecker, Andreas Genau,
+				      Markus Sohlenkamp
+				      GINA++ - An Object-Oriented Application
+				      Framework. An Overview
+
+gina-environment.ps.Z                 Michael Spenke, Andreas Baecker,
+                                      Thomas Berlage, Christian Beilken
+                                      "GINA - A User Interface Development
+                                       Environment based on OSF/Motif"
+                                      1991, 10 pp.
+
+-------------------------------------------------------------------------------
+  Old stuff
+-------------------------------------------------------------------------------
+
+oldstuff/GINA++1.5.tar.Z        REL   Version 1.5 of GINA++
+
+oldstuff/GINA++.1.5.1.tar.Z     REL   Some new demos and many bug fixes
+
+oldstuff/GINA++.1.5.2.tar.Z     REL   Added SUN shared library support.
+				      Functionally identical to Version 1.5.1
+
+oldstuff/GINA++.1.5.3.tar.Z     REL   Enhanced menu system classes. Provides
+				      mechanisms for easy construction of
+				      hirarchical menu systems. Also compiles
+				      with X11R4 and X11R5.
+
+oldstuff/GINA++.1.5.4.tar.Z     REL   Makefile and source code cleanups.
+				      GINA++ now compiles with SUN C++ 2.1,
+				      gcc 2.2.2 and with Lucid's lcc
+
+oldstuff/VPSLEUTH.tar.Z         REL   The compiled vp-sleuth demo program.
+				      Runs on SUN 4.
+
+-------------------------------------------------------------------------------
+
+Software requirements for GINA++:
+    X11R4 Xlib and Xt libraries with patchlevel 18
+    or X11R5
+    Motif 1.1.[34] libraries and headers
+    Sun C++ or 2.1
+
+The software has been tested on Sun Sparcstations with SunOS 4.1.x
+It compiles with Sun C++ 2.1. 
+
+The software does not run with Motif versions earlier than 1.1.3 !
+
+We are interested in your opinion about this software. Please send
+bug reports, suggestions, enhancements, etc. to baecker@gmd.de
+
+The subdirectories in the GINA++ distribution contain the following stuff:
+
+./include      Gina include files
+./GnBasic      Meta-Object Protocal and data structures
+./GnMotif      Motif-Encapsulation and Widget-Framework
+./GnFramework  The framework-related classes
+./GnGraph      Widget classes for viewing graph-like structures
+./demos        Source and Makefiles of the demos applications
+./sample       sample GINA++ application and Makefile
+./bin          binaries of the demos applications
+./lib          GINA++ shared and static libraries
+./doc          Documentation 
+./doc/ug.pos and ./doc/ur.ps Documentation
+
+=============================================================================
+The GINA Interface Builder, which generates Code for GINA in Lisp/CLOS and C++,
+is only implemented in Lisp. There are two standalone versions of the IB for
+- SUN Sparc Station 10 running SunOS 4.1.3 sun4m   and
+- SUN Sparc Station  2 running SunOS 4.1.3 sun4c.
+Each occupies packed more than 10 MB and requires unpacked 26 MB disk space.
+You need a Sparc with more than	16 MB main memory to run the IB.
+You find the IB in directory /gmd/gina.
+Please read the README first.
+(This text about IB added by Christian Beilken, 7/23/93.)
+

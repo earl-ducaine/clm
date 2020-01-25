@@ -1,0 +1,5 @@
+
+
+http://www.cs.cmu.edu/afs/cs/project/ai-repository/ai/lang/lisp/gui/clm/
+ftp://ftp.uvsq.fr/pub/X11/x.org/R5contrib
+
