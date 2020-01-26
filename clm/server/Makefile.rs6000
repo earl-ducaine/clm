@@ -1,0 +1,26 @@
+# sccsid = @(#)Makefile.rs6000	1.3 11/9/92
+
+# Directories where the Motif header files and the Motif toolkit
+# header files are stored.
+XM_INCLUDE = -I/usr/include/Xm
+
+# Directories where the include files for Allegro CL reside
+EXCL_INCLUDE = -I/vol/allegro4.0/lib/misc
+
+# Libraries
+LIB_PATH = -L/usr/lib
+
+# Any additional CFLAGS
+ADD_CFLAGS = -D_NO_PROTO
+# CFLAGS only for the foreign functions loaded into Lisp
+# NOVFORK: use fork because vfork is in a shared library
+LISP_CFLAGS = -DNOVFORK
+# Additional flags for loader operation
+ADD_LFLAGS = -O
+
+# Any additional libraries
+ADD_LIBS =
+
+#for a cpp hack
+ENUMSETGET = foo
+

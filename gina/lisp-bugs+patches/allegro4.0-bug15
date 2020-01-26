@@ -1,0 +1,79 @@
+Bug Description:
+Calling the accessor of a shared slot multiple times when it is in the
+"one-index-reader" cache state leads to error.
+
+Thomas Berlage, F3.MMK (berlage@gmdzi.gmd.de)
+GMD (German National Research Center for Computer Science)
+P.O. Box 1240
+W-5205 Sankt Augustin 1, Germany
+Phone: +49 2241 14-2078
+
+
+Dribble:
+========================================================================
+dribbling to file "/tmp_mnt/home/berlage/all40/clos-bug"
+ 
+LISP-IMPLEMENTATION-TYPE: Allegro CL
+LISP-IMPLEMENTATION-VERSION: 4.0.1 [Sun4] (2/8/91)
+MACHINE-TYPE: Sun4
+MACHINE-VERSION: 
+SOFTWARE-TYPE: SunOS
+SOFTWARE-VERSION: 
+SHORT-SITE-NAME: n32
+*features*: (:CLOS :UNIX :SUN4 :SPARC :SUN :SUNOS4 :FLAVORS :IEEE :IEEE-FLOATING-POINT :CONFORMING-IEEE :COMMON-LISP :ALLEGRO :EXCL :FRANZ-INC :ALLEGRO-VERSION>= :ALLEGRO-V4.0 :GSGC :BIG-ENDIAN :DYNAFASL)
+*modules*: ("RINSTRS" "QSTRUCTS")
+PATCH::*PATCHES*:
+ (1 . "comp of recursive tagbodies/blocks that turn into catch")
+
+NIL 
+<COMMON-LISP-USER 4> (load "test")
+
+; Loading /tmp_mnt/home/berlage/all40/test.lisp.
+CLOS::ONE-CLASS-READER
+CLOS::TWO-CLASS-READER
+CLOS::ONE-INDEX-READER
+CLOS::ONE-INDEX-READER
+Error: Attempt to take the cdr of 814332 which is a non-cons.
+
+Restart actions (select using :continue):
+ 0: retry the load of test
+[1] <COMMON-LISP-USER 5> :zo
+Evaluation stack:
+
+ ->(ERROR "Attempt to take the cdr of ~s which is a non-cons." 814332)
+   (SN)
+   (LET (# # #) (SN X) (FORMAT T "~s~%" #) (SN Y) (FORMAT T "~s~%" #) (SN Z) (FORMAT T "~s~%" #) (SN Z) (FORMAT T "~s~%" #) (SN Z) (FORMAT T "~s~%" #))
+   (EVAL (LET # # # # # # # # # # #))
+   (EXCL::SLOLOAD #<EXCL::CHARACTER-INPUT-FILE-STREAM @ #xb7306e>)
+   (LOAD "test")
+   (EVAL (LOAD "test"))
+   (APPLY #<Function TOP-LEVEL-READ-EVAL-PRINT-LOOP @ #x28f1ae> NIL)
+
+... more older frames ...
+[1] <COMMON-LISP-USER 6> (dribble)
+
+
+Contents of the file "test.lisp"
+============================================================================
+(defclass a ()
+  ((sn :accessor sn :initform nil :allocation :class)))
+
+(defclass b (a)
+  ())
+
+(defclass c (a)
+  ())
+
+(let ((x (make-instance 'a)) (y (make-instance 'b)) (z (make-instance 'c)))
+  (sn x) (format t "~s~%" (get 'sn 'clos::dis))
+  (sn y) (format t "~s~%" (get 'sn 'clos::dis))
+  (sn z) (format t "~s~%" (get 'sn 'clos::dis))
+  (sn z) (format t "~s~%" (get 'sn 'clos::dis))
+  (sn z) (format t "~s~%" (get 'sn 'clos::dis))
+)
+
+
+
+
+
+

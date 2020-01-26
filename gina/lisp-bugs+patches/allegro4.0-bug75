@@ -1,0 +1,98 @@
+Subject: Another bug in process-lock
+
+The folowing dribble file shows that process-locks will be damaged
+when a process waiting for the lock is killed.
+
+Michael Spenke (spenke@gmdzi.gmd.de)
+GMD (German National Research Center for Computer Science)
+P.O. Box 1240
+W-5205 St. Augustin 1
+Germany
+Phone: +49 2241 14-2642
+
+P.S. Did you receive my previous bug report about process locks
+     of Sept. 5 1991??
+
+
+==========================================================================
+
+dribbling to file "/tmp_mnt/home/spenke/ib/bug2.dribble"
+ 
+LISP-IMPLEMENTATION-TYPE: Allegro CL
+LISP-IMPLEMENTATION-VERSION: 4.0.1 [Sun4] (2/8/91)
+MACHINE-TYPE: Sun4
+MACHINE-VERSION: 
+SOFTWARE-TYPE: SunOS
+SOFTWARE-VERSION: 
+SHORT-SITE-NAME: mike
+*features*: (:MOTIF-SERVER :CLX-MIT-R4 :XLIB :CLX :LOOP LOOP :MULTIPROCESSING :CLOS :UNIX :SUN4 :SPARC :SUN :SUNOS4 :FLAVORS :IEEE :IEEE-FLOATING-POINT :CONFORMING-IEEE :COMMON-LISP :ALLEGRO :EXCL :FRANZ-INC :ALLEGRO-VERSION>= :ALLEGRO-V4.0 :GSGC :BIG-ENDIAN :DYNAFASL)
+*modules*: ("CLX" "MDPROC" "LOOP" "PROCESS" "FOREIGN" "FOREIGN-FUNCTIONS" "RINSTRS" "QSTRUCTS")
+PATCH::*PATCHES*:
+ (17 . "Fixes bug in destructuring-bind")
+ (16 . "fix clos class slot value accessor discrimination functions")
+ (15 . "use checking discriminator for multi-type class slot access")
+ (1 . "comp of recursive tagbodies/blocks that turn into catch")
+mdproc: $aclHeader: mdproc.cl,v 1.23 90/04/12 19:57:08 layer Rel $
+loop: $aclHeader: loop.cl,v 1.6 90/09/19 00:33:22 layer Rel $
+process: $aclHeader: process.cl,v 1.59 90/12/18 19:55:53 layer Rel $
+foreign: $aclHeader: foreign.cl,v 1.59 90/12/14 00:15:02 layer Rel $
+
+;; creat a fresh lock 
+<cl> (setq lock1 (mp:make-process-lock))
+#<process-lock @ #x1080166>
+ 
+;; start background process holding the lock
+<cl> (mp::process-run-function "p1"
+			   #'(lambda (lock)
+			       (mp::with-process-lock (lock)
+				 (sleep 30)))
+			   lock1)
+#<process p1 @ #x1080dae> 
+
+;; try to get the lock in foreground process (lisp listener)
+<cl> (mp::with-process-lock (lock1)
+      (print "hallo"))
+
+=> lisp listener is blocked
+
+;; control c-cc
+Interrupt 2 (Keyboard interrupt):  Select a process to handle it:
+
+  0 -- Ignore the Interrupt --
+  1 #<process Initial Lisp Listener @ #x485456 Lock>
+  2 #<process Finder on unix @ #xa1eafe event wait>
+  3 #<process p1 @ #x1237f16 Sleeping>
+Enter an integer: 1
+Error: Received signal number 2 (Keyboard interrupt)
+
+Restart actions (select using :continue):
+ 0: continue computation
+[1c] <cl> :res
+
+=> lisp listener has jumped out of with-process-lock
+
+<cl> :pro
+"p1" is Sleeping (arrested for PROCESS-SLEEP).
+"Finder on unix" is event wait.
+"Initial Lisp Listener" is active.
+<cl> :pro
+"Finder on unix" is event wait.
+"Initial Lisp Listener" is active.
+
+=> background process is terminated now
+
+<cl> (print (mp:process-lock-locker lock1))
+
+NIL 
+NIL 
+
+=> lock SEEMS to be free!
+
+<cl> (describe lock1)
+#<process-lock @ #x121da76 awaited by #<process Initial Lisp Listener @ #x485456>> is a MULTIPROCESSING:PROCESS-LOCK
+
+
+=> Any process trying to get the lock will now block !!!!
+
+It's a bug! Isn't it?
+

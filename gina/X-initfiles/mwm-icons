@@ -1,0 +1,29 @@
+
+Mwm*ibuild*iconImage: /vol/gina/gina2/bitmaps/ibuild
+Mwm*IB-demo*iconImage: /vol/gina/gina2/bitmaps/ibdemo
+Mwm*browser*iconImage: /vol/gina/gina2/bitmaps/browser
+Mwm*GINA*iconImage: /vol/gina/gina2/bitmaps/empty
+Mwm*clmd*iconImage: /vol/gina/gina2/bitmaps/clmd
+
+Mwm*hello*iconImage: /vol/gina/gina2/bitmaps/hello
+Mwm*micky*iconImage: /vol/gina/gina2/bitmaps/micky
+Mwm*txedit*iconImage: /vol/gina/gina2/bitmaps/editor
+Mwm*clock*iconImage: /vol/gina/gina2/bitmaps/clock
+Mwm*finder*iconImage: /vol/gina/gina2/bitmaps/finder
+Mwm*gredit*iconImage: /vol/gina/gina2/bitmaps/gredit
+Mwm*output*iconImage: /vol/gina/gina2/bitmaps/output
+Mwm*bitedit*iconImage: /vol/gina/gina2/bitmaps/bitedit
+Mwm*lisp-widgets*iconImage: /vol/gina/gina2/bitmaps/lisp-widgets
+Mwm*tetris*iconImage: /vol/gina/gina2/bitmaps/tetris
+Mwm*Pac*iconImage: /vol/gina/gina2/bitmaps/pac
+Mwm*Spreadsheet*iconImage: /vol/gina/gina2/bitmaps/spreadsheet
+Mwm*hyper*iconImage: /vol/gina/gina2/bitmaps/hyper
+Mwm*listener*iconImage: /vol/gina/gina2/bitmaps/listener
+Mwm*chess*iconImage: /vol/gina/gina2/bitmaps/chess
+Mwm*calc*iconImage: /vol/gina/gina2/bitmaps/calc
+Mwm*drag*iconImage: /vol/gina/gina2/bitmaps/drag
+Mwm*drop*iconImage: /vol/gina/gina2/bitmaps/drop
+Mwm*mandel*iconImage: /vol/gina/gina2/bitmaps/mandel
+
+Mwm*XTerm*iconImage: /vol/gina/gina2/bitmaps/term
+Mwm*emacs*iconImage: /vol/gina/gina2/bitmaps/emacs

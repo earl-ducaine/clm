@@ -1,0 +1,17 @@
+# This is the Lisp system you're using
+
+# Allegro 4.0
+LISP_SYSTEM = excl
+LISP = /vol/allegro4.0/bin/allegro-small
+BIN = fasl
+LISTEN = lisp-listener.fasl
+
+# Lucid 4.0
+#LISP_SYSTEM = lucid
+#LISP = /vol/lisp4.0/lisp-4-0-base
+#BIN = sbin
+#LISTEN =
+
+# This is the path where the compiled code for GINA should be installed.
+GINA_LIB = ../lib.sun4
+

@@ -1,0 +1,614 @@
+                      GINA Version 2.3 RELEASE NOTES
+
+                            Thomas Berlage
+          GMD (German National Research Center for Computer Science)
+                P.O. Box 1316, 53731 Sankt Augustin, Germany
+                         Thomas.Berlage@gmd.de
+
+This distribution contains GINA version 2.3. GINA is a class library to
+implement interactive user interfaces. GINA is based on CLM, which is the
+Lisp interface to OSF/Motif. CLM resides in a separate tar file and must
+be present before GINA can be installed and used.
+
+Requirements
+------------
+
+
+Extract from the README file about CMU Common Lisp
+==================================================
+
+CMU Common Lisp is a public domain implementation of Common Lisp.  Both
+sources and executables are freely available via anonymous FTP; this software
+is "as is", and has no warranty of any kind.  CMU and the authors assume no
+responsibility for the consequences of any use of this software.  
+
+Distribution:
+CMU Common Lisp is only available via anonymous FTP.  We don't have the
+manpower to make tapes.  These are our distribution machines:
+    lisp-rt1.slisp.cs.cmu.edu (128.2.217.9)
+    lisp-rt2.slisp.cs.cmu.edu (128.2.217.10)
+
+If you have any trouble with FTP access, please send mail to slisp@cs.cmu.edu.
+
+As of 8/6/92, the latest SunOS Sparc release is:
+    16e-sun4c_41.tar.Z (6.5 meg)
+    16e-extra-sun4c_41.tar.Z (3.5 meg)
+
+The release area also contains source distributions and other binary
+distributions.
+
+
+Overview of Changes since GINA 2.2:
+===================================
+
+o  The documentation still remains unchanged (although you can generate a
+   new reference manual yourself).
+
+o  The IB has been patched to avoid problems with Motif 1.2.
+
+o  Some changes in the inspector (also because of 1.2).
+
+o  Corrected drag-and-drop calculations for 1.2.
+
+o  Optimization of option menu should now work.
+
+o  Bug fixes with the tap model.
+
+o  Corrected root-pathname-p for excl and define-cursor.
+
+o  The optimization for non-overlapping objects in views is no longer present.
+
+o  Read mailbox fixed to avoid deadlocks.
+
+o  Views now always need a document.
+
+
+Overview of Changes since GINA 2.1:
+===================================
+
+o  The documentation remains unchanged.
+
+o  CLM now works with CMU CL (16e and up) and Ibuki Lisp.
+
+o  GINA now works with CMU CL, although background processes are not available.
+
+o  Tetris now has the usual pieces, not simply rectangles.
+
+o  New demo application: diagram-editor.
+
+o  The inspector was replaced with a new one. There is only one window with
+   a list of objects to select from.
+
+o  The browser includes a new facility to generate code for subclassing and 
+   overriding methods of GINA.
+
+o  The menu entry "Reply History" is now available as the "Play" button in
+   the history scroller.
+
+o  The CLX functions copy-plane and copy-area are now available as GINA
+   functions to support future hooks.
+
+Minor incompatible changes:
+---------------------------
+
+- Method (submit cmd) will not be called when (executable cmd) fails but
+  instead method not-submitted will be called.
+  (In Gina 2.1 submit was called but did nothing. Method not-submitted 
+  is of class drag-command and mouse-down-command.)
+
+- Some others (which we unfortunately do not remember exactly :-)
+
+Experimental Extensions:
+------------------------
+
+There are some experimental extensions in GINA that are probably not stable
+enough to be used generally (so there is no documentation for them yet). These
+features include:
+
+o  A first version of the TAP mechanism (see paper available by FTP).
+
+o  Postscript printing (optional "postscript.lisp").
+
+o  The GINA interaction recorder (see paper available by FTP).
+   Optional "interaction-rec.lisp".
+
+
+Overview of Changes since GINA 1.0:
+===================================
+
+Major Extensions:
+-----------------
+
+ o The changes necessary to run GINA under Allegro4.0, Lucid4.0
+   and Genera 8 are now included.
+
+ o It is no longer necessary to start the CLM daemon if Lisp and the CLM server
+   are to run on the same machine. The CLM server is then started from Lisp.
+
+ o A number of functions have been added to CLM to support more of the Motif
+   functionality. Thanks to all who have contributed code.
+
+ o GINA and CLM now support multiple background processes within a single
+   application.
+
+ o A new error handling mechanism within GINA considerably improves the
+   development phase. Errors during callbacks are just printed on 
+   *error-output*, the debugger is not entered. In addition, a cleared 
+   backtrace of the relevant functions is printed (implemented for Allegro 
+   and Genera only). Some additional measures (e.g. finishing the 
+   active-mouse-command) make it possible to continue the main event 
+   loop after almost all errors.
+   (Thanks to Steven Litvintchouk (sdl@mbunix.mitre.org) who initiated this
+   development.)
+
+ o A new subclass movable-icon of class direct-manipulation-object is
+   available. The look of such an icon is defined by a bitmap file. The
+   icons can have non-rectangular shape and drop-shadows. See the chess
+   demo for an example. An XOR-outline or the icon itself can be moved around
+   in views.
+
+ o The new command class drag-and-drop-command allows objects to be moved
+   across window borders. These commands are typically used in connection
+   with a drag-and-drop-label which is a subclass of label with label-type
+   pixmap: A copy of the label is dragged off and can be dropped anywhere.
+   A list of target-widgets describes the possible targets and their meaning
+   similar to an item-list of e.g. an option-menu. Drag-and-drop is possible
+   between windows belonging to different documents and even different
+   applications.
+
+ o Double buffering can be optionally switched on for a view, i.e. all
+   output to the view is first buffered in a pixmap and finally the
+   affected area is copied into the window in a single operation. This 
+   leads to a flicker-free screen update even in complex cases. 
+   For example, overlapping icons with non-regular shapes can be smoothly 
+   moved around in the chess demo.
+
+ o The interface builder has been completely redesigned for version 2.1. There
+   are the following major enhancements:
+    - Except for changing form and pane constraints, all interactions are now
+      properly coded as undoable commands.
+    - The set of available widgets and resources has been completed.
+    - Widgets can be selected and placed by Drag and Drop.
+    - Code can be generated for either Lisp or C++.
+    - The magnifying glass can be dropped over a widget to pop up the
+      resource dialog.
+    - Cut&Paste is possible within the interface builder, even for widgets
+      inside managers.
+    - When grouping widgets into a form, reasonable default attachments are
+      calculated for the form layout.
+    - Callbacks can be specified in the resource dialogs.
+
+ o There are some new demo applications:
+    - A typical spreadsheet where Lisp expressions can be entered as formulas.
+    - A Hypercard-like application with Lisp as the interpreter language.
+    - A Lisp listener based on the Motif text-widget (for Allegro 4.0 only).
+    - A simulated chessboard demonstrating movable icons.
+    - A demo with multiple processes inspired by the pacman game.
+    - A drag demo and a drop demo which can communicate.
+    - A demo that displays the Mandelbrot set with different parameters.
+    - A desk calculator demo that shows the use of the Interface Builder.
+
+Incompatible changes:
+---------------------
+
+  There are only very few incompatible changes in GINA 2.1: The demo
+  programs of GINA 1.0 still run completely unchanged with one exception:
+  The make-object-selector function (used in the graphic-editor demo)
+  now has an additional parameter CODE, which is simply passed from
+  the BUTTON-PRESS method.
+
+  Another known incompatible change is that there is now a method
+  RECONFIGURE of class VIEW-OBJECT which is a combination of 
+  MOVE and RESIZE. If someone has added an :after demon for 
+  MOVE and RESIZE he will now have to
+  add another :after demon for RECONFIGURE. Alternatively, he can
+  override the empty method RECONFIGURED-BY-USER which is called 
+  whenever MOVE, RESIZE or RECONFIGURE is called from from an
+  OBJECT-MOVER or OBJECT-RESIZER command.
+
+  For inter-application communication, X client message events are now
+  used which did not work in CLX of X11R3. This might cause problems if
+  you have an old CLX version. Inter-application communication takes 
+  place e.g. when you open a document for a running application in the 
+  Finder.
+
+  The default name given by GINA to widgets which may be specified in resource
+  files is now always in lower case!
+
+  Setting the slot VIEW-OBJECTS of a VIEW to define the stacking order
+  of objects without calling the accessor function (SETF VIEW-OBJECTS)
+  is no longer allowed because there is an after demon which maintains
+  a reverse list in slot OBJECT-CACHE!
+
+Minor enhancements:
+-------------------
+
+ o The global variable gina:*bitmap-directories* defines a list of
+   directories where bitmaps are searched. Therefore, absolute
+   pathnames can be avoided in most cases.
+   If you start a CLM-demon (which is now only necessary if CLM runs
+   on a remote host) you must set XBMLANGPATH to something like
+       /vol/gina/bitmaps/%B:/usr/include/X11/bitmaps/%B
+   so that Motif searches for bitmaps in the right directories.
+
+ o The macro DEFGINAPACKAGE is used in the demos to define a new
+   package which uses GINA and COMMON-LISP. Its implementation
+   strongly depends on the Lisp-sytem used, e.g. FUTURE-COMMON-LISP
+   is used for Genera, LUCID-COMMON-LISP for Lucid, etc..
+
+ o It is now possible to define accelerators and separators for menu entries. 
+   The functions add-menu-command, make-button-entry and make-toggle-entry 
+   have additional keyword parameters:
+ 
+   ... &key (separator-before nil) (accelerator nil) (acc-modifier :alt))
+
+   By setting :separator-before to T, a horizontal line is put into the menu.
+   Settig :accelerator e.g. to the string "f" means that the key-combination
+   ALT-f can used as a shortcut. Instead of :alt, it is possible to 
+   define :shift or :ctrl as the :acc-modifier. Note that on SUN keyboards
+   you have to hold down the diamond-key (meta) instead of the key labelled
+   "Alt" to enter a kombination like  ALT-f !!
+
+   GINA defines accelerators for some standard menu entries like
+   OPEN, CLOSE and QUIT. Some demos also use accelerators.
+
+ o Class direct-manipulation-object now has a built-in strategy for incremental 
+   selection: Clicking at a view-object with the :select button (left) 
+   selects it and deselects all others in the same view. Clicking with the 
+   :extend button (middle or shift-left) adds an object to the selection.
+   Clicking with the :toggle button (ctrl-left) toggles its state.
+   The same strategy is built into the object-selector command which
+   is used to select several objects at a time.
+
+ o OPEN/SAVE dialog boxes are now being reused, so that the second
+   OPEN/SAVE from the same document is very fast.
+
+ o Most methods of class direct-manipulation-object have been moved up to 
+   the class view-object. Direct-manipulation-object differs from view-object
+   only in the initial value for the slot "facilities", i.e. it is movable and
+   resizable.
+
+ o Directories displayed in scrollable lists in the Finder and in OPEN/SAVE
+   boxes are now sorted by GINA. (We gave up hope that the CommonLisp function
+   DIRECTORY will some day return a sorted list.)
+
+ o In the File menu there is now a submenu of all open documents of the
+   application. It is useful when some documents are covered by other windows
+   or iconified.
+
+ o You can symbolically specifiy the desired position of dialog-boxes 
+   by setting the slots relative-widget, relative-x, and relative-y 
+   of a dialog-box before it is popped up. The dialog box is positioned
+   relative to relative-widget according to the keywords specified for
+   relative-x and relative-y:
+   - relative-widget is any widget e.g. the main-shell of a document.
+   - relative-x is one of :center :left :left-align :right-align :right
+   - relative-y is one of :center :top :top-align :bottom-align :bottom
+
+ o XOR-feedback has sometimes been a problem on color screens, because
+   the resulting color depended on the order of entries in the color table.
+   Before the method draw-feedback of class mouse-down-command (or 
+   draw-outline of class direct-manipulation-object) is called, GINA
+   already sets the drawing-function boole-xor in the graphics context 
+   of the view. You do not have to specify
+           (xlib:with-gcontext  ..... :function boole-xor ...
+   any more. Furthermore, GINA computes and sets an apropriate foreground 
+   color for the XOR-feedback. The color will yield black when combined 
+   with the background colour of the X-window of the view. If you want to
+   achieve another color you can call the method xor-foreground yourself
+   and specify the optional argument color-to-achieve. 
+
+   The new slot "background" of class view holds the background color of 
+   the underlying X-window.
+
+ o GINA now sets a clipping area before your draw method is called for
+   a view or view-object. Without clipping, the stacking order of
+   view-objects sometimes was wrong. 
+
+   A view can have both an individual draw method and installed view-objects.
+   In this case the draw method will be always called with count=0 and 
+   a clip mask set, so that the objects are always above the background
+   drawn in the draw method of the view. The optimization of drawing only 
+   when count=0 is no longer possible in this case because the final 
+   draw-method would cover the objects. 
+
+ o GINA now correctly searches the list of view-objects installed in a view
+   in different directions when view-objects are redrawn and when the
+   object hit by a button press is determined: The topmost object is drawn
+   last and but is checked first whether it is hit by a mouse click. GINA
+   maintains the reverse list in the slot OBJECT-CACHE of class view. When
+   an application explicitly manipulates the stacking order it must use
+   SETF to change the slot VIEW-OBJECTS: An :after deamon will also update
+   the slot OBJECT-CACHE.
+
+ o Similar to the constrain-mouse method of mouse-down-commands there
+   are now two new methods constrain-size and constrain-position of class
+   view-object. These are called when an object is moved or resized by 
+   the user. You can override them to e.g. to ensure that a square retains
+   equal width and height. The graphic editor demo has been extended to
+   demonstrate this feature.
+
+ o There is a new utility function RECTANGLES-OVERLAP which can be used
+   to test if two rectangles overlap. It is often helpful in DRAW methods
+   for checking whether the rectangle to be refreshed intersects with 
+   some graphical representation in the view.
+
+ o There is now a method set-keyboard-focus of class widget. It is used
+   in the Tetris demo to make sure that characters typed always go to
+   the main view.
+
+ o In addition to the global variable *default-display-host* there are
+   two new variables *default-display-number* and *default-screen-number*
+   which can be used to specify where a GINA application should run.
+
+ o There is a new method get-refresh-candidates which can be overridden 
+   to optimize the redisplay of view-objects. GINA must loop through all
+   objects installed in a view in order to determine which objects intersect
+   with a certain rectangle. Sometimes, application specific information 
+   can be used to speed up this computation. In this case you can override
+   this method and return a smaller set of candidate objects.
+
+ o The slot CURSOR-TABLE of class application now contains a hashtable
+   mapping cursor keywords to resource ids. As a consequence, cursors for 
+   mouse-down-commands and widgets are created only once (per application).
+
+ o The slot ACTIVE-MOUSE-COMMAND has been moved from class APPLICATION to
+   class DOCUMENT. The is normally of no importance for applications.
+
+ o Errors when reading/writing (OPEN/SAVE) files are now reported to the 
+   user in a dialog-box. If you turn of the JUST-PRINT-ERRORS option in 
+   the debug menu, the debugger will be entered instead.
+
+ o The GINA macro with-errors-ignored is no longer available, the CL standard
+   macro ignore-errors is used instead.
+
+ o There is a new macro with-cursor, similar to the old macro 
+   with-clock-cursor, but the cursor being used is an additional parameter
+   now. You can use this macro to set a certain cursor for some
+   body of code. with-clock-cursor calls with-cursor with parameter :watch.
+
+ o The function START-FILE, which is used for example in the Finder demo
+   to start up a document or an application from a given pathname, has
+   been extended. It can now be used with pathname NIL and a given signature
+   instead. For example, 
+      (start-file nil :signature "browser")
+   either starts the GINA-Browser or exposes the main-shell of the
+   first Browser document if the application is already running.
+
+ o When creating a pixmap label you can now use one of the predefined
+   Motif icons. For example,
+	(make-label parent "default_xm_warning" :label-type :pixmap)
+   will display the Motif warning icon. Other possible parameters are
+   "default_xm_error" "default_xm_question" "default_xm_working" and
+   "default_xm_inform". The standard dialogs of GINA like WARNING-DIALOG
+   use the appropriate icon. You can make GINA use a different icon
+   by the parameter :icon-pixmap.
+
+ o A warning-dialog can now also be modeless, i.e. it does not block until
+   the user has pressed the OK button.
+
+ o Multi line labels are now possible, e.g.:
+	(make-label parent
+	     (format nil "first line~%second line ~%third line"))
+
+ o For inter-application communication, X client message events are now
+   used, which did not work in CLX of X11R3. This might cause problems if
+   you have an old CLX version. Inter-application communication takes 
+   place e.g. when you open a document for a running application in the 
+   Finder.
+
+ o In the debug menu you can switch on the experimental feedback animation
+   feature. As a consequence GINA will record all mouse movements 
+   during mouse-down-commands and replay them in a REDO, i.e. the
+   draw-feedback method is called for each mouse position. You can try
+   this feature in the graphic editor or chess demo.
+
+ o There are some new methods of class widget:
+   point-inside, set-keyboard-focus, set-sensitivity
+
+ o The new method mouse-rectangle is available to compute the rectangle
+   drawn by a mouse-down-command. This rectangle always has positive
+   width and height, so it can be directly used in CLX calls even if the
+   cursor position has flipped over its starting point.
+
+ o The constructor make-basic-document-shell now has an additional keyword 
+   :allow-shell-resize to set the corresponding Motif resource.
+
+
+Detailed Description of Major Changes in 2.1
+============================================
+
+New Error Handling
+------------------
+
+GINA can catch all errors during application startup and inside callbacks.
+When the slot JUST-PRINT-ERRORS of class application is T, errors are just 
+printed on *error-output*, the debugger is not entered. In addition, a cleared 
+backtrace of the relevant functions is printed (implemented for Allegro 
+only). Some additional measures (e.g. finishing the active-mouse-command) 
+make it possible to continue the main event loop after almost all errors.
+After an error in the application startup (typically in your create-windows
+method) the process is aborted, because there is no way to proceed from
+such an error.
+
+In the debug menu there is a toggle-button JUST-PRINT-ERRORS which
+toggles the value of the application slot. If you turn off the new
+feature, your process falls into the debugger. There you can continue
+with ":cont 0". (Take care to send the input to the GINA process, not to
+the Lisp Listener!!) If you want to fall into the debugger in the
+startup phase, you can not toggle the flag from the debug-menu. Instead,
+you have to override the slot JUST-PRINT-ERRORS with :initform NIL.
+
+If you want to define your own error handler, you can override the method
+HANDLE-ERROR of class application. The function PRINT-BACKTRACE is just
+empty for all Lisps but Allegro 4.0 and Genera . We would be happy if 
+someone could implement it for other Lisps also!
+
+Double Buffering
+----------------
+
+The function make-view now has a new keyword parameter :double-buffering.
+The default is NIL.
+
+Example:
+(make-view parent ... :double-buffering t)
+
+When double buffering is switched on, a pixmap is created of the same
+size and depth as the underlying X-window of the view. All output using
+methods like draw-rectangle of class view (which is triggered by force-redraw
+or invalidate rectangle) goes into this pixmap first and is finally copied 
+into the window. This leads to flicker-free redisplay. In response to
+expose events, an area of the pixmap is simply copied into the window. 
+XOR-feedback is still directly drawn into the window.
+
+All GINA demos have been tested with double buffering and ran without
+errors, i.e. double buffering is completely transparent. The chess demo
+uses double buffering, so that chess pieces can be moved around smoothly
+with direct feedback (no XOR drawing). The Mandelbrot demo also uses
+double buffering to store the bitmap which is the result of a long
+computation.
+
+The implementation uses an additional slot "drawable" of class view. Methods
+like draw-rectangle draw to this drawable. GINA sets drawable either to
+the X window or the pixmap in each situation. Low level output which
+directly calls CLX functions like e.g. xlib:copy-plane should be correctly
+directed to the drawable slot. The clear-area method of class view can
+be used in connection with double buffering even though xlib:clear-area
+is not defined for pixmaps (which have no background): The method simulates
+xlib:clear-area by drawing a rectangle in the background color of the view.
+
+Movable Icons
+-------------
+
+A new subclass movable-icon of class direct-manipulation-object is
+now available. The look of such an icon is defined by a bitmap file. 
+You can either specify a pathname for the bitmap file or an XLIB image.
+GINA caches pathnames, images and pixmaps in a hashtable in slot
+pixmap-table of class application. Therefore, if you pass the same pathname
+or image to several objects, GINA need not read the bitmap file and send
+the image to the X server each time. Note that you can read the bitmap
+file before the connection to the X server is established. Therefore,
+you can read the bitmaps when your code is loaded and thus minimize
+the startup time of your application:
+       (defvar *icon* (xlib:read-bitmap-file "...."))
+
+If you also pass a mask bitmap to make-movable-icon, it is used for
+clipping when the icon is drawn, so that the icon can have holes in it.
+Mouse-clicks are only propagated to the icon when the mask is hit. Also,
+the mask can be used to draw a drop shadow for the icon. You have to pass
+a :shadow-offset greater than 0 to get shadows.
+
+To test the new class you can start the graphic editor and evaluate
+the following expression:
+
+ (with-application-stopped
+    (setq icon (make-movable-icon "/usr/include/X11/bitmaps/mailfull"
+		   :mask "/usr/include/X11/bitmaps/mailfullmsk"
+		   :shadow-offset 8))
+    (install icon (main-view (first (document-list *application*)))))
+
+An icon will appear in the graphic editor which can be moved around.
+Moving is also undoable. If "/usr/include/X11/bitmaps" is in your
+gina:*bitmap-directories* list, you can use relative pathnames.
+
+If you want to define e.g. a subclass with an additional namestring
+below the icon, you can set margins and define an :after demon for
+the draw method.
+
+Background Processes
+--------------------
+
+It is now possible to have multiple background processes in a single 
+GINA application. Using background processes, it is possible to
+perform extensive computations while the user interface still responds
+to user inputs. For example, the computation can be aborted. Without
+a background process, executing (sleep 60) in a callback will block
+the application for one minute without a way to interrupt. Not even
+expose events will be processed during this period.
+
+For each application there is always exactly one main process running
+the main event loop and there can be several background processes which
+can draw into views using CLX and call CLM functions to create, modify,
+or delete widgets. A background process should be started using the
+macro in-background-process:
+
+(in-background-process (document)
+   ...
+   ...)
+
+A new process is started which executes the body of the macro. The
+macro immediately returns the newly created process. Within the body
+the global variables *application*, *display*, and  xtk:*motif-connection*
+are set so that calls to CLX and CLM are possible. (The function
+xlib:display-force-output must be explicitly called to flush the CLX
+buffer. In some case also xtk:with-immediate-update-enabled.) 
+Also the GINA error handler is set up which will print the error
+and terminate the process. The keyword parameter :terminate-on-error
+can be used to prevent the macro from setting up the error handler.
+
+Note that modal dialog boxes cannot be popped up from a background process
+because they start a second (recursive) main event loop. However, 
+a modeless dialog box can be used with the additional Motif resource 
+:dialog-style set to :full-application-modal so that no further 
+input is allowed in the main window.
+
+Background processes always belong to a document. They are registered
+in the slot background-processes of class document. The method
+kill-background-process of class document can be used to kill a single
+process. The method kill-all-background-processes sends a kill signal 
+to all background processes and waits until they are all dead. (Which
+can take some time because of the cleanup actions in unwind-protects.)
+kill-all-background-processes is called by GINA when a document is closed.
+
+Because all processes work in the same data space, it is sometimes 
+necessary to synchronize access to common data structures using locks.
+In CLM there is already a lock for each connection which guarantees that
+only one request is handled at a time. You can explicitly prevent other 
+processes from calling CLM functions with the macro with-clm-connection. 
+CLX also uses such a lock (see xlib:with-display). In order to synchronize
+access to data structures of class application and class document there
+are slots semaphor in both classes which contain a lock. The macros
+with-application and with-document can be used for this purpose.
+
+GINA calls with-document when the slot background-processes is modified
+and when a process is killed. Therefore, you can prevent a background
+process from being killed for some time by using with-document. GINA 
+also guarantees that a process is not killed in the middle of a CLM 
+request by using with-clm-connection.
+
+The macro with-progress-bar can be used to create a background process
+and additionally to display a dialog box which contains a variable message, 
+a scale indicating the progress of the computation and an abort-button.
+
+For example,
+
+(with-progress-bar (doc :title "Sleeping")
+  (loop for i from 1 to 10
+	until (progress-bar-aborted)
+        do (sleep 1)
+           (indicate-progress (* 10 i))))
+
+displays a dialog box, increases the value of the scale in steps of 10,
+and can be terminated by pressing the abort-button.
+
+There are some keyword parameters which control appearance and behavior of
+the dialog box:
+- by the flag :modal it is controlled whether other user input is allowed
+  or pressing abort is the only possible action
+- :title and :message are strings displayed in the dialog box
+- the flags :abortable, :centered, and :with-scale control whether the
+  abort button is sensitive, whether the scale is displayed and whether
+  the dialog-box is in the middle or below the main-shell
+- the flag :kill-on-abort controls whether the background process is killed
+  or is itself responsible to ask periodically whether abort was pressed
+
+Within the dynamic extent of the macro with-progress-bar the two functions
+progress-bar-aborted and indicate-progress can be called. The first function
+checks  whether the abort button has already been called. The second function
+is used to update the scale value to the current percentage and optionally
+to display a new message.
+
+The pacmen demo gives an simple example of how to use background processes.
+The Lisp Listener demo, the Chess demo and the Mandelbrot demo also 
+use background processes.
+

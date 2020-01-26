@@ -1,0 +1,28 @@
+===========================================================
+This directory contains some bug-reports and fixes for
+bugs we detected in Allegro4.0 and Lucid4.0 while testing 
+GINA. You should try if you can reproduce the errors and 
+ask your Lisp vendor for the patches if necessary. 
+===========================================================
+
+Allegro4.0:
+-----------
+* Without patch15, the Interface Builder runs into an error 
+  described in the file allegro4.0-bug15.
+* The file allegro4.0-bug16 describes a performance problem.
+* Without patch70 and patch75 GINA demos using multiple processes 
+  do not run correctly.
+  The performace problem of the function DIRECTORY is not yet solved.
+  Therefore, the OPEN/SAVE dialogs of GINA are still somewhat slow.
+
+You can load the patches allegro4.0-patch*.fasl if you have a Sun4. 
+Otherwise try to reproduce the error described in  allegro4.0-bug* 
+and send a bug report to Allegro.
+
+Lucid4.0:
+---------
+In Lucid the bug is more crucial: No callbacks are set for Motif widgets
+because after deamons are not executed. This bug is described in lucid-bug1.
+You can try the minimal test to reproduce the error. You have to ask Lucid 
+for a bug fix if the error occurs in your version. We received a comple new
+clos.sbin from Lucid.

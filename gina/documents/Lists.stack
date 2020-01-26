@@ -1,0 +1,20 @@
+"hyper"
+791 339
+1
+17
+10
+:code-element 222 63 "Code14" "(setf String1 List2)" NIL 288 575
+:code-element 231 63 "Code13" "(setf String1 List2)" NIL 38 575
+:button-element 181 65 "Button11" "Code7" "Delete" 361 194
+:button-element 181 65 "Button10" "Code9" "Replace" 361 100
+:code-element 589 109 "Code9" "(progn 
+  (setf (items List2)
+     (substitute String1 List2 (items List2) :test #'equal))
+      (setf List2 String1))" NIL 38 369
+:button-element 181 65 "Button8" "Code3" "Append" 361 6
+:code-element 419 75 "Code7" "(setf (items List2)
+   (delete List2(items List2)))" NIL 38 486
+:code-element 419 75 "Code3" "(setf (items List2)
+   (append (items List2) (list String1)))" NIL 38 284
+:list-element 212 188 "List2" "Code14" NIL 77 6
+:string-element 214 53 "String1" "Gruenlich" NIL 77 206

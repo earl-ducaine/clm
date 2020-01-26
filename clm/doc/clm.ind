@@ -1,0 +1,902 @@
+\begin{theindex}
+
+  \item *clm-binary-directory*
+    \subitem Variable description, 11
+  \item *clm-binary-name*
+    \subitem Variable description, 11
+  \item {\ptt *clock-widget*}, 19
+  \item *debug-mode*
+    \subitem Variable description, 9
+  \item *default-display-host*
+    \subitem Variable description, 9
+  \item {\ptt *default-display-host*}, 10
+  \item *default-display-number*
+    \subitem Variable description, 10
+  \item *default-screen-number*
+    \subitem Variable description, 10
+  \item *default-server-host*
+    \subitem Variable description, 10
+  \item {\ptt *default-server-host*}, 11
+  \item *motif-connection*
+    \subitem Variable description, 11
+  \item *x-display*
+    \subitem Variable description, 12
+  \item {\ptt *x-display*}, 17
+  \item *xt-tcp-port*
+    \subitem Variable description, 11
+  \item {\ptt :activate}, 37, 63
+  \item {\ptt :addition}, 40
+  \item {\ptt :initial}, 40
+  \item {\ptt :modification}, 40
+  \item {\ptt :1000th-inches}, 52
+  \item {\ptt :100th-font-units}, 52
+  \item {\ptt :100th-millimeters}, 52
+  \item {\ptt :100th-points}, 52
+
+  \indexspace
+
+  \item {\ptt :above-workspace}, 52
+  \item {\ptt :activate}, 42, 63
+  \item {\ptt :active-in-handler}, 57
+  \item add-callback
+    \subitem Function description, 38
+  \item {\ptt add-callback}, 37, 38
+  \item add-event-handler
+    \subitem Function description, 48
+  \item {\ptt add-event-handler}, 47
+  \item add-protocol-callback
+    \subitem Function description, 44
+  \item {\ptt add-protocol-callback}, 44, 45
+  \item add-tab-group
+    \subitem Function description, 55
+  \item {\ptt add-tab-group}, 55
+  \item add-wm-protocol-callback
+    \subitem Function description, 45
+  \item {\ptt add-wm-protocol-callback}, 44
+  \item {\ptt additional-call-data}, 40
+  \item {\ptt :after-function}, 15, 16
+  \item {\ptt :after-function-args}, 15, 16
+  \item alert-dialog
+    \subitem Function description, 63
+  \item {\ptt alert-dialog}, 58, 63
+  \item {\ptt :any}, 52
+  \item {\ptt :any-type}, 52
+  \item app-main-loop
+    \subitem Function description, 18
+  \item {\ptt app-main-loop}, 13--15, 17--19
+  \item {\ptt :application-defined}, 52
+  \item {\ptt :application-modal}, 52
+  \item {\ptt applicationShellWidgetClass}, 25
+  \item {\ptt :apply}, 40
+  \item {\ptt :arrow-button}, 26
+  \item {\ptt :arrow-button-gadget}, 26
+  \item {\ptt :arrow-down}, 52
+  \item {\ptt :arrow-left}, 52
+  \item {\ptt :arrow-right}, 52
+  \item {\ptt :arrow-up}, 52
+  \item {\ptt :as-needed}, 52
+  \item augment-translations
+    \subitem Function description, 53
+  \item {\ptt augment-translations}, 53
+  \item {\ptt :auto-unmanage}, 63
+  \item {\ptt :automatic}, 52
+
+  \indexspace
+
+  \item {\ptt :background}, 50
+  \item {\ptt :beginning}, 52
+  \item {\ptt :below-workspace}, 52
+  \item {\ptt bitmap}, 61
+  \item {\ptt :bottom-left}, 52
+  \item {\ptt :bottom-right}, 52
+  \item {\ptt :browse}, 52
+  \item {\ptt :browse-select}, 41
+  \item {\ptt :bulletin-board}, 26
+  \item {\ptt button}, 39
+  \item {\ptt :button-press}, 39
+  \item {\ptt :button-release}, 39
+
+  \indexspace
+
+  \item {\ptt call-data}, 33, 37, 39--42
+  \item {\ptt :cancel}, 52
+  \item {\ptt :cascade-button}, 26
+  \item {\ptt :cascade-button-gadget}, 26
+  \item {\ptt :center}, 52
+  \item change-grab-cursor
+    \subitem Function description, 61
+  \item {\ptt change-grab-cursor}, 60
+  \item change-timer
+    \subitem Function description, 59
+  \item {\ptt change-timer}, 57
+  \item {\ptt client-data}, 18, 19, 31, 37, 42, 47, 57
+  \item clm-server@{\ptt clm-server}, 11
+  \item {\ptt clmd}, 7
+  \item {\ptt :command}, 26, 39
+  \item command-get-child
+    \subitem Function description, 71
+  \item {\ptt :constant}, 52
+  \item {\ptt count}, 39, 40, 48
+  \item {\ptt create-...}, 23, 28
+  \item {\ptt create-...-dialog}, 23
+  \item {\ptt create-....-dialog}, 30
+  \item {\ptt create-application}, 45
+  \item create-application-shell
+    \subitem Function description, 25
+  \item {\ptt create-application-shell}, 18, 22, 23
+  \item {\ptt create-arrow-button}, 24
+  \item {\ptt create-arrow-button-gadget}, 24
+  \item {\ptt create-bulletin-board}, 24
+  \item {\ptt create-bulletin-board-dialog}, 24
+  \item {\ptt create-cascade-button}, 24
+  \item {\ptt create-cascade-button-gadget}, 24
+  \item {\ptt create-command}, 24
+  \item {\ptt create-dialog-shell}, 24
+  \item {\ptt create-drawing-area}, 24
+  \item {\ptt create-drawn-button}, 24
+  \item {\ptt create-error-dialog}, 24
+  \item {\ptt create-file-selection-box}, 24
+  \item {\ptt create-file-selection-dialog}, 24
+  \item create-font-cursor
+    \subitem Function description, 60
+  \item {\ptt create-font-cursor}, 60
+  \item {\ptt create-form}, 24
+  \item {\ptt create-form-dialog}, 24
+  \item {\ptt create-frame}, 24
+  \item {\ptt create-information-dialog}, 24
+  \item {\ptt create-label}, 24
+  \item {\ptt create-label-gadget}, 24
+  \item {\ptt create-list}, 24
+  \item {\ptt create-main-window}, 24
+  \item {\ptt create-menu-bar}, 24
+  \item {\ptt create-menu-shell}, 24
+  \item {\ptt create-message-box}, 24
+  \item {\ptt create-message-dialog}, 24
+  \item create-named-widget
+    \subitem Function description, 28
+  \item {\ptt create-named-widget}, 22, 23, 28
+  \item {\ptt create-option-menu}, 24, 33
+  \item {\ptt create-override-shell}, 23, 24, 32
+  \item {\ptt create-paned-window}, 24
+  \item create-pixmap-cursor
+    \subitem Function description, 61
+  \item {\ptt create-pixmap-cursor}, 60
+  \item {\ptt create-popup-menu}, 24, 33
+  \item create-popup-shell
+    \subitem Function description, 32
+  \item {\ptt create-popup-shell}, 23, 27, 32
+  \item {\ptt create-prompt-dialog}, 24
+  \item {\ptt create-pulldown-menu}, 24, 33
+  \item {\ptt create-push-button}, 24
+  \item {\ptt create-push-button-gadget}, 24
+  \item {\ptt create-question-dialog}, 24
+  \item {\ptt create-radio-box}, 24
+  \item {\ptt create-row-column}, 24
+  \item {\ptt create-scale}, 24
+  \item {\ptt create-scroll-bar}, 24
+  \item {\ptt create-scrolled-list}, 25
+  \item {\ptt create-scrolled-text}, 25
+  \item {\ptt create-scrolled-window}, 25
+  \item {\ptt create-selection-box}, 25
+  \item {\ptt create-selection-dialog}, 25
+  \item {\ptt create-separator}, 25
+  \item {\ptt create-separator-gadget}, 25
+  \item {\ptt create-text}, 25
+  \item {\ptt create-text-field}, 25
+  \item create-timer
+    \subitem Function description, 58
+  \item {\ptt create-timer}, 57, 58
+  \item {\ptt create-toggle-button}, 25
+  \item {\ptt create-toggle-button-gadget}, 25
+  \item {\ptt create-top-level-shell}, 27
+  \item {\ptt create-toplevel-shell}, 23, 25, 32
+  \item {\ptt create-transient-shell}, 23, 25, 32
+  \item create-unmanaged-widget
+    \subitem Function description, 28
+  \item {\ptt create-unmanaged-widget}, 22, 23, 25, 28
+  \item {\ptt create-unmanged-widget}, 23
+  \item {\ptt create-warning-dialog}, 25
+  \item create-widget
+    \subitem Function description, 27
+  \item {\ptt create-widget}, 22, 23, 25, 28
+  \item {\ptt create-work-area}, 25
+  \item {\ptt create-working-dialog}, 25
+  \item {\ptt :current}, 56
+
+  \indexspace
+
+  \item {\ptt :default-action}, 41
+  \item define-cursor
+    \subitem Function description, 61
+  \item {\ptt define-cursor}, 60
+  \item {\ptt :destroy}, 52
+  \item destroy-application
+    \subitem Function description, 29
+  \item {\ptt destroy-application}, 29
+  \item destroy-timer
+    \subitem Function description, 58
+  \item {\ptt destroy-timer}, 57, 58
+  \item destroy-widget
+    \subitem Function description, 29
+  \item {\ptt destroy-widget}, 22
+  \item {\ptt :dialog-shell}, 26
+  \item {\ptt :directory}, 52
+  \item {\ptt :discard}, 52
+  \item {\ptt :display-host}, 10, 13, 14, 17
+  \item {\ptt :display-number}, 10, 13, 14, 17
+  \item {\ptt :do-nothing}, 52
+  \item {\ptt :double-dashed-line}, 52
+  \item {\ptt :double-line}, 52
+  \item {\ptt :down}, 56
+  \item {\ptt :drag}, 41
+  \item {\ptt :drawing-area}, 26, 39
+  \item {\ptt :drawn-button}, 26, 40
+
+  \indexspace
+
+  \item {\ptt :edit-mode}, 63
+  \item {\ptt :editable}, 50
+  \item {\ptt :enabled}, 58
+  \item {\ptt :end}, 52
+  \item {\ptt :error}, 52
+  \item {\ptt :etched-in}, 52
+  \item {\ptt :etched-out}, 52
+  \item {\ptt event}, 47, 48
+  \item {\ptt event-type}, 47
+  \item {\ptt :exclusive-tab-group}, 52
+  \item {\ptt :execute-main-loop}, 14, 16, 18, 19
+  \item {\ptt :explicit}, 52
+  \item {\ptt Expose}, 47
+  \item {\ptt :expose}, 39, 40
+  \item {\ptt :extended}, 52
+  \item {\ptt :extended-selection}, 40, 41
+  \item {\ptt :extra-process}, 14
+
+  \indexspace
+
+  \item {\ptt False}, 48
+  \item {\ptt :file-selection}, 52
+  \item {\ptt :file-selection-box}, 26, 40
+  \item file-selection-box-get-child
+    \subitem Function description, 70
+  \item {\ptt :form}, 26, 52
+  \item {\ptt :frame}, 26
+
+  \indexspace
+
+  \item get-items
+    \subitem Function description, 66
+  \item {\ptt get-items}, 65
+  \item get-parent
+    \subitem Function description, 35
+  \item {\ptt get-parent}, 22
+  \item get-selected-items
+    \subitem Function description, 66
+  \item {\ptt get-selected-items}, 65
+  \item get-values
+    \subitem Function description, 51
+  \item {\ptt get-values}, 41
+  \item {\ptt :gina-view}, 26
+  \item {\ptt :grab-exclusive}, 32
+  \item {\ptt :grab-none}, 32
+  \item {\ptt :grab-nonexclusive}, 32
+  \item {\ptt :grow}, 52
+
+  \indexspace
+
+  \item {\ptt height}, 39, 40, 48
+  \item {\ptt :help}, 52
+  \item {\ptt :home}, 56
+  \item {\ptt :horizontal}, 52
+
+  \indexspace
+
+  \item {\ptt :iconic}, 52
+  \item {\ptt :in}, 52
+  \item {\ptt :information}, 52
+  \item {\ptt :init-arguments}, 16
+  \item {\ptt init-function}, 13, 16
+  \item {\ptt init-xclock}, 19
+  \item {\ptt :input}, 39
+  \item is-mwm-running
+    \subitem Function description, 18
+  \item {\ptt is-mwm-running}, 15, 18
+  \item {\ptt item}, 40
+  \item {\ptt items}, 66
+
+  \indexspace
+
+  \item {\ptt :just-print-errors}, 15
+
+  \indexspace
+
+  \item {\ptt :keep}, 52
+  \item {\ptt key}, 39
+  \item {\ptt :key-press}, 39
+  \item {\ptt :key-release}, 39
+
+  \indexspace
+
+  \item {\ptt :l-to-r}, 52
+  \item {\ptt :label}, 26
+  \item {\ptt :label-gadget}, 26
+  \item {\ptt :label-string}, 50
+  \item {\ptt :left}, 56
+  \item {\ptt let}, 15, 19
+  \item {\ptt :list}, 26, 40
+  \item list-add-item
+    \subitem Function description, 66
+  \item {\ptt list-add-item}, 67
+  \item list-add-item-unselected
+    \subitem Function description, 67
+  \item {\ptt list-add-item-unselected}, 67
+  \item list-delete-item
+    \subitem Function description, 67
+  \item {\ptt list-delete-item}, 67
+  \item list-delete-pos
+    \subitem Function description, 68
+  \item {\ptt list-delete-pos}, 67
+  \item list-deselect-all-items
+    \subitem Function description, 68
+  \item {\ptt list-deselect-all-items}, 67
+  \item list-deselect-item
+    \subitem Function description, 68
+  \item {\ptt list-deselect-item}, 67
+  \item list-deselect-pos
+    \subitem Function description, 68
+  \item {\ptt list-deselect-pos}, 67
+  \item list-select-item
+    \subitem Function description, 68
+  \item {\ptt list-select-item}, 67
+  \item list-select-pos
+    \subitem Function description, 69
+  \item {\ptt list-select-pos}, 67
+  \item list-set-bottom-item
+    \subitem Function description, 69
+  \item {\ptt list-set-bottom-item}, 67
+  \item list-set-bottom-pos
+    \subitem Function description, 69
+  \item {\ptt list-set-bottom-pos}, 67
+  \item list-set-horiz-pos
+    \subitem Function description, 69
+  \item {\ptt list-set-horiz-pos}, 67
+  \item list-set-top-item
+    \subitem Function description, 69
+  \item {\ptt list-set-top-item}, 67
+  \item list-set-top-pos
+    \subitem Function description, 70
+  \item {\ptt list-set-top-pos}, 67
+  \item localhost@{\ptt localhost}, 9, 10
+  \item {\ptt :losing-focus}, 42
+
+  \indexspace
+
+  \item {\ptt :main-window}, 26
+  \item main-window-set-areas
+    \subitem Function description, 72
+  \item make-clx-window
+    \subitem Function description, 14
+  \item {\ptt make-clx-window}, 14, 22, 40
+  \item manage-popup
+    \subitem Function description, 31
+  \item {\ptt manage-popup}, 30
+  \item manage-popup-child
+    \subitem Function description, 30
+  \item {\ptt manage-popup-child}, 30, 31, 34
+  \item manage-widgets
+    \subitem Function description, 34
+  \item {\ptt manage-widgets}, 22, 23
+  \item {\ptt :managed}, 23
+  \item map-widgets
+    \subitem Function description, 34
+  \item {\ptt map-widgets}, 22
+  \item {\ptt :max-on-bottom}, 52
+  \item {\ptt :max-on-left}, 52
+  \item {\ptt :max-on-right}, 52
+  \item {\ptt :max-on-top}, 52
+  \item {\ptt :menu-bar}, 52
+  \item {\ptt :menu-option}, 52
+  \item {\ptt :menu-popup}, 52
+  \item {\ptt :menu-pulldown}, 52
+  \item {\ptt :menu-shell}, 26
+  \item {\ptt :message}, 52
+  \item {\ptt :message-box}, 26
+  \item message-box-get-child
+    \subitem Function description, 70
+  \item {\ptt :modeless}, 52
+  \item {\ptt :modify-verify}, 42
+  \item {\ptt Motion}, 48
+  \item {\ptt :motion-verify}, 42
+  \item {\ptt :multi-line-edit}, 52
+  \item {\ptt :multiple}, 52
+  \item {\ptt :multiple-selection}, 41
+  \item {\ptt mwm}, 25, 29, 45
+
+  \indexspace
+
+  \item {\ptt n}, 40
+  \item {\ptt :n-of-many}, 52
+  \item {\ptt :name}, 25
+  \item {\ptt :next}, 56
+  \item {\ptt :next-tab-group}, 56
+  \item {\ptt nil}, 10--19, 23, 41, 42, 51, 58, 63
+  \item {\ptt :no-line}, 52
+  \item {\ptt :none}, 52
+  \item {\ptt :normal}, 52
+
+  \indexspace
+
+  \item {\ptt :ok}, 37, 38, 40, 41, 52
+  \item {\ptt :ok-button}, 70, 71
+  \item {\ptt :one-of-many}, 52
+  \item {\ptt :opposite-form}, 52
+  \item {\ptt :opposite-widget}, 52
+  \item option-button-child
+    \subitem Function description, 71
+  \item option-label-gadget
+    \subitem Function description, 71
+  \item {\ptt :out}, 52
+  \item {\ptt :override-shell}, 26, 31
+  \item override-translations
+    \subitem Function description, 53
+  \item {\ptt override-translations}, 53
+  \item {\ptt overrideShellWidgetClass}, 26
+
+  \indexspace
+
+  \item {\ptt :pack-column}, 52
+  \item {\ptt :pack-none}, 52
+  \item {\ptt :pack-tight}, 52
+  \item {\ptt :paned-window}, 26
+  \item {\ptt :pixels}, 52
+  \item {\ptt :pixmap}, 52
+  \item {\ptt :pointer}, 52
+  \item pop-translations
+    \subitem Function description, 54
+  \item {\ptt pop-translations}, 53, 54
+  \item popdown
+    \subitem Function description, 32
+  \item {\ptt popdown}, 31
+  \item popup
+    \subitem Function description, 32
+  \item {\ptt popup}, 23, 27, 31, 32
+  \item {\ptt popup-exclusive}, 31
+  \item {\ptt popup-none}, 31
+  \item {\ptt popup-nonexclusive}, 31
+  \item {\ptt :position}, 52
+  \item {\ptt position}, 40, 66, 67
+  \item {\ptt :prev}, 56
+  \item {\ptt :prev-tab-group}, 56
+  \item {\ptt :process-name}, 14
+  \item process-traversal
+    \subitem Function description, 55
+  \item {\ptt process-traversal}, 55
+  \item {\ptt :prompt}, 52
+  \item {\ptt :push-button}, 26
+  \item {\ptt :push-button-gadget}, 26
+  \item push-translations
+    \subitem Function description, 54
+  \item {\ptt push-translations}, 53
+
+  \indexspace
+
+  \item {\ptt :question}, 52
+  \item quit-application
+    \subitem Function description, 18
+  \item {\ptt quit-application}, 15, 18, 25, 29
+
+  \indexspace
+
+  \item {\ptt :r-to-l}, 52
+  \item realize-widget
+    \subitem Function description, 33
+  \item {\ptt realize-widget}, 22, 27
+  \item {\ptt :regular}, 52
+  \item remove-all-callbacks
+    \subitem Function description, 38
+  \item {\ptt remove-all-callbacks}, 37
+  \item remove-callback
+    \subitem Function description, 38
+  \item {\ptt remove-callback}, 37, 38
+  \item remove-event-handler
+    \subitem Function description, 49
+  \item remove-protocol-callback
+    \subitem Function description, 45
+  \item {\ptt remove-protocol-callback}, 25, 44, 46
+  \item remove-tab-group
+    \subitem Function description, 55
+  \item {\ptt remove-tab-group}, 55
+  \item remove-wm-protocol-callback
+    \subitem Function description, 46
+  \item {\ptt remove-wm-protocol-callback}, 44
+  \item {\ptt :resize}, 39
+  \item {\ptt :resize-if-possible}, 52
+  \item {\ptt resource-names}, 51
+  \item {\ptt resources}, 25
+  \item {\ptt :restore}, 61
+  \item {\ptt :right}, 56
+  \item {\ptt :row-column}, 26
+  \item run-motif-application
+    \subitem Function description, 16
+  \item {\ptt run-motif-application}, 9--15, 18, 19, 29
+
+  \indexspace
+
+  \item {\ptt :scale}, 26, 41
+  \item {\ptt :screen-number}, 10
+  \item {\ptt :scroll-bar}, 26, 41
+  \item {\ptt :scrolled-window}, 26
+  \item scrolled-window-set-areas
+    \subitem Function description, 71
+  \item {\ptt :selection}, 52
+  \item {\ptt :selection-box}, 26, 41
+  \item selection-box-get-child
+    \subitem Function description, 70
+  \item {\ptt :self}, 52
+  \item {\ptt :separator}, 26
+  \item {\ptt :separator-gadget}, 26
+  \item {\ptt :server-host}, 11, 13, 16
+  \item set-insensitive
+    \subitem Function description, 35
+  \item {\ptt set-insensitive}, 22
+  \item set-items
+    \subitem Function description, 66
+  \item {\ptt set-items}, 65
+  \item set-sensitive
+    \subitem Function description, 35
+  \item {\ptt set-sensitive}, 22
+  \item set-values
+    \subitem Function description, 50
+  \item {\ptt set-values}, 50
+  \item {\ptt :shadow-etched-in}, 52
+  \item {\ptt :shadow-etched-out}, 52
+  \item {\ptt show-state}, 42
+  \item {\ptt :single}, 52
+  \item {\ptt :single-dashed-line}, 52
+  \item {\ptt :single-line}, 52
+  \item {\ptt :single-line-edit}, 52, 63
+  \item {\ptt :single-select}, 41
+  \item {\ptt source}, 61
+  \item start-timer
+    \subitem Function description, 59
+  \item {\ptt start-timer}, 57, 58
+  \item {\ptt state}, 39, 48
+  \item {\ptt :static}, 52
+  \item {\ptt :sticky-tab-group}, 52
+  \item stop-timer
+    \subitem Function description, 59
+  \item {\ptt stop-timer}, 57, 58
+  \item {\ptt :string}, 52
+  \item {\ptt :sync-clx}, 9, 15
+  \item {\ptt :system-modal}, 52
+
+  \indexspace
+
+  \item {\ptt t}, 16--18, 23, 42, 51
+  \item {\ptt :tab-group}, 52
+  \item {\ptt :text}, 26, 41
+  \item {\ptt text}, 42
+  \item text-append
+    \subitem Function description, 64
+  \item {\ptt text-append}, 64, 65
+  \item {\ptt text-clear-selection}, 65
+  \item {\ptt text-copy}, 65
+  \item {\ptt text-cut}, 65
+  \item {\ptt :text-field}, 26, 41
+  \item {\ptt text-get-baseline}, 65
+  \item {\ptt text-get-insertion-position}, 65
+  \item {\ptt text-get-last-pos}, 65
+  \item {\ptt text-get-selection}, 65
+  \item {\ptt text-get-selection-position}, 65
+  \item {\ptt text-get-substring}, 65
+  \item text-insert
+    \subitem Function description, 64
+  \item {\ptt text-insert}, 64, 65
+  \item {\ptt text-paste}, 65
+  \item {\ptt text-pos-to-xy}, 65
+  \item {\ptt text-remove}, 65
+  \item {\ptt text-replace}, 65
+  \item {\ptt text-scroll}, 65
+  \item {\ptt text-search}, 65
+  \item {\ptt text-set-add-mode}, 65
+  \item {\ptt text-set-highlight}, 65
+  \item {\ptt text-set-selection}, 65
+  \item {\ptt text-show-position}, 65
+  \item {\ptt text-xy-to-pos}, 65
+  \item {\ptt text.lisp}, 65
+  \item {\ptt time}, 39
+  \item {\ptt timer-id}, 57
+  \item {\ptt :to-bottom}, 41
+  \item {\ptt :to-top}, 41
+  \item {\ptt :toggle-button}, 23, 26, 42
+  \item {\ptt :toggle-button-gadget}, 26
+  \item {\ptt :top-left}, 52
+  \item {\ptt :top-right}, 52
+  \item {\ptt :toplevel-shell}, 26, 31
+  \item {\ptt topLevelShellWidgetClass}, 26
+  \item {\ptt :transient-shell}, 26, 31
+  \item {\ptt transientShellWidgetClass}, 26
+  \item {\ptt type}, 40
+
+  \indexspace
+
+  \item unmanage-popup
+    \subitem Function description, 31
+  \item {\ptt unmanage-popup}, 30, 63
+  \item unmanage-popup-child
+    \subitem Function description, 30
+  \item {\ptt unmanage-popup-child}, 30, 31, 34
+  \item unmanage-widgets
+    \subitem Function description, 34
+  \item {\ptt unmanage-widgets}, 22
+  \item {\ptt :unmap}, 52, 63
+  \item unmap-widgets
+    \subitem Function description, 34
+  \item {\ptt unmap-widgets}, 22
+  \item {\ptt unsigned char}, 50
+  \item {\ptt :up}, 56
+  \item {\ptt update-interval}, 19
+  \item {\ptt :use-clx}, 12, 14
+
+  \indexspace
+
+  \item {\ptt :value}, 50
+  \item {\ptt :value-changed}, 41, 42
+  \item {\ptt :variable}, 52
+  \item {\ptt :vertical}, 52
+
+  \indexspace
+
+  \item wait-for-input
+    \subitem Function description, 63
+  \item {\ptt wait-for-input}, 58
+  \item {\ptt :warning}, 52
+  \item {\ptt :widget}, 52
+  \item {\ptt widget}, 30, 37, 47, 63
+  \item {\ptt WidgetClass}, 23
+  \item {\ptt width}, 39, 40, 48
+  \item {\ptt :wm-delete-window}, 45
+  \item {\ptt :wm-protocols}, 45, 46
+  \item {\ptt :work-area}, 52
+
+  \indexspace
+
+  \item {\ptt x}, 12, 39, 40, 48
+  \item {\ptt xbutton}, 39
+  \item {\ptt XChangeActivePointerGrab()}, 60, 61
+  \item {\ptt xclock}, 15, 19, 20
+  \item {\ptt XCreateFontCursor()}, 60
+  \item {\ptt XCreatePixmapCursor()}, 60, 61
+  \item {\ptt XDefineCursor()}, 60, 61
+  \item {\ptt xhost}, 8
+  \item {\ptt xkey}, 39
+  \item {\ptt Xm}, 23
+  \item {\ptt XmADDITION}, 40
+  \item {\ptt XmAddProtocolCallback()}, 44
+  \item {\ptt XmAddTabGroup()}, 55
+  \item {\ptt XmAddWMProtocolCallback()}, 44
+  \item {\ptt xmArrowButtonGadgetClass}, 26
+  \item {\ptt xmArrowButtonWidgetClass}, 26
+  \item {\ptt XmAugmentTranslations()}, 53
+  \item {\ptt XmBulletinBoard}, 23, 30, 31, 63
+  \item {\ptt xmBulletinBoardWidgetClass}, 26
+  \item {\ptt XmCAlignment}, 52
+  \item {\ptt XmCArrowDirection}, 52
+  \item {\ptt xmCascadeButtonGadgetClass}, 26
+  \item {\ptt xmCascadeButtonWidgetClass}, 26
+  \item {\ptt XmCAttachment}, 52
+  \item {\ptt XmCCommandWindowLocation}, 52
+  \item {\ptt XmCDefaultButtonType}, 52
+  \item {\ptt XmCDeleteResponse}, 52
+  \item {\ptt XmCDialogStyle}, 52
+  \item {\ptt XmCDialogType}, 52
+  \item {\ptt XmCEditMode}, 52
+  \item {\ptt XmCFileTypeMask}, 52
+  \item {\ptt XmCIndicatorType}, 52
+  \item {\ptt XmCInitialState}, 52
+  \item {\ptt XmCKeyboardFocusPolicy}, 52
+  \item {\ptt XmCLabelType}, 52
+  \item {\ptt XmCListSizePolicy}, 52
+  \item {\ptt XmCMultiClick}, 52
+  \item {\ptt XmCNavigationType}, 52
+  \item {\ptt XmCommand}, 39, 65, 66
+  \item {\ptt xmCommandWidgetClass}, 26
+  \item {\ptt XmCOrientation}, 52
+  \item {\ptt XmCPacking}, 52
+  \item {\ptt XmCProcessingDirection}, 52
+  \item {\ptt XmCreateArrowButton()}, 24
+  \item {\ptt XmCreateArrowButtonGadget()}, 24
+  \item {\ptt XmCreateBulletinBoard()}, 24
+  \item {\ptt XmCreateBulletinBoardDialog()}, 24
+  \item {\ptt XmCreateCascadeButton()}, 24
+  \item {\ptt XmCreateCascadeButtonGadget()}, 24
+  \item {\ptt XmCreateCommand()}, 24
+  \item {\ptt XmCreateDialogShell()}, 24
+  \item {\ptt XmCreateDrawingArea()}, 24
+  \item {\ptt XmCreateDrawnButton()}, 24
+  \item {\ptt XmCreateErrorDialog()}, 24
+  \item {\ptt XmCreateFileSelectionBox()}, 24
+  \item {\ptt XmCreateFileSelectionDialog()}, 24
+  \item {\ptt XmCreateForm()}, 24
+  \item {\ptt XmCreateFormDialog()}, 24
+  \item {\ptt XmCreateFrame()}, 24
+  \item {\ptt XmCreateInformationDialog()}, 24
+  \item {\ptt XmCreateLabel()}, 24
+  \item {\ptt XmCreateLabelGadget()}, 24
+  \item {\ptt XmCreateList()}, 24
+  \item {\ptt XmCreateMainWindow()}, 24
+  \item {\ptt XmCreateMenuBar()}, 24
+  \item {\ptt XmCreateMenuShell()}, 24
+  \item {\ptt XmCreateMessageBox()}, 24
+  \item {\ptt XmCreateMessageDialog()}, 24
+  \item {\ptt XmCreateOptionMenu()}, 24
+  \item {\ptt XmCreatePanedWindow()}, 24
+  \item {\ptt XmCreatePopupMenu()}, 24
+  \item {\ptt XmCreatePromptDialog()}, 24
+  \item {\ptt XmCreatePulldownMenu()}, 24
+  \item {\ptt XmCreatePushButton()}, 24
+  \item {\ptt XmCreatePushButtonGadget()}, 24
+  \item {\ptt XmCreateQuestionDialog()}, 24
+  \item {\ptt XmCreateRadioBox()}, 24
+  \item {\ptt XmCreateRowColumn()}, 24
+  \item {\ptt XmCreateScale()}, 24
+  \item {\ptt XmCreateScrollBar()}, 24
+  \item {\ptt XmCreateScrolledList()}, 25
+  \item {\ptt XmCreateScrolledText()}, 25
+  \item {\ptt XmCreateScrolledWindow()}, 25
+  \item {\ptt XmCreateSelectionBox()}, 25
+  \item {\ptt XmCreateSelectionDialog()}, 25
+  \item {\ptt XmCreateSeparator()}, 25
+  \item {\ptt XmCreateSeparatorGadget()}, 25
+  \item {\ptt XmCreateText()}, 25
+  \item {\ptt XmCreateTextField()}, 25
+  \item {\ptt XmCreateToggleButton()}, 25
+  \item {\ptt XmCreateToggleButtonGadget()}, 25
+  \item {\ptt XmCreateWarningDialog()}, 25
+  \item {\ptt XmCreateWorkArea()}, 25
+  \item {\ptt XmCreateWorkingDialog()}, 25
+  \item {\ptt XmCResizePolicy}, 52
+  \item {\ptt XmCRowColumnType}, 52
+  \item {\ptt XmCScrollBarDisplayPolicy}, 52
+  \item {\ptt XmCScrollBarPlacement}, 52
+  \item {\ptt XmCScrollingPolicy}, 52
+  \item {\ptt XmCSelectionPolicy}, 52
+  \item {\ptt XmCSeparatorType}, 52
+  \item {\ptt XmCShadowType}, 52
+  \item {\ptt XmCStringDirection}, 52
+  \item {\ptt XmCUnitType}, 52
+  \item {\ptt XmCVisualPolicy}, 52
+  \item {\ptt XmDialogShell}, 23, 30, 31, 63
+  \item {\ptt xmDialogShellWidgetClass}, 26
+  \item {\ptt XmDrawingArea}, 4, 14, 39
+  \item {\ptt xmDrawingAreaWidgetClass}, 26
+  \item {\ptt XmDrawnButton}, 4, 14, 40
+  \item {\ptt xmDrawnButtonWidgetClass}, 26
+  \item {\ptt XmFileSelectionBox}, 37, 40
+  \item {\ptt xmFileSelectionBoxWidgetClass}, 26
+  \item {\ptt xmFormWidgetClass}, 26
+  \item {\ptt xmFrameWidgetClass}, 26
+  \item {\ptt XmINITIAL}, 40
+  \item {\ptt xmLabelGadgetClass}, 26
+  \item {\ptt xmLabelWidgetClass}, 26
+  \item {\ptt XmList}, 40, 41, 65--67
+  \item {\ptt XmListAddItem()}, 67
+  \item {\ptt XmListAddItemUnselected()}, 67
+  \item {\ptt XmListDeleteItem()}, 67
+  \item {\ptt XmListDeletePos()}, 67
+  \item {\ptt XmListDeselectAllItems()}, 67
+  \item {\ptt XmListDeselectItem()}, 67
+  \item {\ptt XmListDeselectPos()}, 67
+  \item {\ptt XmListSelectItem()}, 67
+  \item {\ptt XmListSelectPos()}, 67
+  \item {\ptt XmListSetBottomItem()}, 67
+  \item {\ptt XmListSetBottomPos()}, 67
+  \item {\ptt XmListSetHorizPos()}, 67
+  \item {\ptt XmListSetItem()}, 67
+  \item {\ptt XmListSetPos()}, 67
+  \item {\ptt xmListWidgetClass}, 26
+  \item {\ptt xmMainWindowWidgetClass}, 26
+  \item {\ptt xmMenuShellWidgetClass}, 26
+  \item {\ptt xmMessageBoxWidgetClass}, 26
+  \item {\ptt XmMODIFICATION}, 40
+  \item {\ptt XmN}, 37
+  \item {\ptt XmNactivateCallback}, 37
+  \item {\ptt XmNbackground}, 50
+  \item {\ptt XmNeditable}, 50
+  \item {\ptt XmNlabelString}, 50
+  \item {\ptt XmNvalue}, 50
+  \item {\ptt XmOverrideTranslations()}, 53
+  \item {\ptt xmPanedWindowWidgetClass}, 26
+  \item {\ptt XmProcessTraversal()}, 55
+  \item {\ptt xmPushButtonGadgetClass}, 26
+  \item {\ptt xmPushButtonWidgetClass}, 26
+  \item {\ptt XmRemoveProtocolCallback()}, 44
+  \item {\ptt XmRemoveTabGroup()}, 55
+  \item {\ptt XmRemoveWMProtocolCallback()}, 44
+  \item {\ptt xmRowColumnWidgetClass}, 26
+  \item {\ptt XmScale}, 41
+  \item {\ptt xmScaleWidgetClass}, 26
+  \item {\ptt XmScrollBar}, 41
+  \item {\ptt xmScrollBarWidgetClass}, 26
+  \item {\ptt xmScrolledWindowWidgetClass}, 26
+  \item {\ptt XmSelectionBox}, 41, 65, 66
+  \item {\ptt xmSelectionBoxWidgetClass}, 26
+  \item {\ptt xmSeparatorGadgetClass}, 26
+  \item {\ptt xmSeparatorWidgetClass}, 26
+  \item {\ptt XmText}, 41, 63--65
+  \item {\ptt XmTextAppend}, 65
+  \item {\ptt XmTextClearSelection}, 65
+  \item {\ptt XmTextCopy}, 65
+  \item {\ptt XmTextCut}, 65
+  \item {\ptt XmTextField}, 41, 63
+  \item {\ptt xmTextFieldWidgetClass}, 26
+  \item {\ptt XmTextGetBaseline}, 65
+  \item {\ptt XmTextGetInsertionPosition}, 65
+  \item {\ptt XmTextGetLastPos}, 65
+  \item {\ptt XmTextGetSelection}, 65
+  \item {\ptt XmTextGetSelectionPosition}, 65
+  \item {\ptt XmTextInsert}, 65
+  \item {\ptt XmTextpaste}, 65
+  \item {\ptt XmTextPosToXY}, 65
+  \item {\ptt XmTextRemove}, 65
+  \item {\ptt XmTextReplace}, 65
+  \item {\ptt XmTextScroll}, 65
+  \item {\ptt XmTextSetAddMode}, 65
+  \item {\ptt XmTextSetHighlight}, 65
+  \item {\ptt XmTextSetSelection}, 65
+  \item {\ptt XmTextShowPosition}, 65
+  \item {\ptt xmTextWidgetClass}, 26
+  \item {\ptt XmTextXYToPos}, 65
+  \item {\ptt XmToggleButton}, 42
+  \item {\ptt xmToggleButtonGadgetClass}, 26
+  \item {\ptt XmToggleButtonWidgetClass}, 23
+  \item {\ptt xmToggleButtonWidgetClass}, 26
+  \item {\ptt xprocesses}, 19, 21
+  \item {\ptt XReadBitmapFile()}, 60
+  \item {\ptt Xt}, 23
+  \item xt-translate-coordinates
+    \subitem Function description, 35
+  \item {\ptt xt-translate-coordinates}, 22
+  \item {\ptt XtAddCallback()}, 37
+  \item {\ptt XtAddTimeout()}, 57
+  \item {\ptt XtAppCreateShell()}, 22
+  \item {\ptt XtAugmentTranslations()}, 53
+  \item {\ptt XtCreatePopupShell()}, 23--25, 32
+  \item {\ptt XtCreateWidget()}, 22
+  \item {\ptt XtDestroyWidget()}, 22
+  \item {\ptt XtGetValues()}, 50
+  \item {\ptt xtk:}, 7
+  \item {\ptt xtk::*clm-binary-directory*}, 9
+  \item {\ptt xtk::*clm-binary-name*}, 9
+  \item {\ptt xtk::*debug-mode*}, 9
+  \item {\ptt xtk::*default-display-host*}, 9, 13
+  \item {\ptt xtk::*default-display-number*}, 9, 13
+  \item {\ptt xtk::*default-screen-number*}, 9
+  \item {\ptt xtk::*default-server-host*}, 9, 13
+  \item {\ptt xtk::*motif-connection*}, 9, 14
+  \item {\ptt xtk::*x-display*}, 9, 14
+  \item {\ptt xtk::*xt-tcp-port*}, 9
+  \item {\ptt xtk::all-cursors}, 60, 61
+  \item {\ptt xtk:proceed-from-error}, 15, 17
+  \item {\ptt XtManageChild()}, 22
+  \item {\ptt XtManageChildren()}, 22, 34
+  \item {\ptt XtOverrideTranslations()}, 53
+  \item {\ptt XtParent()}, 22, 35
+  \item {\ptt XtParseTranslationTable()}, 53
+  \item {\ptt XtPopdown()}, 32
+  \item {\ptt XtPopup()}, 32
+  \item {\ptt XtRealizeWidget()}, 22, 33
+  \item {\ptt XtRemoveAllCallbacks()}, 37
+  \item {\ptt XtRemoveCallback()}, 37
+  \item {\ptt XtRemoveTimeout()}, 57
+  \item {\ptt XtSetMappedWhenManaged()}, 22, 34
+  \item {\ptt XtSetSensitivity()}, 22, 35
+  \item {\ptt XtSetValues()}, 50
+  \item {\ptt XtTranslateCoordinates()}, 22
+  \item {\ptt XtUnmanageChildren()}, 22, 34
+
+  \indexspace
+
+  \item {\ptt y}, 39, 40, 48
+
+\end{theindex}

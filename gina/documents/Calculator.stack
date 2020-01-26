@@ -1,0 +1,16 @@
+"hyper"
+598 286
+1
+13
+11
+:code-element 431 55 "Code13" "(setf Number9 (/ Number1 Number2))" NIL 16 437
+:code-element 431 55 "Code12" "(setf Number9 (* Number1 Number2))" NIL 16 371
+:code-element 431 55 "Code11" "(setf Number9 (- Number1 Number2))" NIL 16 305
+:code-element 431 55 "Code10" "(setf Number9 (+ Number1 Number2))" NIL 16 239
+:number-element 434 51 "Number9" 116 NIL 14 155
+:button-element 109 45 "Button6" "Code13" "Divide" 338 89
+:button-element 109 45 "Button5" "Code12" "Times" 230 89
+:button-element 109 45 "Button4" "Code11" "Minus" 122 89
+:button-element 109 45 "Button3" "Code10" "Plus" 14 89
+:number-element 211 52 "Number2" 1 "Code10" 233 15
+:number-element 211 52 "Number1" 115 "Code10" 12 15

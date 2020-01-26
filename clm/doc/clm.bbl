@@ -1,0 +1,49 @@
+\begin{thebibliography}{1}
+
+\bibitem{berlage-motif}
+Thomas Berlage.
+\newblock {\em {``OSF/Motif: Concepts and Programming''}}.
+\newblock Addison Wesley, 1991.
+
+\bibitem{xlib}
+James Gettys, Robert~W. Scheifler, and Ron Newman.
+\newblock {\em {``Xlib -- C Language X Interface. X Version 11, Release 4''}},
+  1989.
+
+\bibitem{clue}
+Kerry Kimbrough and LaMott Oren.
+\newblock {\em {``Common Lisp User Interface Environment''}}.
+\newblock Texas Instruments, Sept. 1988.
+\newblock Version 1.15.
+
+\bibitem{xtoolkit}
+Joel McCormack, Paul Asente, and Ralph~R. Swick.
+\newblock {\em {``X Toolkit Intrinsics -- C Language Interface. X Version 11,
+  Release 4''}}, 1989.
+
+\bibitem{motif-prog-ref}
+Open Software Foundation.
+\newblock {\em {``Motif Programmer's Reference Manual''}}, 1990.
+\newblock Version 1.1.
+
+\bibitem{motif-style-guide}
+Open Software Foundation.
+\newblock {\em {``Motif Style Guide''}}, 1990.
+\newblock Version 1.1.
+
+\bibitem{motif-uil}
+Open Software Foundation.
+\newblock {\em {``Motif User Interface Language Programmer's Guide''}}, 1990.
+\newblock Version 1.1.
+
+\bibitem{motif-mwm}
+Open Software Foundation.
+\newblock {\em {``Motif Window Manager Programmer's Guide''}}, 1990.
+\newblock Version 1.1.
+
+\bibitem{common-lisp}
+Guy~L. Steele.
+\newblock {\em {``Common Lisp''}}.
+\newblock Digital Press, 1984.
+
+\end{thebibliography}

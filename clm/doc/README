@@ -1,0 +1,14 @@
+To make the documentation:
+
+ latex clm
+ dvips clm | lpr
+
+To make the documentation from scratch:
+
+ latex clm
+ bibtex clm
+ latex clm
+ latex clm
+ makeindex clm
+ latex clm
+ dvips clm | lpr

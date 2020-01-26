@@ -1,0 +1,29 @@
+"chess"
+820 830
+25
+  1.   d2-d4      Sg8-f6     
+  2.   c2-c4       e7-e6     
+  3.  Sg1-f3       b7-b6     
+  4.   g2-g3      Lc8-b7     
+  5.  Lf1-g2      Lf8-e7     
+  6.  Sb1-c3        0-0      
+  7.    0-0        d7-d5     
+  8.  Sf3-e5       c7-c6     
+  9.   c4xd5       c6xd5     
+ 10.  Lc1-f4       a7-a6     
+ 11.  Ta1-c1       b6-b5     
+ 12.  Dd1-b3      Sb8-c6     
+ 13.  Se5xc6      Lb7xc6     
+ 14.   h2-h3      Dd8-d7     
+ 15.  Kg1-h2      Sf6-h5     
+ 16.  Lf4-d2       f7-f5     
+ 17.  Db3-d1       b5-b4     
+ 18.  Sc3-b1      Lc6-b5     
+ 19.  Tf1-g1      Le7-d6     
+ 20.   e2-e4       f5xe4     
+ 21.  Dd1xh5      Tf8xf2     
+ 22.  Dh5-g5      Ta8-f8     
+ 23.  Kh2-h1      Tf8-f5     
+ 24.  Dg5-e3      Lb5-d3     
+ 25.  Tc1-e1       h7-h6    *
+

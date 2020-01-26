@@ -1,0 +1,52 @@
+Menu RootMenu
+{
+  "Root Menu"         f.title
+  "New XTerm"        f.exec "xterm -name `hostname` &"
+  "Remote"            f.menu rlogin
+  no-label            f.separator
+  "Shuffle Up"        f.circle_up
+  "Shuffle Down"      f.circle_down
+  "Refresh"           f.refresh
+  no-label            f.separator
+  "Restart"           f.restart
+}
+
+Menu MySystemMenu
+{
+  "Restore"           f.normalize
+  "Move"              f.move
+  "Size"              f.size
+  "Minimize"          f.minimize
+  "Maximize"          f.maximize
+  "Lower"             f.lower
+  no-label            f.separator
+  "Close"             f.kill
+}
+
+Keys DefaultKeyBindings
+{
+  Shift<Key>Escape    icon|window        f.post_wmenu
+  Meta<Key>space      icon|window        f.post_wmenu
+  Meta Shift<Key>Tab  root|icon|window   f.prev_key
+  Meta<Key>Tab        root|icon|window   f.next_key
+  Meta Shift<Key>Escape  root|icon|window   f.circle_up
+  Meta<Key>Escape     root|icon|window   f.circle_down
+  Meta<Key>exclam          root|icon|window   f.set_behaviour
+}
+
+Buttons DefaultButtonBindings
+{
+  <Btn1Down>          frame              f.raise
+  <Btn2Down>          frame|icon         f.post_wmenu
+  <Btn1Down>          root               f.menu RootMenu
+  <Btn2Down>          root               f.menu RootMenu
+  <Btn3Down>          root               f.menu RootMenu
+  Meta<Btn1Down>      icon|window        f.move
+  Meta<Btn3Down>      window             f.minimize
+}
+
+Menu rlogin
+{
+"gmdzi" f.exec "xterm -title gmdzi -n gmdzi -geometry 80x24 -e rlogin gmdzi &"
+"zeus" f.exec "xterm -title zeus -n zeus -geometry 80x24 -e rlogin zeus &"
+}

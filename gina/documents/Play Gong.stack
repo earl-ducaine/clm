@@ -1,0 +1,8 @@
+"hyper"
+549 419
+1
+3
+3
+:code-element 313 62 "Code3" "(play \"gong\")" NIL 86 265
+:string-element 186 56 "String2" "Gong" NIL 202 15
+:button-element 242 139 "Button1" "Code3" "Gong" 48 94

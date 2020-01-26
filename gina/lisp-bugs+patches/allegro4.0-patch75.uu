@@ -1,0 +1,131 @@
+From cox@Franz.COM Wed Sep 18 03:20:20 1991
+Return-Path: <cox@Franz.COM>
+Received: from gmdzi.gmd.de by f3svb.gmd.de (4.1/SMI-4.1)
+	id AA00458; Wed, 18 Sep 91 03:20:16 +0200
+Received: from relay1.UU.NET (5012789) by gmdzi.gmd.de
+	id AA01033; Wed, 18 Sep 91 03:19:11 -0200
+Received: from uunet.uu.net (via LOCALHOST.UU.NET) by relay1.UU.NET with SMTP 
+	(5.61/UUNET-internet-primary) id AA16433; Tue, 17 Sep 91 20:27:21 -0400
+Received: from franz.UUCP by uunet.uu.net with UUCP/RMAIL
+	(queueing-rmail) id 202623.13662; Tue, 17 Sep 1991 20:26:23 EDT
+Received: by franz.Franz.COM (MC 2.0/FI-1.0)
+	id AA17423; Tue, 17 Sep 91 16:32:06 PDT
+Received: by crisp.Franz.COM (4.0/FI-1.0)
+	id AA07558; Tue, 17 Sep 91 16:32:39 PDT
+Date: Tue, 17 Sep 91 16:32:39 PDT
+Message-Id: <9109172332.AA07558@crisp.Franz.COM>
+From: Patch Dispatcher <bugs@Franz.COM>
+To: spenke@f3svb
+Subject: [spr4122] patch75 for sparc
+Status: R
+
+
+Allegro CL version:	4.0
+Patch number: 		patch75.fasl
+Architecture:		sparc
+Patch Description:
+ - Removal of terminated processes from process-lock-waiting list.
+
+What follows is a `uuencoded' patch for Allegro CL.  To utilize this
+patch, you must have the Allegro CL 4.0 distribution from which you
+made your `cl' binary image.  If you read your Allegro CL distribution
+into /usr/cl, for example, then you would follow these steps to apply
+this patch:
+
+    % cd /usr/cl/build
+    % mkdir update		# if the directory does not already exist
+    % chmod 777 update		# this is so `uudecode' can write in .
+    % cd update
+    % rm -f patch.uu
+    % cp <the-file-containing-this-message> patch.uu
+    % uudecode patch.uu
+    % cd ..
+
+Now, in the `build' directory, rebuild Allegro CL according to the
+instructions in your Installation Guide (they may vary from machine to
+machine).
+
+If you have any questions concerning this patch or problems installing
+it, please contact me.  I can be reached at the e-mail address or the
+telephone number given below.
+
+	INTERNET: bugs@franz.com
+	UUCP:  uunet!franz!bugs
+	Phone: (415) 548-3600
+	FAX:   (415) 548-8253
+
+---------- here starts the uuencoding of the patch file:
+
+begin 666 patch75.fasl
+M\ZQ_@($J!P >  D% "D %30N,"XQ(%M3=6XT72 H,B\X+SDQ*1L 00 $9S8V
+M,@  /    P (<&%T:&YA;64  2 " @, "&%B<V]L=71E  (@!  '=&UP7VUN
+M= 0  VYE= 0 !6%K8F%R!  "8VP$  ,T+C $  5P871C: 4'!  '<&%T8V@W
+M-00  F-L @0 *B]T;7!?;6YT+VYE="]A:V)A<B]C;"\T+C O<&%T8V@O<&%T
+M8V@W-2YC;!8    (#P, $2IS;W5R8V4M<&%T:&YA;64J  <@+P "" !D    
+M&9WCOYC>!V :G@/@"-XG8!J H.  E= @$($0  '@!V BT@=@)L0!/G^0$  0
+M@0B "#Z   G0(G_^.(  !] B?_[> 2![G\/@ (80( (0@  #D!  $) 0 !"&
+M$" !@<?@")'J   + A P  @8     "L,/    P .=&]P+6QE=F5L+69O<FT 
+M B $  IP871C:#<U+F-L&      %! 4!.P] 00 $9S8V,P !/  ! P %<&%T
+M8V@  B #  -U<V4  B #  1L:7-P  (@ P $97AC;  "( 4#!0$#  QD969P
+M86-K86=E+3$ !R O  ,( $0    1G>._F-X'8!J> ^ (WB=@&H"@X "5T" 0
+M@1   = '8"+@!V FDA  $,0'8"K: * &S -__I_!H "&&" "@<?@")'J   +
+M A P  @8     "L,/  ! P .=&]P+6QE=F5L+69O<FT  B $  IP871C:#<U
+M+F-L&      %! 4!.P] 00 $9S8V-  "/  "%  %<&%T8V@#  DJ<&%T8VAE
+M<RK__" # !(N9VQO8F%L;'DM<W!E8VEA;"X !R # !!C;VUP:6QE<BUP=71P
+M<F]P  0@+P #" "H    *IWCOYC>!V :G@/@"-XG8!J H.  E= @$($0  '0
+M!V BX@$_V^ '8":2$  1E!  $,0'8"K: * &S -__I_!H "&&" #X@=@(J  
+M/_"A/" #X@1 $. !/Z> I$ 0,H  $- '8"+2!V BQ $^?Y 0  2!"( (/H  
+M"= B?_XX@  'T")__MX!('N?P^  AA @ A"   /0!V BT =@(H80( &!Q^ (
+MD>H   L"$#  "!@     *PP\  (#  YT;W M;&5V96PM9F]R;0 "( 0 "G!A
+M=&-H-S4N8VP8     04$!0$[#T!!  1G-C8U  0\  0$ #]296UO=F%L(&]F
+M('1E<FUI;F%T960@<')O8V5S<V5S(&9R;VT@<')O8V5S<RUL;V-K+7=A:71I
+M;F<@;&ES="X#  DJ<&%T8VAE<RK__" O  (( /P    _G>._F-X'8!J> ^ (
+MWB=@&H"@X "5T" 0@1   > '8"+0 3WGQ $]ZXP"( B H( (-(  !<PA/>?>
+M 2 _G\/@ (80( ">$")8WB(__^ B( .B$  (Q =@)LP O_[> 3^G@*& #S* 
+M  G0 3WGD! @!=X!(+^2$  "G\/@ (80( *,$  (T $]YZ 0  ;$ 3WKC (@
+M"("@@ @T@  %S"$]Y]X!(#^?P^  AA @ .(B/__@(B #H!  "-('8";$ 3Y_
+MD!  $($(@ @^@  )T")__CB   ?0(G_^W@$@>Y_#X "&$" "$(   Y 0 !"0
+M$  0AA @ 8''X B1Z@  "P(0,  (&      K##P ! , #G1O<"UL979E;"UF
+M;W)M  (@!  *<&%T8V@W-2YC;!@    "!00% 3L/0$$ !&<V-C8 !3P !0, 
+M FUP  (@ P 3:6YT97)N86PM:6XM<&%C:V%G90 '("\  @@ 0    !"=X[^8
+MW@=@&IX#X C>)V :@*#@ )70(!"!$  !T =@(I(0  3$!V FV@"@!LP#?_Z?
+MP:  AA@@ H''X B1Z@  "P(0,  (&      K##P !0, #G1O<"UL979E;"UF
+M;W)M  (@!  *<&%T8V@W-2YC;!@    #!00% 3L/0$$ &"YP<F]C97-S+6QO
+M8VLM,2YA8S=F.# V9@ &/Q0 #VUU;'1I<')O8V5S<VEN9P, $'!R;V-E<W,M
+M86-T:79E+7#_^" O  $( (0    AG>._F("@X *3T" 0@1   > &8 * I  $
+M(H  !^ &( .0$  $AA @ 8''X B1Z@  X 8@ X"D  0R@  &T 0__] !/]N&
+M$" !$+__^ $   #$!V BV@"@!LP#?_Z?P:  AA@@ 8"B  0B@  %X 0@ Y 0
+M  00O__MAA @ 1"__^Z!$  !"P, !&-O;G,  2 #  1L;V-K__@@!0(0,  (
+M&      K/@Q  P .<')O8V5S<RUL;V-K+3'_^" _0 , $2IC=7)R96YT+7!R
+M;V-E<W,J__@@!  ^4%)/0T534RU,3T-+(&UA>2!N;W0@8F4@8V%L;&5D(&]N
+M('1H92!S8VAE9'5L97(G<R!S=&%C:R!G<F]U<"X# !IL97AI8V%L;'DM=FES
+M:6)L92UF=6YC=&EO;@ '(#P !@8" P ,<')O8V5S<RUW86ET__@@ P 09F]R
+M;6%T+7)U;G1I;64M)@ '(!@    ! P ">'  !R % P, #G=R:71E+7-T<FEN
+M9RLK  <@!  H26YT97)N86P@:6YC;VYS:7-T96YC>2!I;B!P<F]C97-S+6QO
+M8VLZ("$ !!@     &    "@%!0, #V)A<VEC+7=R:71E+65S8P '( , !"9A
+M<F< !R A  0% P, "G=R:71E+6-H87(  2 1   ! R$ ! 4#(0 &(0 '(0 $
+M!0,# !!F;W)M870M<G5N=&EM92TE  <@&     $A  0% P4&+P %" ,L    
+MRYWCOX" H. #D] @$($0  '$!V BX "__J80 !" I, $,H  "> &( +0!V F
+MQ $^N]H H ;, W_^G\&@ (88( '@!B "@*0 !"*  &_@!B &X $_QZP0( "$
+M![_DW@$_K]X@H #<(* $W@$_O]X@H C> 3]OWB"@#$    3>(* 0$(  9JH0
+M  ;@(* 4Q"$_K^ &( ;0 3WGQ $]ZXP"( B H( (-(  !<PA/>?> 2 _G\/@
+M (80( #F(C__X"(@ Z 0  BB$  0D@8@!L0!/G^0$  0@0B "#Z   S0(F  
+M.(  "M B8 " HD ".(  !] B8 #> 2!WG\/@ (80( (0@  #D!  &I 0 !K@
+M!V JDA  $)00 !&6$  8Q =@+MH H ;, W_^G\&@ (88( 3$ 3^K@*" !#* 
+M  K0(* "DA   Y00  B0$""@W@$B7Y_#X "&$" #$(  !(00  B-*. #S""_
+M_L@A/ZNH$  "Q $_K]X H #>(3^OX 8@!J00 !" I  1,H  )^ $H /@!& #
+MD@8@!L0!/G^0$  0@0B "#Z   S0(F  .(  "M B8 " HD ".(  !] B8 #>
+M 2!WG\/@ (80( (0@  #Q@4__L8%/_Z',. #T 4@ N@A/ZN I8  (H  -^ &
+M( +> 2!#DA  %9_#X  !    X 8@!H"D  0B@  OX 8@ A"__Y'@ 3_'$+__
+MQJP0( C@!* #@*0 !#*  !" I  1Q $]I]  O_[D!V RX 8@!I(0 !*4$  1
+MEA  $,0!/;_: * &S -__I_!H "&&" $$+__WL8%/_XR@  5I!  $. $8 .2
+M!* #Q $^?Y 0 !"!"( (/H  #- B8  X@  *T")@ ("B0 (X@  'T")@ -X!
+M('>?P^  AA @ A"__\O&!3_^$+__R<8%/_X0O__9@1   8"D  02@  7 0  
+M * 0 !F2!B "Q $^?Y 0 !"!"( (/H  #- B8  X@  *T")@ ("B0 (X@  '
+MT")@ -X!('>?P^  AA @ A"   .0$  0D!  $(80( &!Q^ (D>H  !"__T>!
+M$  !"P, !&QO8VO_^" #  IL;V-K+79A;'5E__@@ P (=VAO<W1A=&7_^" %
+M Q P  @8     "L^#$ #  YP<F]C97-S+6QO8VLM,?_X("$   8"/  & P (
+9:6YT97)N86P  B A   8      4$!0([ 6QO
+ 
+end
+

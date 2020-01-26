@@ -1,0 +1,40 @@
+%This is documentsubstyle DINA4 for DIN A4 pagesize. GMD Z1.BN  19.01.87
+% Must preserve "(\textheight - \topskip) divides \baselineskip".
+% \topskip always appears to be 10pt.  (from texhax86(issue#12))
+ 
+\if@twocolumn               % Die Seite wird maximal ausgenutzt
+  \topmargin -5.4mm
+  \oddsidemargin 0mm
+  \evensidemargin 0mm
+  \textwidth 160mm
+\ifcase \@ptsize
+    % mods for 10 pt (\baselineskip=12pt)
+    \textheight 658 pt  % = 230.9 mm
+\or % mods for 11 pt (\baselineskip=13.6pt)
+    \textheight 662.801 pt % = 232.6mm (!Rundungsfehler!)
+\or % mods for 12 pt  (\baselineskip=14.5pt)
+    \textheight 662.5 pt % = 232.5mm
+\fi
+ 
+% \textheight 232mm
+ \else
+  \topmargin 0mm
+  \oddsidemargin 5mm
+  \evensidemargin 5mm
+  \textwidth 150mm
+\ifcase \@ptsize
+    % mods for 10 pt (\baselineskip=12pt)
+    \textheight 634 pt  % = 222.5 mm
+\or % mods for 11 pt (\baselineskip=13.6pt)
+    \textheight 635.601 pt % = 223 mm  (!Rundungsfehler!)
+\or % mods for 12 pt  (\baselineskip=14.5pt)
+    \textheight 633.5 pt % = 222.8mm
+\fi
+ 
+% \textheight 222mm
+\fi
+ 
+\marginparwidth 0mm
+\marginparsep 0mm
+\marginparpush 0pt
+\columnwidth\textwidth

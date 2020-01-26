@@ -1,0 +1,2836 @@
+GINA User Manual	1	24.1.1992
+
+
+
+
+
+
+
+
+
+
+GINA User Manual 
+GINA Version 2.1 for Common Lisp
+
+
+Michael Spenke
+Christian Beilken
+Thomas Berlage
+Andreas BŠcker
+Andreas Genau
+
+GMD
+(German National Research Center for Computer Science)
+P.O. Box 1316
+D-5205 Sankt Augustin 1
+Federal Republic of Germany
+
+0. Contents
+1. Introduction	1
+1.1 What is GINA?	1
+1.2 What is CLM?	1
+1.3 Contents of this Release	2
+1.4 Contents of this Manual	2
+1.5 Roadmap of the GINA Documentation	3
+2. Installing GINA	5
+2.1 Hardware and Software Requirements	5
+2.2 The GINA/CLM Distribution	5
+2.3 Printing the Documentation	7
+2.4 Compiling CLM	7
+2.5 Compiling GINA	8
+2.6 Testing GINA	8
+3. Using GINA	9
+3.1 GMD Installation	9
+3.1.1 Using Emacs	9
+3.2 Calling the Demo Applications	10
+3.3 The Inspector	11
+3.4 The GINA Browser	12
+3.5 Interactive Application Development	14
+3.5.1 Calling GINA Functions from the Editor	14
+3.5.2 Debugging and Error Handling	15
+4. Cookbook Ð GINA Classes	17
+4.1 The Most Important GINA Classes	17
+4.2 General Hints	19
+4.3 Subclassing Class Application	20
+4.4 Subclassing Class Document	21
+4.5 Background Processes	23
+5. Cookbook Ð Motif Widgets	26
+5.1 Using Motif Widgets	26
+5.1.1 The Widget Hierarchy	26
+5.1.2 Interfacing Widgets and Application	26
+5.1.3 Encapsulation in CLOS Objects	26
+5.1.4 Callbacks	27
+5.1.5 Subclassing Widgets	28
+5.1.6 Geometry Management	29
+5.1.7 User Customization	29
+5.2 Item Lists	29
+5.3 Menu Entries	31
+5.4 Implementing New Widgets in Lisp	32
+6. Cookbook Ð Views and Commands	34
+6.1 Views	34
+6.1.1 Graphical Output into Views	34
+6.1.2 Mouse Input	36
+6.1.3 Keyboard Input	36
+6.2 Object-Oriented Graphics	36
+6.3 Direct-Manipulation Objects	38
+6.4 Commands	40
+6.5 Mouse Commands	41
+6.6 Drag and Drop	43
+7. The Interface Builder	51
+7.1 Interface Builder Principles	51
+7.2 Interface Builder Tutorial	52
+7.2.1 Creating Widgets	52
+7.2.2 Building the Hierarchy	55
+7.2.3 Generating Code	58
+7.3 Using the Interface Builder	61
+
+.c.1. Introduction
+.c2.1.1 What is GINA?
+GINA is an object-oriented application framework written in 
+CommonLisp and CLOS. It is based on CLM, an interface 
+between CommonLisp and the OSF/Motif software. The Generic 
+INteractive Application is executable and has a complete 
+graphical user interface, but lacks any application-specific 
+behaviour. New applications are created by defining subclasses 
+of GINA classes and adding or overriding methods. The standard 
+functionality of a typical application is already implemented in 
+GINA. Only the differences to the standard application have to 
+be coded. For example, commands for opening, closing, saving 
+and creating new documents are already available in GINA. The 
+programmer only has to write a method to translate the 
+document contents into a stream of characters and vice versa. 
+Motif widgets are encapsulated in CLOS objects (CLOS is the 
+Common Lisp Object System, the upcoming standard for an 
+object-oriented extension of Common Lisp). Instantiating an 
+object implicitly creates a widget within OSF/Motif. Graphical 
+output and direct manipulation with individual graphical 
+feedback are also supported. These features use CLX, the Lisp 
+binding of the basic X protocol. GINA also includes a graphical 
+interactive Interface Builder which treats Motif widgets like 
+MacDraw objects. It can be used to design the layout of windows 
+and dialog boxes. The resources of each widget can be modified, 
+and Lisp code to be used in connection with GINA is generated.
+The combination of framework concepts, the flexible Motif 
+toolkit, the Interface Builder, and the interactive Lisp 
+environment leads to an extremely powerful user interface 
+development environment. There are 18 demo applications 
+including a Finder to start applications and documents, a simple 
+graphic editor, a bitmap editor, and a simple spreadsheet, each 
+consisting of only a few pages of code. 
+Version 2.1 of GINA is publicly available and includes full 
+documentation. It runs on Allegro or Lucid Common Lisp and on 
+Symbolics Lisp Machines. A version of GINA for C++ is also 
+available. 
+.c2.1.2 What is CLM?
+CLM is a language binding for Common Lisp and OSF/Motif. It 
+consists of a Motif daemon and a Motif server. The Motif daemon 
+runs on an arbitrary machine in the network and listens for Lisp 
+processes requesting to use CLM. The Motif daemon forks Motif 
+server processes which communicate with their Lisp processes 
+over a TCP/IP connection. When supported by the Lisp system, 
+the Motif server can also be directly forked from the Lisp process.
+The Motif server offers the functionality of the X toolkit and the 
+convenience functions of OSF/Motif on a network-transparent 
+TCP/IP protocol. A package of Common Lisp functions provides a 
+high-level interface to this protocol. 
+The Motif daemon forks a Motif server process for every 
+application that is using OSF/Motif. This enables multiple Lisp 
+processes using Motif to run in a single Lisp world without 
+getting in trouble with the non-reentrant Motif code. 
+Connections to the Motif daemon can be requested even from 
+remote hosts, which allows client programs running on hardware 
+which is not capable of running X and Motif (e.g. Lisp machines 
+or Lisp boards) to use OSF/Motif for their user interface.
+The Motif server is implemented in C and is designed to be 
+highly portable. The system-dependent part of the Motif 
+interface is a single Lisp function which is used to establish a 
+connection between Lisp and the Motif server. This function is 
+similar to the CLX function that opens a connection to an X 
+display and is coded in much the same way. The functions that 
+read and write to the connection are coded in standard Common 
+Lisp. For efficiency reasons, some of these functions can also be 
+coded in C and can be integrated using a foreign function 
+interface where available. 
+The Motif server solution is very efficient and results in good 
+performance at the user interface level. Redraw operations and 
+geometry management operations are performed by the X Toolkit 
+Intrinsics and the Motif widgets and are handled locally in the 
+Motif server. User interaction like browsing through menu items 
+is also handled by the Motif widgets and requires only the 
+execution of C code. Interactions like clicking a push-button lead 
+to the execution of callbacks and cause an interaction with Lisp. 
+Client programs can use the graphics functions of CLX for 
+drawing into the Motif DrawingArea and DrawnButton widgets. 
+This is achieved by establishing a second connection to the X 
+server and by directly drawing into the widget's window using 
+raw CLX calls. 
+.c2.1.3 Contents of this Release
+Version 2.1 of GINA contains CLM, the interface between 
+Common Lisp and OSF/Motif, the GINA application framework 
+library implemented in CLOS, 18 demo applications, the 
+Interface Builder, the Inspector and a Browser to read the online 
+documentation.
+.c2.1.4 Contents of this Manual
+*	Chapter Installing GINA
+	This chapter describes how GINA is compiled starting with the 
+distribution tape.
+*	Chapter Using GINA
+	This chapter describes how to start GINA, how  to run the 
+demos, and how to use the Inspector and the Browser. Some 
+hints are given how GINA functions can be called directly from 
+Emacs. 
+*	The Cookbook Chapters
+	These chapters contain information about the GINA classes, 
+their methods, when they are called and in which cases they 
+may be overridden.
+*	Chapter Interface Builder
+	This chapter contains a tutorial on how to build widget trees 
+with the Interface Builder and explains the generated code.
+.c2.1.5 Roadmap of the GINA Documentation
+The following documentation about GINA is included in the 
+GINA distribution:
+*	Michael Spenke, Christian Beilken: An Overview of GINA Ñ 
+the Generic Interactive Application, In User Interface 
+Management and Design, Proceedings of the Workshop on 
+User Interface Management Systems and Environments 
+(Lisbon, Portugal, June 4-6, 1990), eds. D.A. Duce, M.R. 
+Gomes, F.R.A. Hopgood, J.R. Lee, Springer Verlage, Berlin, pp. 
+273-293.
+	A description of the concepts of GINA. Read this first.
+*	GINA User Manual
+	This manual.
+*	GINA Demo Applications Manual
+	A description of 18 simple demo applications, including screen 
+dumps and the source code for the simple demos. It is 
+recommended to build own applications starting from the most 
+similar demo.
+*	GINA Reference Manual
+	Detailed documentation of all classes and their slots, methods 
+and their parameters, functions, macros, and global variables 
+which make up the GINA class library.
+*	The source code of GINA
+	The ultimate documentation. The GINA Reference Manual is 
+an excellent guide to the source code.
+*	Andreas BŠcker: CLM Ñ A Language Binding for Common 
+Lisp and OSF/Motif, User Guide and Reference Manual.
+	CLM is used by GINA. In general, it is not necessary to know 
+details of CLM to program with GINA, but in rare cases it 
+might be necessary to call CLM functions directly.
+The following books and manuals are recommended for the GINA 
+programmer, because GINA builds on the X Window System, 
+OSF/Motif and Common Lisp:
+*	CLX Manual (from the X11R4 release tape)
+	The most important drawing routines of CLX are encapsulated 
+in GINA methods, but for complicated graphical output the 
+programmer has to call CLX functions directly, e.g. for dealing 
+with graphics contexts, color, etc.
+*	Robert W. Scheifler, James Gettys, X Window System, The 
+Complete Reference, 2nd Edition, Digital Press, 1990
+	This is the "X Bible". No easy reading, but an indispensable 
+reference.
+*	Thomas Berlage, OSF/Motif: Concepts and Programming, 
+Addison-Wesley 1991, ISBN 0-201-55792-4, 496pp.
+	Although the examples in the book are in C, it helps to 
+understand the Motif concepts and the functionality of the 
+widget classes.
+*	OSF/Motif Programmer's Reference Manual
+	The details of the Motif widgets are not explained in the GINA 
+manuals. You have to refer to the Motif documentation 
+directly.
+*	Steele, Common LISP: The Language, 2nd Edition, Digital 
+Press.
+*	Keene, Object-Oriented Programming in Common LISP, 
+Addison-Wesley.
+	This is an introduction to CLOS.
+The following is the current list of other papers available about 
+GINA. Most of the papers are available for anonymous FTP on 
+our server ftp.gmd.de in the directory /gmd/gina.
+*	Michael Spenke, Andreas BŠcker: GINA Ñ An Application 
+Framework Based on a Language Binding for OSF/Motif and 
+Common Lisp, The European X Window System Conference 
+and Exhibition, London, 12 to 14 November 1990.
+	A newer, but shorter description of the GINA and CLM 
+concepts.
+*	Michael Spenke, Andreas BŠcker, Thomas Berlage, Christian 
+Beilken, GINAÑA User Interface Development Environment 
+Based on OSF/Motif, Proceedings of the First International 
+Lisp Users and Vendors Conference (Gaithersburg, MD, Oct. 
+28-Nov. 1, 1991)
+	The latest description of GINA, including the Interface 
+Builder.
+*	Thomas Berlage, The GINA Interface Builder, Proceedings of 
+the First Annual Motif Users Conference (Washington D.C., 
+Dec. 8-10, 1991)
+	Describes the GINA Interface Builder.
+*	Thomas Berlage, Michael Spenke: GINA Ñ Ein 
+objektorientiertes Integrationsmodell fŸr die 
+Benutzerschnittstelle des Assistenz-Computers, GMD 
+Jahresbericht 1989.
+	An introduction to the GINA concepts for the non-expert. In 
+German.
+*	Andreas BŠcker, Michael Spenke: GINA Tutorial Notes, 
+Tutorial at Interact «90, Cambridge, 27 August 1990.
+	The slides explain the stepwise implementation of a GINA 
+application, starting with a simple Hello World program up to 
+a little graphic editor.
+.c.2. Installing GINA
+.c2.2.1 Hardware and Software Requirements
+GINA requires the following software on the target platform:
+*	The X Window System Version 11 (Release 4 or later). We are 
+currently using the freely available MIT distribution.
+*	The OSF/Motif toolkit version 1.1 or higher. GINA needs the 
+toolkit as a library to link with. If it is not available on your 
+system, you need a source license from the OSF (currently 
+$1000).
+*	A Common Lisp implementation that supports multiple 
+processes inside Lisp, the CLX interface library to the X 
+Window System, and a CLOS implementation (e.g. the freely 
+distributed PCL). We currently support Franz Allegro, Lucid 
+Lisp and Genera.
+Except for multiple Lisp processes, all the requirements are 
+standards and we are committed to support these standards as 
+they evolve.
+GINA does not require special hardware features, but the 
+software basis mentioned above strongly suggests a fast 
+workstation (such as a Sun SparcStation) with enough memory 
+(at least 16 MB RAM, 32MB are recommended). A local disk for 
+swapping is also a good idea.
+Because the X Window System and GINA are networked, the 
+three different components mentioned above may run on 
+different machines. For example, a Lisp machine may support 
+the Lisp part. It connects to some UNIX server where OSF/Motif 
+is running, while the output of both machines is displayed on a 
+PC equipped with X server software or a dedicated X terminal.
+.c2.2.2 The GINA/CLM Distribution
+GINA is available as source code with a copyright. The copyright 
+allows arbitrary use of the code as long as the copyright notice is 
+retained. See the file COPYRIGHT for details.
+The distribution consists of two parts: CLM, a Lisp binding for 
+OSF/Motif, and GINA, the Generic Interactive Application. CLM 
+is a stand-alone package, but GINA requires CLM.
+You can obtain the distribution by anonymous FTP from 
+ftp.gmd.de in "/gmd/gina" or from export.lcs.mit.edu in the 
+"/contrib" directory. To install the distribution, create a directory 
+and uncompress and unpack the tar file. Further directions can 
+be found in the top-level README (that is also available as a 
+separate file for FTP) and the files "clm/INSTALL" and 
+"gina/INSTALL".
+CLM consists of two parts. The first part (directory "clm/lisp") is 
+Lisp code to implement a protocol talking to a Motif server 
+process. The second part (directory "clm/server") is the Motif 
+server that consists of two C programs.
+GINA itself consists of three parts. The first part is the basic 
+application framework (directory "gina"). The second part is a set 
+of demo applications (directory "gina-demos") to demonstrate the 
+GINA features. The third part (directory "ib") is the GINA 
+Interface Builder.
+For a finished application at run-time, you do not need the demos 
+or the Interface Builder, but these two parts should be present 
+during development.
+At run-time, the GINA demo applications need bitmaps 
+(directory "bitmaps") and some demonstration documents 
+(directory "documents").
+There is also the "documentation" directory that contains the 
+GINA documentation.
+While you are developing own applications it might be helpful to 
+have a look at the GINA sources from time to time. The source 
+files in the "gina" directory are organized as follows:
+*	The file package.lisp creates the package GINA.
+*	metainfo.lisp contains macros like defginaclass, 
+defginamethod which are almost equivalent to defclass and 
+defmethod but which allow additional semiformal comments. 
+These comments are collected and form the information base 
+about the structure of GINA used by the Browser.
+*	globals.lisp contains some global variables.
+*	OS-dependent.lisp contains some operating system 
+dependent routines, especially for the file system interface. 
+*	classes.lisp contains all class definitions of GINA, because 
+they have to be compiled first. This file is automatically 
+generated by a function in extract-classes.lisp, which has 
+to be called whenever a class definition has been changed. The 
+class definitions are written down in the different source files 
+but are quoted. The source files are scanned to generate the 
+file classes.lisp.
+*	framework.lisp contains the classes application and  
+document.
+*	motif-widgets.lisp contains the encapsulation of the Motif 
+widgets in CLOS objects.
+*	dialogs.lisp contains predefined standard dialog boxes.
+*	views.lisp contains the code for the views (drawing areas) 
+and the objects which can be installed there and moved 
+around.
+*	background.lisp contains support for background processes.
+*	commands.lisp contains the framework for undoable 
+commands.
+*	browser.lisp contains the implementation of the online 
+manual.
+*	in extract-classes.lisp there is a utility to extract the 
+headers of all GINA classes, methods, functions, etc.
+.c2.2.3 Printing the Documentation
+The PostScript files for the GINA documentation are contained 
+in the "documentation" subdirectory. Part of the documentation 
+is available in TeX format, the rest was created on the Apple 
+Macintosh.
+The following documents are available:
+*	CLM Reference Manual ("clm-manual.ps"Ñ70pp.)
+	The LaTeX sources for this manual are located in the "clm" 
+directory.
+*	GINA Reference Manual ("gina-reference.ps"Ñ200pp.)
+	This manual is generated from the same database that the 
+GINA Browser uses. The information comes from comments in 
+the GINA source code and is formatted into a LaTeX file (see 
+the file "extract-tex-manual.lisp" in the "gina" directory).
+*	GINA User Manual ("gina-manual.ps"Ñ65pp.)
+*	GINA Demo Applications Manual ("gina-demos.ps"Ñ59pp.)
+*	GINA overview paper ("gina-overview.ps"Ñ12pp.)
+The last four documents were created on the Apple Macintosh 
+and are also available in Rich Text Format (RTF), which is 
+understood by many word processors.
+Simply sending the PostScript files to the printer (lp/lpr) should 
+print the documents (provided you have a PostScript printer, of 
+course). If you have trouble printing the files, there are also plain 
+ASCII versions of all the files. However, some information 
+(especially the figures) is necessarily missing from these files.
+.c2.2.4 Compiling CLM
+CLM consists of two parts: the Motif server (directory "server") 
+and a Lisp library (directory "lisp"). The compilation process is 
+controlled by Makefiles in both directories as well as a top-level 
+Makefile in the "clm" directory that calls "make" in the 
+subdirectories.
+The Makefiles must be edited for your installation regarding the 
+location of the Motif libraries and header files as well as your 
+Lisp version. You must also specify the path names for the 
+installation directories. Futhermore, you have to edit the 
+parameter definitions at the top of the file "lisp/defs.lisp".
+Typing "make" in a subdirectory compiles the respective 
+directory, "make install" installs the result in the destination 
+directories specified in the Makefile.
+The server part produces two executables: the daemon process 
+"clm-td" and the Motif interface "clm-server" that is spawned as 
+a child process for each Lisp process. It also produces a one-line 
+shell script "clmd" that starts the daemon and contains the 
+absolute path names of the executables. The three files are 
+usually installed in a "bin" directory. The location of this 
+directory must be defined in "defs.lisp" if the CLM server is to be 
+started directly from Lisp.
+The Lisp part produces a compiled Lisp library and possibly 
+some object files (".o") that are loaded in the foreign function 
+interface. These files are usually installed in a "lib" directory.
+.c2.2.5 Compiling GINA
+To compile GINA, your Lisp system must provide CLX and 
+CLOS. If it does not, you can obtain CLX as a part of the MIT 
+X11R4 distribution and PCL (a portable CLOS implementation) 
+by anonymous ftp from arisia.xerox.com. PCL must be at least 
+the "Victoria Day" version (5/22/89).
+Some GINA demo applications and the Interface Builder require 
+bitmap files. In the file "gina/globals.lisp" you should edit the 
+definition of the variable *bitmap-directories* to include the 
+pathname where you have installed the bitmap directory of the 
+GINA distribution. When using the CLM daemon, this directory 
+must also be mentioned in the environment variable 
+XBMLANGPATH before starting clmd.
+Each of the three directories "gina", "gina-demos", and "ib" 
+contains a file "load.lisp" that compiles and loads the Lisp code of 
+the respective directory.
+To compile and load a part of GINA, start your Lisp and ensure 
+that CLM is loaded. Then "cd" to the respective directory, and 
+type 
+	(load "load")
+Remember that the demos and the Interface Builder require 
+GINA to be loaded.
+.c2.2.6 Testing GINA
+In order to test GINA you can start the empty application now. 
+Optionally start the CLM daemon and then call
+	(gina:make-application)
+from Lisp. If the CLM server and the X server do not run on the 
+local host you can supply the keyword parameters :toolkit-
+host and :display-host. You can also set the global variables 
+gina:*default-display-host* and gina:*default-
+toolkit-host* before calling gina:make-application. As a 
+result, the (empty) generic application is started. It does not have 
+any special functionality, but a complete user interface. 
+Documents of this application can be saved and reloaded. The 
+window can be resized and scrolled. The arbitrarily placed 
+buttons just beep when pressed. 
+See Chapter 3.2 for a description of how to test the demo 
+applications.
+You can start the Interface Builder from the Finder. There is a 
+file interface-builder.appl in the documents directory. 
+Double-clicking this file starts the Interface Builder. 
+Alternatively, you can start the Interface Builder by typing 
+(ib::make-ib-application).
+.c.3. Using GINA
+.c2.3.1 GMD Installation
+GINA is installed in the directory "/vol/gina". This directory is 
+available either through the automounter or must be mounted 
+from "zeus:/export/vol/gina".
+GMD has a site licence for Allegro CL on Sun4 machines, so the 
+hardware requirement is a Sun SparcStation with at least 16 MB 
+RAM. 24 or 28 MB RAM are recommended. A local disk for 
+swapping is highly desirable for the 16 MB configuration.
+The reason for the memory requirements is that a machine 
+running the X server, the Motif window manager and a simple 
+Motif application already needs more than 8 MB. Lisp with 
+CLOS and CLX statically needs 7 MB, and the GNU Emacs 
+development environment adds another 2 MB. GINA with all the 
+demos and the Interface Builder needs only 2 MB, but if you add 
+the dynamic memory requirements during development, you can 
+see that even a 28 MB machine needs swapping from  time to 
+time.
+Further software requirements are X11 ("/vol/X11R4") and Motif 
+("/vol/motif"Ñneeded only for shared libraries at run-time).
+For maximum consistency you should use the Motif window 
+manager (mwm). We have developed a set of icons that you can 
+use for the GINA demo applications. To activate this feature, you 
+should copy the file "/vol/gina/X-initfiles/mwm-icons" into the file 
+".Xdefaults" in your home directory.
+If you have not yet used X, you can copy the files in the directory 
+"/vol/gina/X-initfiles" into your home directory:
+	cp /vol/gina/X-initfiles/.* $HOME
+You can use the command xinit to start a default X 
+environment. You can leave this environment by double-clicking 
+into the upper left corner of the "console" window.
+.c3.3.1.1 Using Emacs
+Allegro CL supplies a set of extensions for GNU Emacs that 
+create a comfortable development environment. You can edit the 
+Lisp source in one window, while the Lisp listener process can be 
+controlled in another window. You can directly evaluate or 
+compile regions  in the source files.
+GINA supplies a shell script that starts the Emacs in the 
+necessary configuration. The script should be started in the 
+directory where your source files are located. To start the script, 
+type
+	/vol/gina/bin/allegro-emacs
+while running under X. You need a file "cl" that specifies which 
+Lisp image shall be started. If you do not have such a file in your 
+source directory, the script creates one that refers to the GINA 
+image. If you subsequently create a custom Lisp image with 
+GINA and your application, you can edit the "cl" file to refer to 
+that image instead, so that you do not have to load your 
+application each time.
+The Emacs window that appears has two parts. In the upper part 
+you can edit a source file, while input and output of the Lisp 
+image appear in the lower part. 
+If you include the two lines
+	(load "/vol/gina/emacs-support/mouse-add-ons.el")
+	(load "/vol/gina/emacs-support/sun-fkeys.el")
+in the ".emacs" file in your home directory, you can set the point 
+in either window by clicking into it with the (left) mouse button.
+In the lower part you can enter input for the Lisp listener as 
+usual. You can reuse previous commands by editing them and 
+then hitting RETURN. You can use all Emacs editing facilities in 
+this buffer. You will find a general explanation of the sublisp 
+mode in the GNU Emacs manual.
+You can mark a region by pressing the left mouse button on the 
+first character ("setting the mark") and releasing it behind the 
+last character ("setting the point"). Although there is no visible 
+indication of this selection, you can use this region for further 
+commands (e.g. ^W).
+The most important Allegro extension is to be able to evaluate a 
+region. You must first select the region with the mouse as 
+described above (or in any other way) and then use the command 
+^C^R. The region is copied into a temporary file and the listener 
+is instructed to load the file. If you want to compile the region 
+instead, you can use the ^U prefix (i.e. ^U^C^R).
+In this way you can incrementally develop your application by 
+adding or changing parts (functions, methods, classes) and 
+compiling them into the running image.
+The Allegro extensions are described in detail in the file 
+"/vol/allegro.sun4/emacs/fi/spec.out".
+.c2.3.2 Calling the Demo Applications
+You must have  the X server running. Start the Lisp world 
+containing GINA and the demo programs (e.g. 
+/vol/gina/bin/gina).
+There is a set of simple GINA applications available, the most 
+important of which is the Finder. It is similar to the Macintosh 
+Finder but much more primitive. The Finder is started by the 
+call (gina:make-finder) (or alternatively (gina:AC)). There 
+are keyword parameters :toolkit-host and :display-host to 
+specify the hosts where the servers run. As default the host 
+"localhost" is used which means the local machine. You can 
+also set the global variables gina:*default-display-host* 
+and gina:*default-toolkit-host* before calling gina:make-
+finder.
+As a result, a window comes up showing the contents of the 
+current directory. Therefore, you should change to the 
+documents directory (/vol/gina/documents) before calling the 
+Finder or you have to make a walk through the directory tree 
+now. 
+Once you have reached the documents directory you can double-
+click a file name (or select it and then press the start-button) to 
+launch an application. There are application files (xxx.appl) and 
+documents (e.g. the-s.hello) which belong to a certain 
+application. Opening a document implicitly starts the 
+corresponding application if it is not already running. 
+The functionality of the demos is described in the GINA Demo 
+Applications Manual.
+.c2.3.3 The Inspector
+You can inspect the slots of each CLOS object of a running GINA 
+application. In the Debug menu there are entries to pop up the 
+inspector box for the application object, the document object, or 
+the main-view of the document. In addition, you can inspect any 
+visible widget using the so called inspect-click (control-right 
+mouse-button). For example, you can look into the interior of a 
+push-button, see which callback is attached to it, move to its 
+parent widget etc.
+Each object is displayed in a modeless dialog box containing a 
+scrollable list of slots. Each item shows a slot name and its 
+current value. Selecting an item and pressing the Inspect 
+button (or alternatively double-clicking the item) will display the 
+value in an extra box. In this way, you can follow pointers to 
+other objects or zoom into lists. Using the Go back button you can 
+pop up the last inspector box again. 
+                                                         
+Several objects can be shown at the same time in different 
+windows. You can move an inspector box aside and work with the 
+application. In order to display the up-to-date slot values of an 
+object you have to press the Refresh button or select Refresh 
+Inspector form the Debug menu. To get rid of an inspector box 
+you either double-click the upper left corner (mwm menu) or 
+press the Dismiss button. Pressing Dismiss All or selecting 
+Leave Inspector from the Debug menu deletes all inspector 
+boxes. When an object is inspected for the second time, the 
+already existing box is just exposed but not refreshed. Therefore, 
+an extra refresh might be necessary.
+You cannot directly modify slots using the inspector. However, 
+the last inspected object is always assigned to the global variable 
+*inspected-object*. Therefore, you can easily modify slots in 
+the editor using (setf (<slot> *inspected-object*) ...).
+The inspect-click can be disabled for an individual application 
+(before it is started) by overriding the slot inspect-click of 
+class application and initializing it to nil. By default, it is 
+initialized to the value of the global variable *inspect-click*. 
+So this variable can be used to turn off the inspect-click for all 
+applications. Analogously, the slot debug-menu and the global 
+variable *debug-menu* control whether the Debug menu is 
+present in an application.
+.c2.3.4 The GINA Browser
+The GINA Browser is a self-contained application (implemented 
+using GINA, of course) which can be used to read the online 
+documentation about GINA. The information available via the 
+Browser is equivalent to the information contained in the GINA 
+Reference Manual. To start the Browser you can either select 
+GINA Browser from the Debug menu or start the file gina-
+browser.appl (in the documents directory) from the Finder. 
+Furthermore, the Browser can be started from the Inspector: 
+Pressing the Browser button will display the class of the 
+inspected object and also will show the corresponding methods. If 
+the Browser is already running, its window will be exposed (and 
+deiconified if necessary).
+The Browser shows three scrollable lists: A list of classes, a list of 
+methods, and a list of functions, macros, or global variables. One 
+item of these three lists can be selected at any time. The manual 
+entry of the selected item is shown in the text widget at the 
+bottom. 
+All information about GINA classes, methods, functions etc. is 
+stored in a database of CLOS objects. The database is 
+automatically generated when the GINA source code is compiled, 
+because macros like defginamethod, defginaclass are used 
+instead of the normal CLOS macros. These macros are used to 
+specify more detailed descriptions for each routine. When e.g. a 
+method is recompiled the database is immediately updated, and 
+the change is reflected in the Browser. To suppress the 
+generation of the database during the compilation process, the 
+variable *generate-metainfo* at the beginning of file 
+metainfo.lisp can be set to nil before compiling GINA.
+                                                          
+You can enter a search string and press the filter button to 
+search for items with a certain substring. Using the main menus 
+Classes, Methods, and Other you can display special subsets of 
+the available items. For example, you can display
+* all classes
+* the basic classes
+* the superclasses of the selected class
+* the subclasses of the selected class
+* the classes inheriting the selected methods
+* all methods
+* the methods of the selected class
+* methods with the same name as the selected method
+* all macros, variables and functions
+* all variables
+* the constructor function of the selected class.
+For each method there are flags indicating whether it can be 
+called by the application (c), must be called by the application 
+(C), can be overridden by the application (o), or must be 
+overridden (O). Using the toggle buttons below the method list, it 
+is possible to search e.g. for all methods of class document that 
+have to be overriden in each application.
+.c2.3.5 Interactive Application Development
+.c3.3.5.1 Calling GINA Functions from the Editor
+If at least one GINA application is running, you can execute 
+GINA functions and methods directly from the editor. For 
+example, you can create and pop up a dialog box, or you can 
+resize an existing window, set resources of existing widgets, draw 
+into existing views, move around view objects etc. 
+However, you have to bear in mind, that each application has its 
+private connection to its own Motif server process running the 
+Motif software. In order to make something happen on the screen 
+you have to send requests to one of these server processes. So, 
+first of all, you have to select one of the running applications. By 
+default, the first element of the list *running-applications* is 
+used. This list contains the application objects of all currently 
+running applications. You can call, for example, (focus-
+application 3) to bring the third application to the front of the 
+list. 
+As soon as you have focussed on the desired application, you can 
+execute any call you would normally place in your application 
+code, but you have to place the calls inside the body of the macro 
+with-application-stopped.For example,
+	(with-application-stopped 
+	  (pop-up (make-modeless-dialog-box "Test" 
+:resize t)))
+will pop up an empty dialog box with the title "Test". The macro 
+sets some global variables, so that the connections of the focussed 
+application to its Motif server and the X server are used, and 
+stops the Lisp process of the application so that no 
+synchronization problems can occur (e.g. two processes reading 
+from the same connection).
+Another example:
+
+(with-application-stopped
+  (setq box (make-modeless-dialog-box "test" 
+:resize t))
+  (setq view (make-view box 
+					:width 200 :height 300
+					:document 
+					(first (document-list 
+*application*))))
+  (install (make-direct-manipulation-object 100 
+100) view)
+  (pop-up box))
+
+This code creates a dialog box containing a view with a 
+rectangular object that can be moved and resized. All operations 
+on this object are automatically undoable! (See section 6.3 to find 
+out why!)
+Inside the body of the macro you can refer to the variables 
+*application* and *display*. *application* denotes the 
+focussed application, and therefore can serve as a hook to reach 
+all objects within an application. For example,
+	(with-application-stopped 
+	  (resize 
+		(main-shell (first (document-list 
+*application*))) 
+		400 500))
+resizes the shell for the first open document of the focussed 
+application. The effect can be immediately observed on the 
+screen.
+For your convenience, the macro will always call xlib:display-
+force-output for *display*, which denotes the connection to 
+the X-server. So you can call CLX functions or GINA methods 
+encapsulating them, and the result will immediately appear on 
+the screen:
+	(with-application-stopped 
+	  (draw-line 
+		(main-view (first (document-list 
+*application*)))
+		10 10 50 50))
+
+The GINA Reference Manual contains a lot of examples like that. 
+Most of the examples can be directly copied from the Browser 
+window into Emacs and be executed.
+The variable *inspected-object* always holds a pointer to the 
+last object visited by the Inspector. So you can walk to a relevant 
+object using the Inspector, and then invoke operations on it from 
+the editor.
+If you want to make a quick test where code is executed inside a 
+callback, you can override the method test-callback of your 
+document. This method is called whenever the entry Test-
+Callback in the Debug menu is executed. The default method 
+just pops up a dialog box.
+.c3.3.5.2 Debugging and Error Handling
+To output debugging information in your programs, you can test 
+the flag (debug *application*). You can turn on the debug 
+flag of an application using the entry Debug On/Off in the Debug 
+menu.
+Errors reported by the X server can come in asynchronously, so 
+that it is hard to figure out what the reason for an error was. You 
+can set the slot clx-synchronous of class application (or the 
+global flag *clx-synchronous*) to run the connection to the X 
+server in synchronous mode. All errors will be reported from 
+inside the Lisp function which caused them.
+The flag "just print errors" in the debug menu determines, 
+whether errors are just printed or the debugger is entered. If 
+errors are just printed, the program reenters the application 
+main loop. This works in many cases, but some errors may have 
+effects on the subsequent execution of the program.
+When the debugger is entered, there is the problem that two 
+processes are trying to read your input as soon as a GINA 
+application runs into an error: The Lisp listener is waiting for 
+the next Lisp form and the debugger is waiting for an indication 
+how to proceed. Usually, the prompt is always the wrong one, e.g. 
+when the debugger prompt appears, the Lisp listener will read 
+the next input. It is usually safe to enter all commands twice, 
+because they probably do not have an undesired effect on the 
+normal Lisp listener. The debugger offers a restart option for the 
+main loop, or you can abort the complete application process.
+In the rare case that the CLM server runs into an error, it will 
+produce a core dump and quit. The application windows 
+disappear, but the Lisp process will not recognize that the 
+connection to the CLM server was closed and continue waiting 
+for input. You have to abort this process. Note that an additional 
+error can occur if you start your application once more for the 
+Finder while the old process still exists. The Finder will conclude 
+(from *running-applications*) that the application is already 
+running and just try to expose its window. There is a cleanup 
+action at the end of each GINA process that will update 
+*running-applications* before the process dies. In rare cases 
+it might be necessary to modify the variable *running-
+applications* by hand.
+.c.4. Cookbook Ð GINA Classes
+.c2.4.1 The Most Important GINA Classes
+A typical GINA application consists of a lot of objects which 
+inherit behaviour from the GINA classes. The figure shows the 
+most important GINA classes and the interconnections of the 
+objects existing at runtime.
+
+                                                   
+
+There is exactly one object of class application (or more 
+precisely: of a subclass of class application) for each running 
+GINA application program. The application object holds a list 
+of document objects, one for each open document the user is 
+working with. Each user action already executed for a document 
+is stored in a list of command objects which form the base for 
+undo- and redo-operations. Documents itself are invisible, they 
+store the internal representation of the document contents and 
+create a shell to display the contents. The shell is the root of a 
+tree of Motif widgets. The leaves of this tree are widgets (like the 
+scrollbars in our example) or views, which are empty widgets 
+where the application can draw using the X Window primitives. 
+Graphical objects within a view are also modeled as CLOS 
+objects.
+Here is a short overview of the GINA classes:
+*	APPLICATION
+This class constitutes the main program of a GINA application. 
+It contains the main event loop translating incoming events 
+into messages to other objects. At runtime there is exactly one 
+instance of a subclass of class application, differing from the 
+superclass at least in its name, signature and the type of 
+document objects used.
+*	DOCUMENT
+This class corresponds to the documents seen by the user, 
+which are created by the user by a new or open command, and 
+can be saved to a file. The programmer defines a subclass of 
+document adding slots describing the contents of the 
+application specific document. Furthermore, he has to override 
+the methods write-to-stream and read-from-stream, so 
+that the document contents can be saved to and restored from 
+a file. GINA calls these methods when appropriate, e.g. in 
+reaction to a save, revert, open, or quit command executed 
+by the user. The programmer also has to override the method 
+create-windows. In this method the window is created which 
+represents the document on the screen.
+*	SHELL
+Shells are toplevel-windows which can be moved, resized, and 
+iconized by the user (using the window manager). The shell 
+classes typically used are the document-shell, which already 
+contains a menu bar and is used to represent a document, and 
+the classes modal-dialog-shell and modeless-dialog-
+shell which are used for dialog boxes .
+*	WIDGET
+This is the superclass of all Motif widgets. Special widgets like 
+scrollbar, push-button, etc. are subclasses of this class.
+*	VIEW
+Views are drawing areas where the contents of a document are 
+represented graphically. The programmer can override the 
+method draw of class view and call the graphical primitives of 
+the X Window System inside this method. GINA calls this 
+method whenever any part of the view has to be redrawn. 
+Views can also react to keyboard and mouse input. To achieve 
+this, the methods button-press and key-press can be 
+overridden which are called when the corresponding events are 
+received.
+*	VIEW-OBJECT
+Instead of overriding the draw method of class view it is also 
+possible to install view-objects at a certain position within a 
+view. View-objects have their own draw method defining their 
+individual shapes. The draw method is called whenever a view-
+object becomes visible. Mouse events are propagated to the 
+object hit when desired. There are methods to move and resize 
+view-objects. A typical example for view-objects are the objects 
+of a graphical editor like MacDraw.
+*	DIRECT-MANIPULATION-OBJECT
+This is a subclass of view-object. These objects can be 
+selected, moved, and resized using the mouse. Methods can be 
+overriden to define individual feedback during dragging 
+operations, non-standard highlighting of selected objects etc. 
+The subclass movable-icon covers an important special case.
+*	COMMAND
+Command objects form the base for undoable commands. Each 
+relevant user input leads to the creation of an object with 
+superclass command, where all parameters of the command are 
+stored. The execution of a command is performed within the 
+method doit which is always overridden by the user. Later, 
+GINA can call the method undoit (also overridden) which 
+contains the inverse operation. Therefore, the application 
+programmer has to define a subclass of class command for each 
+kind of undoable command supported by his application.
+*	MOUSE-DOWN-COMMAND
+This is a subclass of class command which is initiated when the 
+mouse goes down in a view. As long as the mouse button is 
+held down and the mouse is moved around, an application 
+specific feedback is shown in the view. A typical mouse-down-
+command is dragging a rubberband rectangle in a graphic 
+editor. For dragging objects across window and application 
+boundaries, the class drag-command is available.
+.c2.4.2 General Hints
+We recommend that you put your application into its own 
+package and "use" the package GINA. The macro 
+defginapackage performs this task independent of the Lisp 
+platform.
+GINA classes often have shared slots (with :allocation :class). 
+There is only one copy of such a slot which is shared by multiple 
+applications. Be careful not to setf these slots in your 
+application, because this has consequences for other applications. 
+In order to modify a shared slot you have to override it in your 
+subclass. If its value is identical for all instances of your 
+subclass, you can again specify :allocation :class. Otherwise, 
+you can leave out the specification resulting in :allocation 
+:instance.
+GINA also uses before and after daemons for accessor functions. 
+For example, when you setf the slot modified of class 
+document to T, an after daemon is called which makes the save 
+menu entry sensitive. Therefore, you should not directly modify 
+slots of GINA classes. That means:
+	Never modify GINA-defined slots with slot-value or 
+with-slots.
+For each GINA class, there is typically a constructor function like 
+e.g. make-label for class label. The constructor function of a 
+subclass calls the constructor of the superclass. For example, the 
+constructor make-push-button calls make-label because push-
+button is a subclass of label. However, make-label normally 
+creates an object of class label. Therefore, each constructor 
+function has a keyword parameter :class to specify a different 
+class. make-push-button calls make-label with :class 
+«push-button. Moreover, the class push-button has some 
+additional slots. Therefore, each constructor has a keyword 
+parameter :initargs which is a list of key/value-pairs to 
+initialize the slots of the subclass.
+.c2.4.3 Subclassing Class Application
+You have to define a subclass of the GINA class application in 
+your application program. Typically, you override the slots name, 
+document-type, signature, and file-type with a new 
+:initform. See the Demo Applications Manual for examples. 
+You can specify :allocation :class for these slots, because they 
+are never modified and have identical values in all instances. 
+The name of an application is used in several contexts e.g. in the 
+title bar of the main window of the application.
+Document-type is the subclass of the GINA class document used 
+in your application. When the user performs a new command, 
+GINA will create an instance of this subclass. The file-type is 
+used when documents are saved. For example, the graphic editor 
+has file-type "gredit" and consequently the documents are 
+stored in files like mydoc.gredit.
+The signature is a short string serving as a unique identification 
+for your application. It is written into the header of each 
+document saved to a file and is later used to determine the 
+application which has to handle the document, when it is opened 
+from the Finder. If you want to start your application from the 
+Finder, you have to create a file like myapp.appl which contains 
+just the signature in double quotes. The signature can also be 
+used in the .Xdefaults file to identify your application and to 
+set resources for it. For example, to define the icon used for the 
+graphic editor demo you can insert the line
+	Mwm*gredit*iconImage: /vol/gina/bitmaps/gredit
+into your .Xdefaults file. You also have to call the function 
+register-application to insert a line in a central table 
+(*loaded-applications*) of GINA which stores the mapping 
+from signatures to application classes, so that your application 
+can be started when its signature is found in a file. You can 
+define a constructor function like make-xxxx-application 
+(which in turn calls make-application) for your convenience, 
+but it is not called by GINA. GINA just calls make-application 
+with the appropriate :class parameter. Therefore, you should 
+not place any initializations into your constructor function, but 
+instead add an after daemon for the method initialize-
+instance. If you want to do initializations using the connections 
+to the X server and the Motif server, you can override the method 
+startup-actions of class application. It is called by GINA 
+somewhat later when the global variables *display* and 
+xtk:*motif-connection* are already set. For example, you can 
+open the fonts used by your application in this method. Similarly, 
+you can override the method cleanup-actions to do any 
+cleanup before your application is finished.
+Each application can start another application using the function 
+start-file. The parameter is just a pathname. GINA 
+determines whether the pathname denotes a document, an 
+application or a directory, and then starts a new application or 
+tells an already running application to open a new document. 
+GINA uses the method send-message to inform the running 
+application. This is a simple, but powerful mechanism for inter-
+application communication. You can use it for your own 
+purposes. The message transmitted can be any lambda-
+expression, function, or callback, which will be executed by the 
+receiver as soon as it enters the main event loop again.
+Normally, your application does not do anything but wait when 
+the user does not perform any action. However, you can override 
+the slot idle-timeout of class application and thus tell GINA 
+that your application should periodically be woken up. For 
+example, a timeout of 0.5 means that the method idle-action 
+of your application is called every half second. The default 
+version of idle-action does not do anything, but you can 
+override it. See the demos Clock and Tetris as examples. The 
+idle-action is periodically called even when user input is 
+performed between two subsequent timeouts. However, you can 
+call the method restart-timer, to start a new, full time 
+interval. 
+.c2.4.4 Subclassing Class Document
+You have to define a subclass of the GINA class document in 
+your application program. Typically you add some slots holding 
+the application specific contents of your document. When a 
+document is saved to a file the information stored in these slots 
+is transformed into a sequence of ASCII characters.
+You do not have to define a constructor function for your 
+document class, because GINA directly creates an object of the 
+class stored in the application object. Initializations can be 
+placed in an after daemon for the method initialize-
+instance.
+You override the method create-windows in order to define the 
+representation of a document on the screen. Typically, in this 
+method an object of class document-shell or a subclass of it is 
+created and assigned to the slot main-shell. GINA must have 
+this pointer to the shell object e.g. to delete the shell when a 
+document is closed. If you have used the Interface Builder to 
+define your main window you call the constructor function of the 
+subclass of document-shell generated by the Interface Builder. 
+Otherwise, you create the complete widget tree within the 
+method create-windows. You also can add new menu entries to 
+the menu bar or remove some of the standard entries which 
+make no sense in your application. If your widget hierachy 
+contains a view, you have to assign it to the slot main-view of 
+class document. It will then be, for example, redrawn when the 
+user selects the revert menu entry.
+In create-windows only those widgets should be created which 
+do not depend on the concrete contents of the documents. When 
+an existing document is opened, first of all the header containing 
+the shell size is read and assigned to the slots shell-width and 
+shell-height. Next your method create-windows is called. 
+When the document-shell is created the slots shell-width and 
+shell-height determine the size of the shell (provided that 
+there are no explicit size parameters for make-document-shell). 
+Next your method read-from-stream is called. You can create 
+widgets in this method which depend on the document contents. 
+However, you must also take care to destroy any existing widgets 
+representing the old documents contents, because read-from-
+stream is also called when the user selects the revert menu 
+entry.
+When a new document is created, the default values of the slots 
+shell-width and shell-height are used. The default for class 
+document is :auto which means that the shell size is computed 
+from the widgets within the shell. You can override the two slots 
+in your document subclass. Again, create-windows is called to 
+create the content independent part of your window. Afterwards 
+GINA calls the method display-empty which does not do 
+anything by default. You can override this method to create 
+widgets which are present only in an empty document.
+When the user executes a revert command to go back to the last 
+saved version of his document, the size information in the header 
+is read, and the shell is resized. Next, read-from-stream is 
+called and then redraw-views. This method redraws all views so 
+that the display correctly shows the internal state of the 
+document which is modified by read-from-stream. If there are 
+any widgets displaying document contents, for example scales 
+representing an integer (like in the Micky demo) you have to 
+update the current value of the widget (by setf value). You can 
+do this either in read-from-stream or add an after daemon to 
+redraw-views.
+As already mentioned, you have to override the methods read-
+from-stream and write-to-stream when your documents can 
+be saved in a file. Your task is to translate the document 
+contents into a stream of characters and vice versa. This is quite 
+easy when you write out representations that can be read by the 
+Lisp reader. GINA calls these methods in response to open, 
+save, save as, close, quit, and revert commands executed by 
+the user. GINA pops up standard dialog boxes, performs some 
+error checking, for example whether a file is writable, and finally 
+opens the file. The resulting stream is passed to your method. If 
+you want different dialog boxes you can override the methods 
+select-new-file and select-old-file.
+Each document contains a slot modified indicating whether the 
+document contents differ from the saved version. You should call 
+(setf (modified doc) t) whenever you change the document 
+contents. Command objects automatically set this slot when doit 
+is called. You should not access the slot directly, without the 
+accessor, because GINA has installed an after daemon for it, 
+updating the sensitivity of the save menu entry. 
+If you also want to dynamically change the sensitivity of menu 
+entries you can override the empty method command-executed 
+which is called whenever a command is executed, undone, or 
+redone.
+Normally the length of the command history is infinite because 
+the slot max-history of class document is initialized to nil. You 
+can, however, override this slot and define a maximum number 
+of commands to be stored. For example, 1 means that only the 
+last command is undoable, 0 means that no undo is possible at 
+all.
+.c2.4.5 Background Processes
+In GINA you can have multiple background processes in a single 
+GINA application. Using background processes it is possible to 
+perform extensive computations while the user interface still 
+responds to user inputs. For example, the computation can be 
+aborted. Without a background process, executing (sleep 60) in 
+a callback will block the application for one minute without a 
+way to interrupt. Not even expose events will be processed 
+during this period.
+For each application, there is always exactly one main process 
+running the main event loop and there can be several 
+background processes which can draw into views using CLX and 
+call CLM functions to create, modify, or delete widgets. A 
+background process should be started using the macro in-
+background-process:
+
+(in-background-process (document)
+   ...
+   ...)
+
+A new process is started which executes the body of the macro. 
+The macro immediately returns the newly created process. 
+Within the body the global variables *application*, 
+*display*, and xtk:*motif-connection* are set so that calls 
+to CLX and CLM are possible. (The function xlib:display-
+force-output must be explicitly called to flush the CLX buffer.) 
+Also the GINA error handler is set up which will print the error 
+and terminate the process. The keyword parameter :terminate-
+on-error can be used to prevent the macro from setting up the 
+error handler.
+Note that modal dialog boxes cannot be popped up from a 
+background process because they start a second (recursive) main 
+event loop. However,  a modeless dialog box can be used with the 
+additional Motif resource :dialog-style set to :full-
+application-modal so that no further input is allowed in the 
+main window.
+Background processes always belong to a document. They are 
+registered in the slot background-processes of class document. 
+The method kill-background-process of class document can 
+be used to kill a single process. The method kill-all-
+background-processes sends a kill signal to all background 
+processes and waits until they are all dead (which can take some 
+time because of the cleanup actions in unwind-protects). kill-
+all-background-processes is called by GINA when a 
+document is closed.
+Because all processes work in the same data space, it is 
+sometimes necessary to synchronize access to common data 
+structures using locks. In CLM there is already a lock for each 
+connection which guarantees that only one request is handled at 
+a time. You can explicitly prevent other procesees from calling 
+CLM functions by the macro with-clm-connection. CLX also 
+uses such a lock (see xlib:with-display). In order to 
+synchronize access to data structures of class application and 
+class document there are slots semaphor in both classes which 
+contain a lock. The macros with-application and with-
+document can be used for this purpose.
+GINA calls with-document when the slot background-
+processes is modified and when a process is killed. Therefore, 
+you can prevent a background process from being killed for some 
+time by using with-document. GINA also guarantees that a 
+process is not killed in the middle of a CLM request by using 
+with-clm-connection in kill-background-process.
+The macro with-progress-bar can be used to create a 
+background process and additionally to display a dialog box 
+which contains a variable message, a scale indicating the 
+progress of the computation and an abort button.
+For example,
+
+(with-progress-bar (doc :title "Sleeping")
+  (loop for i from 1 to 10
+	until (progress-bar-aborted)
+        do (sleep 1)
+           (indicate-progress (* 10 i))))
+
+displays a dialog box, increases the value of the scale in steps of 
+10, and can be terminated by pressing the abort-button.
+There are some keyword parameters which control apperance 
+and behavior of the dialog box:
+*	the flag :modal controls whether other user input is allowed or 
+pressing abort is the only possible action
+*	:title and :message are strings displayed in the dialog box
+*	the flags :abortable, :centered, and :with-scale control 
+whether the abort button is sensitive, whether the scale is 
+displayed and whether the dialog box is in the middle or below 
+the main shell
+*	the flag :kill-on-abort controls whether the background 
+process is killed or is itself responsible to ask periodically 
+whether abort was pressed
+Within the dynamic extent of the macro with-progress-bar the 
+two functions progress-bar-aborted and indicate-progress 
+can be called. The first function checks  whether the abort button 
+has already been called. The second function is used to update 
+the scale value to the current percentage and optionally to 
+display a new message.
+The "pacmen" demo gives an simple example of how to use 
+background processes. The Lisp Listener demo and the 
+Mandelbrot demo also use background processes.
+
+.c.5. Cookbook Ð Motif Widgets
+.c2.5.1 Using Motif Widgets
+This chapter briefly explains the nature of the Motif widgets and 
+their encapsulation in GINA. For a more detailed description see 
+the Motif documentation and reference.
+.c3.5.1.1 The Widget Hierarchy
+The visible part of a GINA/Motif application is a strict hierarchy 
+of Motif widgets. According to their position in the hierarchy 
+there are two different categories of widgets.
+Primitive widgets are the leaves of the tree. They are simple 
+rectangular areas on the screen with a Motif-defined appearance 
+and behaviour.
+Composite widgets are containers for other widgets. Their 
+children are completely contained within their parent. A 
+composite widget often does not have a distinctive appearance, 
+but only manages the geometry of its children.
+Independent subtrees of the widget hierarchy, such as secondary 
+windows or dialog boxes that can be moved independently, start 
+with a shell widget. Although the shell widget must have a 
+parent, the parent is most often only necessary for 
+administration purposes. In most cases GINA supplies a default 
+parent. A shell widget must have exactly one child, usually a 
+composite widget that manages all the parts of the independent 
+window.
+Application-specific functionality is implemented in empty 
+widgets that are available as views in GINA. View behaviour is 
+implemented by a combination of GINA and CLX facilities. CLX 
+is the library that supports plain Xlib drawing in Lisp.
+.c3.5.1.2 Interfacing Widgets and Application
+The parameters controlling appearance and behaviour of widgets 
+are called resource fields. The different resource fields are 
+documented in the Motif reference manual for all Motif widget 
+classes. Most of them can be changed dynamically.
+User actions such as activating a button are reported by the 
+widgets as callbacks. A callback can be associated with a method 
+of the application that is executed when the callback is triggered. 
+Callbacks that are not associated with any method are simply 
+ignored.
+.c3.5.1.3 Encapsulation in CLOS Objects
+As a convenience, the Motif widgets that reside in the CLM 
+server are encapsulated as CLOS objects on the Lisp side. The 
+class hierarchy on the CLOS side need not and does not mirror 
+the class hierarchy on the Motif side exactly, but there is one 
+CLOS class for every Motif widget class.
+Some GINA widget classes are abstractions built on top of Motif 
+components to create a more uniform interface for the 
+programmer. For example, a GINA radio-button-group 
+consists of a label, a frame, and a row-column with a number of 
+toggles. This combination is a single instance of the class radio-
+button-group. You only need to know the internal structure if 
+you want to set special resources of the components, such as the 
+shadow thickness of the frame. For these rare cases, the subparts 
+are exported as read-only slots of the widget.
+Every GINA widget class provides a constructor function that 
+defines the most frequently used resource fields as parameters. 
+For example
+	(make-push-button parent "OK" :activate-callback 
+(...))
+creates an instance of the push-button class.
+The first parameter of the constructor is the parent object in the 
+hierarchy. There may be more positional parameters and usually 
+a number of keyword parameters. All other resource fields can be 
+specified in the parameter :motif-resources, e.g.
+
+	(make-push-button parent "DoIt"
+		:motif-resources (list 	:shadow-thickness 5 
+								:margin-height 4))
+
+Only a few resource fields of the widgets are cached as slots in 
+the CLOS objects to avoid duplicate storage. A setf daemon 
+updates the resource value when the slot is changed. Another 
+daemon is installed for the slot accessor to read the current value 
+(see resource slots in the class descriptions in the reference 
+manual, also the method update-slots). All resource fields can 
+be read with get-motif-resources and written with set-
+motif-resources.
+.c3.5.1.4 Callbacks
+For every callback defined by a widget class there exists a slot in 
+the CLOS encapsulation. Setting this slot also sets the callback 
+in the Motif widget.
+	(setf 	(activate-callback push-button) 
+			#'(lambda () (xlib:bell *display*)))
+
+Important callbacks can be specified in the parameter list of the 
+constructor function. In this case the default value causes a 
+method of the CLOS class to be executed. You can either override 
+this (empty) method in a subclass or specify a callback function 
+in the parameter list.
+A callback function can be every compiled function or lambda 
+expression. Be careful to specify the correct number of 
+parameters, they are different for each callback. The correct 
+parameter list is specified in the GINA Reference Manual. For 
+example, the activate-callback of a push-button has no 
+parameter, while the value-changed-callback of a scroll-
+bar passes the new value as parameter.
+You can also use a so-called callback object. Callback objects are 
+CLOS objects that are created with make-callback. A callback 
+object not only contains the function to be called, but also a list of 
+static arguments that are always passed to the function. This 
+feature is most often used to call a method of a specified object in 
+the callback. For example
+
+	(make-scrollbar parent :value-changed-callback
+		(make-callback #'set-volume speaker))
+
+This expression creates a scroll bar that calls the method set-
+volume when the value is changed by the user. The first 
+argument of the method is the object speaker. The arguments of 
+the callback, in this case the new value, are passed as additional 
+parameters of the method. Therefore, the method set-volume 
+must be defined with two parameters.
+A callback can also be a list of functions or callbacks that are 
+called in succession.
+.c3.5.1.5 Subclassing Widgets
+You can define subclasses of the GINA widget classes to define 
+widgets with special appearance or behaviour. For example, you 
+can define a class beep-button as a subclass of push-button 
+that beeps when it is pressed. In the constructor function make-
+beep-button you call the superclass constructor make-push-
+button. To allow for the subclass, the constructor functions have 
+a parameter :class that can be set to 'beep-button in the 
+subclass constructor. If a subclass has additional slots, the 
+keyword parameter :initargs may be used to supply a list of 
+keyword-value pairs where the keywords must be a defined 
+initarg of the subclass.
+
+(defclass beep-button (push-button)
+	()
+	(:documentation " A push-button that beeps"))
+
+(defun make-beep-button (parent 
+					&key (class 'beep-button)
+					(initargs nil) (motif-resources 
+nil)
+					&aux new-beep-button)
+	(setq new-beep-button
+		(make-push-button parent "Beep" :show-as-
+default 5
+			:class class :initargs initargs
+			:motif-resources 
+				(more-motif-resources :alignment 
+:center)))
+	new-beep-button)
+
+(defmethod execute-activate-callback ((bb beep-
+button))
+	(declare (special *display*))
+	(xlib:bell *display*))
+
+.c3.5.1.6 Geometry Management
+A principle of the Motif toolkit is that the geometry (size and 
+position) of widgets should not be specified explicitly. Because 
+the user of an application can choose an arbitrary font through 
+the resource database mechanism of X, an explicitly specified 
+geometry is only valid for a certain situation. Furthermore, a 
+fixed layout does not make use of resizable windows.
+Therefore the layout of a main window or dialog box is controlled 
+by a composite widget that follows a certain layout strategy. The 
+chosen font and the current size of the window are taken into 
+account by this composite widget.
+The layout strategy can be influenced by choosing an appropriate 
+widget class and by setting resource fields that are defined by 
+this class (such as spacing between children).
+There are two general widget classes in Motif that are designed 
+as universal geometry managers: the row-column widget that 
+produces a regular layout, and the form widget that handles 
+constraints for the layout of its children.
+.c3.5.1.7 User Customization
+You should avoid setting resource fields in your program that 
+only affect the presentation (such as fonts and colours), because 
+they cannot be overridden by the user if set in the program. The 
+user can express preferences in his .Xdefaults file. Specific 
+widgets in an application can be addressed by name. The name is 
+a keyword parameter with the CLOS class name as default 
+(converted to lowercase).
+For example,
+	*push-button*background: pink
+shows all push buttons with no explicit name in all applications 
+in pink.
+.c2.5.2 Item Lists
+GINA has unified some Motif widget classes that originally have 
+different programmer interfaces by providing an item list 
+abstraction. The following GINA widget classes support item 
+lists: selection-list, option-menu, toggle-button-group, 
+radio-button-group, toggle-group-entry, radio-group-
+entry. Only the Motif selection list supports the item list more 
+or less directly. In the other widgets, which are composed of more 
+elementary Motif widgets, item lists are implemented by 
+reconstructing the array of buttons when the item list is 
+changed.
+For the classes that support item lists, the item list must be 
+specified as a positional parameter on creation, e.g.
+(make-selection-list parent 
+						'("helvetica" "times" 
+"courier"))
+Originally, the list widget supports an item list consisting of a 
+list of strings. For easier identification in Lisp, each item in the 
+list can be accompanied by a value that is kept on the Lisp side 
+as an identification in the value-changed-callback. This value is 
+most often a keyword, but can be any Lisp object. If a value is 
+supplied for a string, both are enclosed as a sublist, e.g.
+(make-option-menu parent 
+	'(("Normal" :normal) ("Bold" :bold) ("Italic" 
+:italic)))
+
+Strings with values can be mixed with strings without values. In 
+the latter case the string is also regarded as the value.
+Item lists are not directly available as slots. Instead, you have to 
+use set-item-list to change the item list of a widget 
+dynamically. You should be aware that this is a rather expensive 
+operation for all widgets except the selection list, because a 
+number of button widgets will be destroyed and then created 
+again.
+Except for the list widget, you can also introduce separators at 
+arbitrary places between items by specifying :separator as an 
+item in the item list.
+The purpose of the item list in all these widget classes is to allow 
+the user to select one or more items from the list. The selected 
+values are available as the slot value. Depending on the widget 
+class, this may be a single value or a list of values. For example, 
+the radio-button-group always has a single value, while in a 
+toggle-button-group more than one value can be selected. For the 
+list widget it depends on the selection policy whether one or more 
+values can be selected. The values are the second elements of the 
+item list sublists, or the string if no separate value is specified. 
+You can set the value with setf to present a different set of 
+selected items.
+All these widget classes support a value-changed-callback 
+that is activated when the user changes the selected value. The 
+first parameter of this callback is always the new value, but, 
+depending on the widget class, there may be further parameters 
+identifying the situation, such as the last value or the item that 
+has been toggled.
+(make-radio-button-group parent '("a" "b" "c")
+		:value-changed-callback
+			#'(lambda (value old-value)
+				(format t "Changed from ~a to ~a.~%" 
+							old-value value)))
+The keyword parameter initial-value of the constructor 
+function specifies what value should be selected initially.
+(make-toggle-button-group parent '("a" "b" "c") 
+							:initial-value '("b" "c"))
+The default value is either :use-first (if only one value can be 
+selected) or nil.
+.c2.5.3 Menu Entries
+The pull-down menu system in GINA (i.e. the menu bar with the 
+associated pull-down menus) is dynamically reconfigurable. 
+Because the entries can be more than simple buttons, a list of 
+strings is not sufficient to describe the menu structure. Instead, 
+the menu system is composed of a hierarchy of menu entry 
+objects.
+Each menu entry object describes one entry, but is different from 
+the Motif widget implementing the entry. The reason is that the 
+widgets for the entries are destroyed if the menu is reconfigured 
+and are recreated from the information in the menu entry 
+objects.
+There are four different kinds of menu entries: push buttons, 
+toggle buttons, toggle button groups and radio button groups. 
+Push buttons are used to activate simple menu commands. 
+Toggle buttons represent boolean values. Toggle button groups 
+are used for n-of-many selections (such as text styles) and radio 
+button groups are used for one-of-many selections (such as fonts).
+The entry objects are constructed as subclasses of menu-entry. 
+Because they only describe an entry, they do not need a parent 
+widget. The parent will be supplied when the entry is installed in 
+the menu. The following code creates a simple button entry.
+(make-button-entry "Dialog..." #'pop-up-the-dialog)
+The other entry classes have similar constructor functions to be 
+described below. The entry object returned by the constructor can 
+be used to later change attributes of the entry, such as the label 
+string (this feature is, for example, used to change the "Undo" 
+menu entry in GINA).
+The entry object must be installed in a main-menu under a 
+certain topic header and an item name.
+(insert-menu-entry main-menu "Tools" "Dialog"
+		(make-button-entry "Dialog..." #'pop-up-the-
+dialog))
+The topic and item names are used as keys to locate the entry 
+even if the label string is changed later. For this purpose you can 
+use the following method:
+(setq entry-object 
+		(find-menu-entry main-menu "Tools" "Dialog"))
+Because the above case is the most frequent one, you can use the 
+following method as an abbreviation to install simple button 
+menu entries:
+(add-menu-command main-menu "Tools" "Dialog" 
+					#'pop-up-the-dialog)
+To change the label string of the entry, you can simply set the 
+slot of the entry object.
+(setf (label-string 
+			(find-menu-entry main-menu "Tools" 
+"Dialog")) 		"Dialog...")
+Because the main menu in a standard main window already 
+contains a number of menu entries, you can remove entries with 
+remove-menu-entry and specify a :before keyword in insert-
+menu-command to specify a certain location within the 
+preinstalled entries.
+Toggle entries have an additional slot value. You can set this 
+slot with setf, updating the toggle state. A value changed by the 
+user is reported by the callback, which is the value-changed-
+callback of the toggle button.
+(make-toggle-entry "Default" '(lambda (new-value) 
+()))
+The two types of group entries can either be expanded in place 
+(i.e. the buttons of the group are installed as normal entries) or 
+put into a cascaded submenu. The following code creates a 
+cascaded submenu for font selection.
+(make-radio-group-entry "Fonts" 
+		'("Helvetica" "Courier" "Times")
+		#'(lambda (new-value old-value) ()) 
+		:initial-value "Courier")
+The following code creates a button group in place
+(make-toggle-group-entry "" 
+		'("Normal" "Bold" "Italic")
+		#'(lambda (value toggled-value set) ()) 
+		:is-submenu nil)
+You can dynamically change the set of available entries with 
+set-item-list, just as for other button groups.
+If you need to create a submenu with individual entries (such as 
+the "Documents" entry in the "File" menu), you can use a toggle 
+button group entry with the Motif resource :indicator-on set 
+to NIL.
+The functions add-menu-command, make-button-entry and 
+make-toggle-entry have additional keyword parameters:
+... &key (accelerator nil) (acc-modifier :alt))
+Setting :accelerator e.g. to the string "f" means that the key-
+kombination ALT-f can used as a shortcut. Instead of :alt, it is 
+possible to define :shift or :ctrl as the :acc-modifier. Note 
+that on SUN keyboards you may have to hold down the diamond-
+key (meta) instead of the key labelled "Alt" to enter a 
+kombination like  ALT-f !!
+All the constructors for menu entries as well as add-menu-
+command have a keyword :separator-before. If it is T, a 
+horizontal line is put into the menu before the entry.
+.c2.5.4 Implementing New Widgets in Lisp
+(see also the lisp-widgets demo application)
+If combinations or variations of the predefined Motif widgets are 
+not sufficient, you can implement your own widget classes in 
+Lisp. The Motif widgets are programmed in C, and you can also 
+write new widget classes in C (for performance reasons), but that 
+is much harder than in Lisp.
+Examples are special sliders, such as the volume control on the 
+Mac or simulated cockpit instruments.
+Lisp widgets must be implemented as a subclass of view. The 
+size can be specified explicitly when the view is created. 
+However, you should set the resize-policy appropriately, 
+because the widget should be able to resize itself in geometry 
+negotiations, for example if the user shrinks a window.
+The draw-method of the Lisp widget must be prepared to handle 
+the changing view size.
+Just as in views, you can program the reaction of the Lisp widget 
+to mouse events in the button-press method, either directly or 
+by using a mouse-down command with feedback.
+.c.6. Cookbook Ð Views and Commands
+.c2.6.1 Views 
+Views are drawing areas where the document contents are 
+represented graphically and can be interactively manipulated. 
+Class view is a subclass of widget, the Motif class is drawing-
+area. Consequently, views are placed in the widget tree, 
+typically as the son of a scroller. However, no particular look 
+and behaviour is defined by Motif. Instead, the Programmer can 
+override the method draw and call the graphics primitives of the 
+X Window System to define the contents of the view. The 
+methods button-press and key-press are overridden in order 
+to react to user input.
+.c3.6.1.1 Graphical Output into Views
+For graphical output into views the primitives of CLX are 
+available which are typically called within the draw method. A 
+view has slots x-window and gcontext. X-window is a reference 
+to a CLX window structure corresponding to the Motif drawing 
+area. It can be specified as an argument to CLX functions. Each 
+view also has its own CLX graphics context storing attributes 
+like line-width, font, etc.
+For optimization purposes, GINA passes the exact area to be 
+redrawn as parameters to the method draw. The number of 
+subsequent calls to draw which will immediately follow is also 
+passed. You can either optimize your draw method so that only 
+the necessary part is redrawn or you can just draw the complete 
+view in the last call (when count equals 0). However, this 
+optimization is only possible in a view without installed view-
+objectsÑif there are view-objects, count is always 0.
+The CLX primitives like draw-line, draw-rectangle, draw-
+circle and draw-point are encapsulated into methods of class 
+view with the same name. For example, the calls
+	(draw-point view x y)
+	and
+	(xlib:draw-point (x-window view) (gcontext view) 
+x y)
+are equivalent. The x-window and gcontext of the view are 
+implicitly passed to the CLX function. You can find a lot of 
+examples for the use of drawing functions in the GINA Reference 
+Manual.
+The encapsulation of CLX functions into methods makes it 
+possible for GINA to automatically support WYSIWYG printing 
+of views. When a global flag printing is set, methods like draw-
+rectangle can generate equivalent Postscript code instead of 
+calling a CLX function. This is, however, still not supported in 
+GINA 2.1.
+Attributes of the gcontext can be permanently changed for the 
+whole view by a call like
+	(setf (xlib:gcontext-line-width gcontext) 5)
+The effect of calls like draw-line is different then. See the 
+Graphic Output demo for some examples.
+New graphics contexts can be generated by CLX calls and be 
+temporarily stored in the gcontext slot of a view. Alternatively, 
+the gcontext can be modified for a short time using the macro 
+xlib:with-gcontext.
+Example: 
+(xlib:with-gcontext ((gcontext view) :line-width 4)
+	(draw-rectangle view 50 5 40 40))
+Here, all attributes of gcontext are inherited, only the line-
+width is modified for a single call.
+Views are instantiated by a call to make-view. Typically, you 
+define a subclass of view with its own constructor function 
+calling make-view, the constructor function of the superclass. 
+You should always pass the document shown in the view as a 
+parameter, so that the view is automatically refreshed, when e.g. 
+the document is reverted to the last saved version. Moreover, 
+mouse commands performed in the view are stored in the undo 
+list only if the view belongs to a document. You can place 
+initializations into your constructor function.
+The graphics context of a view does not yet exist after the view is 
+created because it depends on the X window. To change 
+attributes of the graphics context, to create new ones, or for any 
+other CLX-related initializations that depend on the viewÕs 
+window, you can add an after daemon for the method 
+determine-window-id, which is called by GINA in response to 
+the first Expose event.
+When the internal representation of your document changes, you 
+can call force-redraw to redraw the whole view or 
+invalidate-rectangle to redraw only a part of it.
+When the user resizes your view, GINA calls the draw method for 
+any new areas of your view. If even the old parts have to be 
+redrawn, because resizing means, for example, some kind of 
+zooming, you can add an after daemon to the method resized.
+To allow smooth animations of complex drawings, you can 
+instruct a view to use double buffering. For example, the chess 
+demo uses double buffering so that chess pieces can be moved 
+around smoothly without XOR drawing. Double buffering is 
+transparent to the programmer.
+If the keyword double-buffering to make-view is specified as 
+T, a pixmap as large as the view is created in the X server and all 
+drawing operations performed by methods of class view, such as 
+draw-rectangle, are redirected into this pixmap. Only the final 
+pixels are copied to the window. XOR-feedback is still directly 
+drawn into the window.
+The pixmap is also used to handle expose events, so the viewÕs 
+draw method will only be called when parts of the view are 
+invalidated by the application. However, depending on the view 
+size, the pixmap may consume a large amount of memory. 
+Because output is redirected by GINA, you should not use direct 
+CLX drawing operations.
+.c3.6.1.2 Mouse Input
+To react to mouse clicks in the view, you have to override the 
+method button-press of your view subclass. This method is 
+called by GINA when any mouse button goes down in the view. 
+The point where the mouse went down is reported in the 
+parameters x and y which hold coordinates relative to the view. 
+The parameter code indicates which button was pressed. It holds 
+a virtual button code like :select, :extend or :toggle. (See the 
+Reference manual for more details.) The use of virtual codes 
+makes your program independent of one, two and three button 
+mice. If you need the real codes you have to override the method 
+handle-button-press, which handles the translation and calls 
+button-press.
+The parameter repetition indicates if this click is part of a 
+series of subsequent clicks within a short time. For example, if 
+the user double-clicks into the view, button-press will be called 
+twice: once with repetition=1 and once with repetition=2. 
+You can adjust the double-click-interval which is a slot of 
+class view and defaults to 250 milliseconds.
+A button press may be directly reported to the view-object hit 
+when the slot propagate-button-press is set to T. See Chapter 
+Object-Oriented Graphics below.
+If you want your program to react when the mouse button goes 
+up and show a graphical feedback as long as the button is held 
+down, you have to use a mouse-down-command (see below).
+.c3.6.1.3 Keyboard Input
+In order to react to keyboard input in views, you have to override 
+the empty methods key-press or key-release which are called 
+when a key goes down and the view has the keyboard focus. You 
+can use the method set-keyboard-focus to set the focus to the 
+view, for example in the button-press method. However, there 
+are still focus-related bugs in Motif 1.1.
+All relevant parameters of the corresponding X events are 
+reported as parameters of the two methods. See the Reference 
+Manual for more details.
+.c2.6.2 Object-Oriented Graphics
+Besides overriding the method draw of class view to define the 
+contents of a view, it is also possible to install objects of class 
+view-object at a certain position within a view. View-objects 
+are graphical objects like a circle, a rectangle or any other visible 
+object with application specific semantics. 
+View-objects are similar to X-Windows, but they can have an 
+arbitrary shape and they can overlap. Moreover, they are 
+cheaper than X-Windows and are not known to the X-server, but 
+are just data-structures of the application (the X client).
+View-objects also have a draw method, i.e. they have to know 
+how to represent themselves. A view calls the draw methods of 
+the view-objects installed in it (after calling its own draw 
+method) whenever a part of the view is refreshed which contains 
+the view-objects. Therefore, object-oriented and procedural 
+graphics can be mixed in a single view, i.e. you can override the 
+draw method of a view and install view-objects in it.
+In the implementation of the draw method for a view-object, the 
+graphics primitives like draw-line can be called as methods of 
+the view-object. The coordinates supplied as parameters are 
+interpreted relative to the current position of the object within 
+the view.
+Example:
+	(draw-rectangle view-object 0 0 width height)
+draws a rectangle at the current position of the view-object.
+It is important not to draw anything outside the enclosing 
+rectangle of a view-object, because that violates an assumption 
+GINA makes about view-objects and undesired visual effects may 
+occur.
+	Never draw outside the enclosing rectangle of a view-object.
+Calls to the method button-press are propagated to the view-
+object hit, provided that the flag propagate-button-press of 
+class view is on. The coordinates of the mouse-click are 
+transformed into coordinates relative to the position of the object. 
+The view-objects are stored in the view in the slot view-
+objects. Normally, you do not modify this slot, but instead call 
+methods like install and deinstall which in turn modify this 
+slot. However, in some cases the order of objects in this list is 
+relevant: The draw methods of the objects are called one after the 
+other and can overlap. Also, mouse clicks are reported to the first 
+object hit. There may be other objects at the mouse position 
+which come later in the list.
+Therefore, it might be necessary to rearrange the list view-
+objects in order to define an application dependent stacking 
+order. For this purpose, a programmer should use setf on the 
+slot and only reorder the objects. View-objects should only be 
+added to this list using install, and removed using deinstall.
+A new view-object is created by a call to the function make-view-
+object. Typically, you define a subclass of view-object and call 
+make-view-object in the constructor function of your subclass. 
+You have to specify the width and the height of your object. Even 
+for non-rectangular objects the enclosing rectangle is held in the 
+slots x-pos, y-pos, width and height, because it is used to 
+decide, for example, if an object must be redrawn.
+Other than widgets, view-objects can exist without a parent, so 
+there is no parent parameter in make-view-object. Instead, 
+there is the method install which is called in an extra step. The 
+position of the view-object within the view is specified in the 
+parameters. A later call to deinstall will remove the object 
+again from the view. The methods move and resize do not only 
+change the size and position of an object, but also make sure that 
+the object is cleared at the old position, redrawn at the new 
+position and any objects that where covered by the object are also 
+redrawn. Simultaneous moving and resizing is handled more 
+efficiently by the method reconfigure.
+If you are sure, that your objects can never overlap, you can 
+override (not set) the flag overlapping-objects to nil. As a 
+result, operations like moving and resizing will be handled more 
+efficiently. See, for example, the Tetris demo.
+There are two methods, point-inside and inside-rectangle, 
+which are called by GINA to decide if an object is hit by a mouse-
+click and if an object intersects with a rectangle to be refreshed. 
+The default methods assume that an object is rectangular. You 
+can override these methods according to the actual shape of your 
+object. In this way, you can specify, for example, that a circle in a 
+graphic editor is not selected, when the mouse is clicked inside 
+the enclosing rectangle, but outside the circle itself.
+Just like for views, you can call the methods force-redraw and 
+invalidate-rectangle to redraw a complete object or a 
+rectangular part of it.
+If an application uses many view-objects and their positions and 
+sizes follow some regular strategy, it may be possible to speed up 
+object redraw by overriding the method get-refresh-
+candidates of the view. The complete list of objects and a region 
+that must be refreshed are passed as parameters. By default, the 
+method returns all view-objects, which are then checked whether 
+they intersect with the region.
+The method can be overridden to return fewer objects. If the 
+method knows exactly which objects are affected, it may return T 
+as a second value. In this case the returned objects are directly 
+redrawn by GINA without checking.
+If the method returns NIL as a second parameter, it may return a 
+superset of the affected objects and let GINA check which 
+actually intersect. This is useful if there is a "quick-and-dirty" 
+method that reduces the number of objects to be checked.
+.c2.6.3 Direct-Manipulation Objects
+The class direct-manipulation-object is a subclass of class 
+view-object. Instances of this class have the additional 
+property, that they can be selected, moved, and resized using the 
+mouse. The most obvious application of this class are the objects 
+manipulated by a graphic editor like MacDraw. However, most 
+direct-manipulation interfaces are concerned with some kind of 
+dragging or reshaping of objects. The ruler of MS-Word, where 
+tab-marks can be moved around, is another example.
+The operations performed on such an object are undoable 
+because special types of mouse-down commands are created, 
+when the mouse is clicked into an object.
+In fact, all these features are already available in the class view-
+object. You can override the slot facilities to determine 
+which subset of the available operations shall be allowed for an 
+object class. This slot is set to nil in class view-object, 
+disabling all features, while the facilities for direct-
+manipulation-object enable the maximum number of features. 
+While an object is moved or resized, either an outline of the 
+object is shown as feedback or the object is immediately adapted 
+each time the mouse is moved. By default, outlines are used. You 
+can override the flag outlines to change the default.
+Like for view-objects, you override the method draw to define the 
+individual shape of an object. In addition, you can override the 
+method draw-outline which by default draws a dashed 
+rectangle. For example, when a circle is moved, a dashed circle 
+might be the appropriate outline.
+When an object has been selected by the user, this is indicated by 
+four little squares at the corners. You can override the method 
+draw-selected to get a different indication for the state 
+selected. In this method you place additional graphical output 
+which is not produced by the method draw. In the case, that a 
+selected object looks completely different from an unselected one, 
+your draw method should take into account the value of the slot 
+selected, and draw-selected should be empty. You can also 
+change the state of an object by the program using setf 
+selected. An after daemon of GINA redraws the object if the 
+state really has changed.
+When you override the method draw-selected, it might be 
+necessary to override also the method which-resize-handle, 
+which is called by GINA in order to determine if one of the resize 
+handles is hit by a mouse click.
+When a button is pressed twice or more in an object within a 
+very short time (double-click-interval) the method double-
+clicked is called. The default version just beeps. You can 
+override it to define a special reaction to double clicks into your 
+object. However, on the first click, button-press is called, so the 
+double-click action should be a superset of the single-click 
+version.
+There are two methods of class view-object, constrain-
+position and constrain-size, that can be overridden to 
+implement constraints for moving and resizing on a per-view-
+object-class basis. The new position or the new size of the object 
+are passed as parameters. The methods return the nearest 
+approximation that the object allows. They can be used to 
+implement fixed increments for the size, moving objects only in 
+certain allowed areas, or constraining width and height to the 
+same value. Although resizing an object may also result in 
+moving it (e.g. if the user drags the upper left handle), only 
+constrain-size is called, because the two constraints may 
+easily be contradictory.
+The method reconfigured-by-user can be overridden to 
+implement any consequences of the user moving or resizing a 
+view-object.
+For the common case of iconic objects, the subclass movable-
+icon of class direct-manipulation-object is available. The 
+look of such an icon is defined by a bitmap file. You can either 
+specify a pathname for the bitmap file or an XLIB image. GINA 
+caches pathnames, images and pixmaps in a hashtable in the slot 
+pixmap-table of class application. Therefore, if you pass the 
+same pathname or image to several objects, GINA need not read 
+the bitmap file and send the image to the X server each time.
+Note that you can read the bitmap file before the connection to 
+the X server is established. Therefore, you can read the bitmaps 
+when your code is loaded and thus minimize the startup time of 
+your application:
+(defvar *icon* (xlib:read-bitmap-file (find-bitmap 
+"..")))
+
+In this case, the procedure find-bitmap can be used to find a 
+bitmap in the list of directories given by *bitmap-
+directories*. Calling this procedure is only necessary if you 
+call xlib:read-bitmap-file directly.
+If you also pass a mask bitmap to make-movable-icon, it is 
+used for clipping when the icon is drawn so that the icon can 
+have holes in it. Mouse-clicks are only propagated to the icon 
+when the mask is hit. Also, the mask can be used to draw a drop 
+shadow for the icon. You have to pass a :shadow-offset greater 
+than 0 to get shadows.
+To test the class you can start the graphic editor and evaluate 
+the following expression:
+
+ (with-application-stopped
+    (setq icon 
+			(make-movable-icon "mailfull"
+				:mask "mailfullmsk"
+				:shadow-offset 8))
+    (install icon 
+			(main-view 
+				(first (document-list 
+*application*)))))
+
+An icon will appear in the graphic editor which can be moved 
+around.
+If you want to define e.g. a subclass with an additional name 
+string below the icon you can set margins and define an :after 
+daemon for the draw method.
+.c2.6.4 Commands
+Command objects form the base for undoable commands. Each 
+relevant user input leads to the creation of an object with 
+superclass command, where all parameters of the command are 
+stored. 
+You have to define a subclass of class command for each kind of 
+command supported by your application. An instance of your 
+subclass is created at the moment the user requests an 
+operation, e.g. by executing a menu item. In the callback you call 
+the constructor function for your subclass which in turn calls 
+make-command. You have to supply the document to which the 
+command belongs. The command object will be stored inside the 
+document object for a possible later undo. If the effect of the 
+command is shown in some view, you should also supply the 
+:view parameter. GINA will automatically scroll the view when 
+the command is later undone, so that the effect of the undo can 
+be observed by the user.
+Calling make-command implicitly passes the command to GINA 
+which will call the method doit of your command. The default 
+version of doit does not do anything, you have to override it to 
+define the effect of the command. Because doit does not have 
+any parameter (but the command object) you have to place all 
+relevant information you need to perform the command inside 
+the command object. 
+There are some shared slots of class command which you can 
+override. The slot name is initialized to "Command". The name of 
+a command is displayed in the undo and redo menu entries. 
+Therefore, you should select meaningful names for your 
+commands. Normally, you override the name slot which has 
+:allocation :class with a new :initform (repeating the 
+:allocation :class). The name is then identical for all 
+instances. You can, however, use :allocation :instance if you 
+want an individual name for each instance.
+The flags undoable and causes-change both are shared slots 
+and default to T. Again, you can override them for your subclass 
+or for each instance. By default, a command causes a change and 
+consequently the document is marked as modified when the 
+command is executed. Also, commands are usually undoable and 
+are stored in a list inside the document. If your command is not 
+undoable but causes a change, GINA will clear the command 
+history because no undo is possible any more.
+You always override the methods doit and redoit in order to 
+define an operation and its inverse. If the user selects the redo 
+menu entry, the method redoit is called. By default, it just calls 
+doit, i.e. it is assumed that executing the command for the 
+second time is the same as doing it for the first time. In some 
+cases, however, redoing an operation is easier, because e.g. a 
+view-object already exists and only has to be installed again 
+when a draw-rectangle command is repeated.
+If subsequent commands in the command history have references 
+on an object that is created in this command, it is important to 
+recreate the same object in the redoit method. If a completely 
+new object is created on redo (i.e. if redoit is handled like doit), 
+the subsequent commands refer to the wrong objects and will 
+fail.
+When your command is eventually deleted from the command 
+history, the normally empty method commit is called. So you 
+have a chance to do any cleanup which is necessary when your 
+command cannot be undone or redone any more.
+.c2.6.5 Mouse Commands
+Your hook for reacting to mouse input is the method button-
+press of the classes view and view-object. You can override 
+this method and get the current mouse position and the button 
+code. In simple cases you can code the reaction of your program 
+directly into button-press. If it is desired that the effect of a 
+mouse click is undoable, you have to create a command object in 
+button-press as explained above. The semantics of the click 
+are then coded in doit.
+Often, it is also desired that a visual feedback is shown as long as 
+the mouse button is held down and the mouse is moved around. 
+In this case, you have to define a subclass of class mouse-down-
+command which is a subclass of command. 
+In addition to the inherited methods, there is also a method 
+draw-feedback which is called whenever the mouse is moved 
+while the button is still down. By default, draw-feedback draws 
+a rubberband line from the point where the button went down to 
+the current mouse position. You can override this method to 
+define a special application dependent feedback. Typically, you 
+use the drawing function boole-xor to draw your feedback, 
+because you are also responsible for clearing the feedback again. 
+GINA calls the method draw-feedback twice for each mouse-
+movement. By default, GINA switches the graphics context into 
+XOR mode for the duration of this method, so you do not have to 
+distinguish whether you have to draw or to clear the feedback.
+In the implementation of draw-feedback you will often use the 
+slots start-x, start-y, last-x, and last-y which hold the 
+points where the mouse went down and the last point visited. If 
+the feedback will flip over when the current position is to the top 
+or left of the starting position, you can use the method mouse-
+rectangle that determines a rectangle between current position 
+and start with a positive width and height. This is important 
+because you cannot draw rectangles with a negative width or 
+height in X.
+Each mouse position entered during the feedback phase is also 
+processed by the method constrain-mouse. The default version 
+just returns x and y as multiple values. You can override this 
+method to modify the mouse coordinates before draw-feedback 
+is called. In this way, you can easily specify, that e.g. only 
+squares or horizontal lines are drawn as feedback. Note that the 
+mouse is not forced to certain areas on the screen. It is an 
+important user interface guideline, that the mouse (which is 
+regarded as the users finger) is not moved by the program, but 
+the user. The program, however, can indicate by a special 
+feedback, that the set of possible operations is constrained, e.g. 
+an object cannot be moved to a certain place.
+Similar to the method draw-feedback, the method track-mouse 
+is called each time the mouse moves. However, it is called only 
+once for each mouse position. Typically, nothing is drawn in 
+track-mouse, but the coordinates are processed in some way. 
+For example, it can be checked if some object is hit or all mouse 
+positions can be collected in a list.
+Finally, you can also override the method mouse-idle, which is 
+called, whenever the mouse is not moved for some time while the 
+button is down. The time interval is determined by the slot 
+idle-timeout.
+By default, autoscrolling is enabled if the view, where the 
+feedback is drawn, is placed inside a scroller, i.e. the view is 
+scrolled when the mouse is moved outside. If the command is 
+later repeated by a redo, the view will automatically scrolled by 
+GINA to the point where the mouse button was released so that 
+the effect of the redo can be observed by the user.
+When the mouse button is eventually released, doit is called. 
+The feedback phase can also be regarded as a parameter-
+collection phase, because the concrete action performed in doit 
+typically depends on the mouse movement. GINA will ask your 
+command whether it is executable before doit is called. So you 
+have a chance to override the method executable and specify 
+conditions under which the command is executed. By default, a 
+command is always executable. 
+You can also specify a hysteresis for a command, which is a 
+minimum number of pixels the mouse must be moved before the 
+command is submitted. When the command is not submitted, 
+instead the method not-submitted is called which you also can 
+override. For example, the command to move an object only 
+selects it when the mouse is accidentally moved for one or two 
+pixels while clicking.
+You can also specify a special mouse cursor which is to be used 
+during the feedback phase.
+.c2.6.6 Drag and Drop
+The primary difference of the drag-and-drop mechanism 
+compared to mouse-down-commands is that objects may be 
+dragged across window boundaries. In simple mouse operations, 
+all operations take place in a drawing area and auto-scrolling 
+may be invoked if the mouse cursor leaves the drawing area. The 
+feedback always stays within the drawing area. In contrast, if 
+you drag a folder icon across the screen, the icon follows the 
+pointer position even across windows of foreign applications.
+Moving an image across the screen can be implemented in three 
+different ways in the X Window System:
+*	Direct drawing on top of other windows. However, to avoid 
+interferences, all other applications must be frozen, which 
+prevents any feedback reaction from a possible target.
+*	Using a distinctive cursor image. This produces the fastest 
+feedback operations, however, in general not every image can 
+be used as the mouse cursor, because the cursor size may be 
+limited in an X server.
+*	Moving a separate window. This restricts the feedback to 
+rectangular images if the X shape extension cannot be used for 
+availability or performance reasons.
+The GINA implementation supports the latter two options. When 
+creating a drag-command, the programmer can pass a cursor or a 
+window or both. The window may be an arbitrary Motif widget 
+inside an override-shell. The override-shell is necessary to 
+prevent any window manager decoration around the moving 
+window.
+First of all, the application must provide a widget whose 
+activation by button-press creates the drag-command and that 
+provides the necessary event handlers to catch motion events 
+and pass them to the active mouse command. For this purpose, 
+GINA provides a special widget class called a drag-label. A 
+drag-label is a Motif label widget that is drawn using a bitmap 
+image and that reacts to button presses by calling its activate 
+callback. The activate callback passes the x and y coordinates of 
+the button press to a function that is responsible for creating the 
+appropriate drag-command. The following GINA code creates 
+such a label showing the "woman" bitmap provided with X11:
+(make-drag-label parent-widget a-document "woman"
+	:activate-callback 
+		(make-callback 	#«make-demo-drag-command 
+						a-document source))
+
+The class demo-drag-command is implemented as follows as a 
+subclass of drag-command:
+(defclass demo-drag-command (drag-command)
+	((name	:initform "Demo Drag"	:allocation 
+:class)))
+
+(defun make-demo-drag-command (source-widget 
+document x y)
+	(make-drag-command document source-widget x y nil
+				:class «demo-drag-command
+				:cursor :left-ptr	;; default is 
+:dotbox
+				:shell-to-move (drag-shell source)))
+
+This constructor function installs the normal cursor for the 
+feedback phase and passes a shell belonging to the drag-label as 
+the shell image to move. Such a shell that is initially invisible is 
+automatically created by a drag-label. The nil parameter to make-
+drag-command will be explained below.
+The effect of this program is that you can move the "woman" 
+image of the drag-label across the screen. When you press the 
+mouse button, the invisible shell appears on top of the label and 
+is moved synchronously with the mouse pointer. When you 
+release the mouse button, the shell disappears and no further 
+action is taken (because none is defined yet).
+Another variation is to use a self-created cursor image. For this 
+purpose you need a cursor bitmap with the hot spot defined and 
+a mask bitmap that defines all pixels that shall be drawn by the 
+cursor. The two pathnames of the bitmap files are passed to the 
+drag-label, that creates an X cursor out of these bitmaps. You can 
+then use the new cursor in the drag command instead of the 
+bitmap image in the shell. The feedback is then faster, but you 
+cannot create arbitrarily large cursors on most X servers.
+(make-drag-label parent-widget a-document 
+	"/vol/gina/bitmaps/magnet" 
+	:cursor-mask "/vol/gina/bitmaps/magnet-mask"
+	:activate-callback 
+		(make-callback 	#«make-demo-drag-command 
+						a-document source))
+...
+
+(defun make-demo-drag-command (document source-
+widget x y)
+	(make-drag-command document source-widget x y nil
+					:class «demo-drag-command
+					:cursor (cursor source)))
+
+Targets
+A drag-command does not have an effect unless a possible target 
+is defined for it. A target may be any widget within the main 
+window or dialog windows belonging to a document. The list of 
+possible targets is specified when creating a drag-command as 
+the fifth parameter to the constructor.
+To associate an application-specific object with each target to 
+identify the target in terms of the application, every target 
+specification consists of a widget and an arbitrary value. 
+Therefore the target list is composed of target-value pairs, such 
+as
+(defun make-demo-drag-command (document source-
+widget x y)
+	(make-drag-command document source-widget x y
+				(list 
+					(list (main-view document) 
+						:view)
+					(list (main-menu (main-shell 
+document)) 
+						:menu))
+				:class «demo-drag-command
+				:cursor (cursor source)))
+
+In this case, two targets are defined: the main view and the 
+menu bar of the document shell. Each is identified by a separate 
+keyword.
+When the mouse button is released over a target, the doit 
+method of the command is called, if the release occurs outside a 
+target, not-submitted is executed. To test the effect of the 
+above command class, you can print out the keyword of the 
+target that was hit, if any:
+(defmethod doit ((cmd demo-drag-command))
+	(print (current-value cmd)))
+
+The target information is stored in four slots of the command 
+object:
+	current-target
+		The target widget or nil.	
+	current-value
+		The value associated with the target.	
+	target-x
+		The x position of the button release relative to the 
+target.	
+	target-y
+		The y position of the button release relative to the 
+target.
+If the targets of the drag-and-drop operation are not widgets, or 
+if there are many small targets, the next larger enclosing widget 
+should be chosen as the target. The subtargets must then be 
+identified by the command subclass. A common case are 
+commands that target on view-objects. In this case the view is 
+the target. The subtarget must be identified by overriding the 
+method executable. If this method returns nil, the command 
+will not be executed and not be included in the undo history. The 
+following example assumes that the class demo-drag-command 
+defines a new slot my-subtarget that is used to store the 
+subtarget to be used in the doit method.
+(defmethod executable ((cmd demo-drag-cmd))
+	(setf (my-subtarget cmd) 
+		(identify-my-subtarget cmd 
+							(target-x cmd) (target-y 
+cmd)))
+	(my-subtarget cmd))
+
+For example, to delete the view-object hit in the target-view, the 
+following code can be used.
+(defclass demo-drag-command (drag-command)
+	((name	:initform "Demo Drag"	:allocation 
+:class)
+	(child-to-delete	:accessor child-to-delete)))
+
+(defun make-demo-drag-command (document source-
+widget x y)
+	(make-drag-command document source-widget x y
+					(list (list (main-view document) 
+:view))
+					:class «demo-drag-command
+					:cursor (cursor source)))
+
+(defmethod executable ((cmd demo-drag-cmd))
+	(setf (child-to-delete cmd) nil)
+	(loop for child in (view-objects (current-target 
+cmd))
+		when (point-inside child 
+						(target-x cmd) (target-y cmd))
+		do (setf (child-to-delete cmd) child))
+	(child-to-delete cmd))
+
+	(defmethod doit ((cmd demo-drag-cmd))
+		(deinstall (child-to-delete cmd)))
+
+	(defmethod undoit ((cmd demo-drag-cmd))
+		(install (child-to-delete cmd) (current-
+target cmd)
+				(x-pos (child-to-delete cmd))
+				(y-pos (child-to-delete cmd))))
+
+Target Feedback
+While the pointer is moving, the method track-target is called 
+whenever the pointer moves over one of the targets. To identify 
+the target, not only the widget is passed, but also the identifying 
+value.
+(defmethod track-target ((cmd demo-drag-cmd) 
+							widget x y value)
+	(format t "~s ~d ~d ~s~%" widget x y value))
+
+Using the code above, you can observe that track-target is 
+called on every mouse movement. However, when the pointer 
+moves out of a target, track-target is called once with all 
+parameters as nil, and then only when a new target is entered.
+By overriding the shared slot lazy-tracking of the command as 
+t, track-target is called only once for each target. This is 
+useful if you do not need the position information inside the 
+target. If no mouse tracking is desired, the shared slot do-
+tracking can be defined as nil. In this case, the costly target 
+determination can be avoided during mouse motion.
+In many cases the old feedback must first be switched off before 
+a new feedback can be shown, for example, when drawing with 
+XOR or when changing an attribute of the target. In this case the 
+method draw-target-feedback can be overridden, which is 
+called twice for every position.
+(defmethod draw-target-feedback ((cmd demo-drag-
+command) 
+							widget x y value
+							&key (clear nil))
+	(declare (ignore clear))
+	(when (eq value :view)
+		(xlib:with-gcontext ((gcontext widget) 
+						:function boole-xor
+						:foreground (xor-foreground 
+widget))
+			(draw-line widget 0 0 x y))))
+
+The target widget passed to draw-target-feedback is never 
+nil, i.e. it is not called while the pointer is outside a target. If 
+lazy tracking is enabled, draw-target-feedback is called 
+exactly twice per target, but the positions in these two calls will 
+not be the same (one is the entering, the other the leaving 
+position).
+When subtargets, e.g. in a view, are used, track-target should 
+determine the subtarget and store it in a slot of the command. 
+This slot can then be examined by draw-target-feedback to 
+draw a feedback for the subtarget. Obviously, lazy tracking 
+cannot be used with subtargets.
+Crossing Application Boundaries
+The most interesting case of drag-and-drop is between 
+applications. This subsection describes the technical difficulties 
+encountered and their solution in GINA. However, the technical 
+details are successfully hidden from the programmer.
+In the X environment, one application cannot know anything 
+about the possible targets of the other applications. It can only 
+identify the top-level windows of the foreign application by 
+querying the X server. Therefore the target application must 
+produce the feedback for its targets itself.
+Because in the future multiple documents of the same 
+application may also be implemented as separate processes with 
+their own X connection in GINA, the same also applies to 
+dragging between documents of the same application. 
+Because a button press produces a grab in the X server, the 
+target application does not receive motion events during the 
+dragging process. As a solution, synthetic motion events are sent 
+to the foreign application while moving the pointer on top of one 
+of its windows. The foreign application is then responsible for 
+handling these synthetic events (Figures 6-1 and 6-2). Clearly, 
+the foreign application must know that it is the receiver of the 
+dragging operation, because it should neither try to establish its 
+own cursor nor move the image.
+                                                        
+Figure 6-1: Producing feedback within the sender application.
+                                                        
+Figure 6-2: Producing feedback in the target application.
+To prevent disturbing an application that is not prepared to act 
+as a receiver for a certain dragging operation, every top-level 
+window signals the drag-commands it is able to handle in a 
+window property stored in the X server. This property is read by 
+the dragging application. If the current command does not 
+appear in this property, no motion events are sent to this 
+window.
+The first thing necessary to make this identification possible is to 
+define a unique name for each drag-command that must work 
+across applications. This must be an X atom, which is denoted by 
+a keyword in Lisp. For compatibility with other languages, the 
+name should consist of alphanumeric characters and 
+underscores. The keyword is defined as the shared slot 
+protocol-id of the drag-command.
+Which commands a document accepts must be signaled by every 
+shell that has targets in it. Therefore, the slot drag-protocols 
+is defined for shells that contains a list of protocol IDs that are 
+accepted and have targets inside this shell. As a convenience, the 
+same slot drag-protocols is defined for documents, and 
+document shells automatically inherit this value, because most 
+targets are in the main shell.
+When a moving shell is combined with tracking in the target 
+application, a complication arises for the drag-and-drop 
+implementation that is successfully hidden from the 
+programmer. In X, there is no direct way of identifying the 
+window under the pointer, because the moving shell on top of the 
+desired window will always be reported as the window 
+containing the pointer. Therefore, the drag-command collects all 
+necessary window information at starting time, using caching 
+techniques to minimize the number of X requests, and calculates 
+the target window itself.
+Accepting Drop Requests
+Because handling motion events is not very different in the 
+sender and the receiver, a second drag-command is used in the 
+receiver to handle the synthetic motion events. This command is 
+created when the pointer first enters the target application 
+(provided tracking is enabled in the sender). The method 
+create-drop-command of class document is responsible for 
+creating the receiving drag-command.
+The only difference between creating the sender command and 
+creating the receiver command is that the receiver command 
+must be identified by specifying the keyword :received-from 
+with a value supplied as a parameter of create-drop-command 
+(which is an X window denoting the sending application). 
+Furthermore, no cursor or shell to move can be specified.
+However, what must be specified is a list of targets in the 
+receiving document. For example:
+(defclass demo-drag-command (drag-command)
+	((name		:initform "Demo Drag" :allocation 
+:class)
+	(protocol-id :initform :demo_drag :allocation 
+:class)))
+
+(defmethod create-drop-command ((document demo-
+document) 
+						shell x y protocol-id 
+						transfer-value received-from)
+	(case protocol-id
+		((:demo_drag)
+			(make-drag-command document shell x y
+					(list (list (main-view document) 
+							:view))
+					:class «demo-drag-command
+					:received-from received-from))))
+
+The tracking and feedback methods of the receiving command 
+are called whenever the pointer is over one of the targets in its 
+own target list. Therefore only one of the twin commands can be 
+tracking a target at a time. In the same way, only one doit of the 
+two commands will be called because only one target can be hit.
+Because the pointer may visit a number of foreign windows, a 
+number of receiving commands may be created. However, only 
+one may be tracking, and for only one will doit be called. If an 
+effect is also desired when no own target is hit (this makes only 
+sense for the sender command), submit can be called from the 
+not-submitted method.
+If dragging takes place between documents of the same class, 
+both sending and receiving command may be of the same class, 
+only distinguished by the received-from slot. However, in 
+another application the receiving command may have a 
+completely different class.
+Value Transfer
+To transfer a value from the sender to the receiver, a transfer-
+value can be specified when creating the sending command. This 
+value is automatically transferred to the receiving application 
+and must be passed in create-drop-command to the receiving 
+command object. This value is then available in the receiving 
+doit method.
+The value may currently be any Lisp value (because transfer to 
+non-Lisp applications is not yet implemented), but it is expected 
+that this can be any value that is also suitable for cut&paste.
+It is currently not possible to transfer a return value back to the 
+sending application, for example, to determine whether a foreign 
+target has been hit. The problem is that the execution of the 
+sending command must be delayed until the acknowledge event 
+arrives from the receiving command. However, in the meantime 
+other events arising from user actions may arrive in the sending 
+application that must be handled first.
+.c.7. The Interface Builder
+.c2.7.1 Interface Builder Principles
+This section gives an overview of the role of the Interface Builder 
+(IB) in GINA.
+Target
+You can roughly divide a GINA application into three parts: the 
+construction of the widget hierarchy, the application model, and 
+the connections between the two parts by means of callbacks. 
+The IB currently defines the widget hierarchy as the main part 
+of the user interface and may be used to connect callbacks (but 
+not to define their functionality). The rest of the application must 
+be implemented using the non-widget GINA classes (application, 
+document, command etc.), appropriate view subclasses and 
+application-specific classes.
+Audience
+Currently the IB is used by the programmer. Future versions 
+will support the interface designer and the user.
+Code vs. Interface Builder
+The user interface may be constructed either before or after the 
+application code. Both cases have their problems because each 
+part must know some things about the other. Therefore, the IB 
+will in the future support the separate definition of the interface 
+between the two parts.
+Building New Classes
+The output of the IB is a new widget class as a subclass of some 
+GINA class. All independent windows of an application are 
+constructed as such classes. For example, an application with a 
+main window and two dialog boxes needs three IB documents, 
+each one defining one of the three classes. The IB-generated class 
+may be instantiated several times, but in many cases only one 
+instance will be created.
+The IB generates Lisp code from the definition that may be 
+compiled into the application. However, the generated code 
+should not be edited because these changes will be lost in future 
+edit cycles. You can instead supply additional modifications in 
+other places.
+Structure of a New Class
+Following the model of those GINA widget classes that are 
+composed of several Motif widgets (such as the radio button 
+group), each widget as part of the IB-generated class is defined 
+as a read-only slot of the new class. You can use these slots in 
+your application to dynamically modify the widgets.
+The IB also defines a constructor function that builds the 
+components and fills the slot values. The constructor is usually 
+called in the method create-windows. After calling the 
+constructor you can supply callbacks to the new widget and fill 
+application-dependent values. If the new class is a dialog, it must 
+be popped up (method pop-up) to be visible.
+.c2.7.2 Interface Builder Tutorial
+This tutorial describes how to build the interface of the "Finder" 
+demo application with the Interface Builder. You can compare 
+your result to the complete code in the demo application.
+.c3.7.2.1 Creating Widgets
+You can start the Interface Builder by opening "interface-
+builder.appl" in the Finder or by opening an existing IB 
+document. The empty IB window shows a menu bar, a palette of 
+little tools below and an empty drawing area (Figure 7-1).
+                                                          
+Figure 7-1: The main window of the interface builder.
+As the first step you create the necessary simple widgets for the 
+Finder window. These are three push buttons, a label displaying 
+the directory name, and a scrolled list that will contain the 
+directory entries. The widgets will be selected from a separate 
+palette window that is created by selecting the "Palette..." entry 
+in the "Tools" menu (Figure 7-2).
+                             
+Figure 7-2: The widget palette.
+You create new widgets by pressing the mouse button over one of 
+the widgets in the palette, dragging a copy of that widget onto 
+the work area and dropping it there. The exact position of the 
+new widget is not important, because the layout will be 
+established in another way. However, you should arrange the 
+widgets approximately as they should appear to avoid 
+rearranging them later.
+Widgets you have created are immediately operable. Try pushing 
+the newly installed buttons. However, no action is triggered by 
+activating the buttons, because no application callback has been 
+defined for them yet.
+Because the installed widgets work as usual inside their area, 
+the IB creates a small area around them where IB-related 
+actions can be triggered. For selected widgets this area is marked 
+with a dashed line. A widget may be selected by clicking into it or 
+by catching it with a selection rectangle drawn inside the work 
+area.
+                           
+Figure 7-3: Widgets for finder shell.
+To move a widget, it must be selected. You can then press the 
+mouse button inside the IB-generated border around the widget 
+and move the widget while the mouse button is pressed. The 
+small rectangle in the lower right corner can be used to resize a 
+widget.
+Figure 7-3 shows the contents of the work area with all the basic 
+widgets necessary for the Finder window.
+The generated widgets have default values for all resource fields. 
+Usually you need to change some of them. In this example, 
+specific labels are necessary for the push buttons. Resource fields 
+can be changed in a resource dialog. To display a resource dialog, 
+press the mouse button inside the small magnifying tool and 
+drag the magnifying glass on top the desired widget. A dashed 
+line appears around the widget the cursor is over. The dialog 
+appears when you release the button (Figure 7-4).
+                                     
+Figure 7-4: Resource dialog for a push button.
+A clock cursor appears because the dialog window must first be 
+created (you can simultaneously show resource dialogs for 
+several widgets). In the dialog window you see controls that set 
+the most important resource fields of the widget belonging to this 
+dialog.
+You can now change the label string of the selected push button. 
+The dialog contains a text field with the string. You can edit the 
+string using the normal editing operations. Observe how the 
+label string in the widget immediately changes during the 
+editing process.
+The three push buttons should be labeled "Parent Directory", " 
+Open " and " Refresh ". You can end the resource dialog by 
+clicking on the "Dismiss" button or by double clicking in the 
+upper left corner of the dialog window. However, the dialog may 
+also be left open while you work with the other widgets in the IB 
+because it is a modeless dialog.
+The dialogs also contain the widget name as the first entry in the 
+dialog window. This string is not displayed in the widget, but 
+used to identify the widget from the program. Although a default 
+name is supplied, you should use meaningful names. The widgets 
+in this example that you have already created should be named 
+"parent-button", "directory-label", "file-list", "open-button" and 
+"refresh-button" to correspond with the names used in the Finder 
+application code.
+You can edit other resource fields of the buttons, but they are not 
+necessary for this example. You can also change the contents of 
+the label and the scrolled list, but this has only demonstration 
+character as the real values are supplied from the directories 
+read by the Finder application code.
+.c3.7.2.2 Building the Hierarchy
+The next step is to build the composite widgets that will lay out 
+the components of the Finder window. At first, the two push 
+buttons at the bottom will be aligned through a row-column 
+widget.
+To enclose the buttons in a row-column, you first select the 
+buttons by enclosing them in a selection rectangle drawn in the 
+work area. Then you select the "Make Row-Column" entry from 
+the "Arrange" menu. The buttons are now aligned next to each 
+other by being enclosed in a row-column widget (Figure 7-5).
+                                                     
+Figure 7-5: After enclosing the two buttons in a row-column.
+It is possible that the buttons are not arranged horizontally but 
+vertically. The orientation is determined by a heuristic from the 
+positions of the selected widgets. If the orientation is wrong (and 
+in other cases) you can use the Undo command, rearrange the 
+widgets and then repeat the step correctly.
+It is desirable that there is some spacing between the two 
+buttons. However, you cannot move the buttons apart because 
+they are now parts of the row-column. The row-column 
+determines the layout in its region. Only the row-column as a 
+whole can be selected and moved. Fortunately, the spacing is a 
+resource field of the row-column widget, and you can change it if 
+you pop up the resource dialog for the row-column widget. It is 
+slightly difficult to hit the row-column widget with the 
+magnifying glass, you have to move it near the border until the 
+feedback indicates that the whole row-column is selected.
+To show the resource dialog, you can slo double-click into the 
+border around the row-column widget. Another way to access 
+resource dialogs is the tree tool that appears if you select the 
+"Tree" command in the "Tools" menu to display the widget 
+hierarchy (Figure 7-6). In the dialog that appears you can select 
+a widget by name and activate the "Resources" button or double-
+click an entry.
+                             
+Figure 7-6: The tree tool.
+The row-column is only suitable for regular layout. To arrange 
+the rest of the components you have to use the form widget. The 
+form widget ensures that, when resizing the Finder window, only 
+the selection list is resized.
+You create the form widget in the same way as the row-column. 
+You have to enclose all widgets in the form, even the row-column. 
+At first, the form widget assumes a default layout similar to the 
+placement of the widgets before creating the form. In many cases 
+this layout will be correct, except for the amount of spacing. To 
+change this arrangement you have to use the form resource 
+dialog.
+The form layout is determined by specifying an attachment for 
+each side of each child of the form. The resource dialog (Figure 7-
+7) shows an option menu selecting between the children and four 
+control groups that set the four attachments of the child selected 
+by the option menu.
+Each attachment can have a different type. Three types are 
+important, the others are seldom used. "None" specifies no 
+attachment, the side is left alone. "Form" attaches the side with a 
+specified offset to the side of the form. "Widget" attaches the side 
+with a specified offset to another widget. The offset is specified 
+with a scale and the attached widget, if relevant, is selected by 
+another option menu.
+For this example you should control the attachments for each 
+child in turn. At first the parent-button is connected. Its top and 
+left attachment should be set to "Form". To leave some space, you 
+can set both offset scales to 10.
+                                 
+Figure 7-7: The form resource dialog.
+Next, the label is connected. Its top attachment should be set to 
+"Widget" and its left attachment to "Form". Again you can set the 
+appropriate spacing.
+The file list needs different attachments. At the top it is attached 
+to the label. The list will be attached to the left and the right side 
+of the form to be resized when the window is resized. Test this 
+behaviour by resizing the form widget. See how the list becomes 
+wider, while the other widgets stay at their size.
+The bottom of the list must be attached to the row-column 
+because if the row-column would be attached to the list, the row-
+column would resize vertically and not the list.
+At last, the row-column must be connected. Its top must be 
+attached "None", otherwise the attachments would be circular. 
+Instead its bottom, as well as its left side, are attached to the 
+form. Note that you cannot attach the buttons in the form, 
+because they are not direct children of the form widget.
+Test the resize behaviour of the resulting layout and adjust the 
+spacing until it suits your needs.
+There is an experimental feature that shows the layout 
+parameters of the form widget, called the ruler view. You can see 
+this view if you click on "Show Constraints" in the resource 
+dialog for the form widget (Figure 7-8). You can change the 
+spacing by moving the rulers. However, this feature is not fully 
+implemented and may crash in exotic circumstances.
+                        
+Figure 7-8: Ruler view (experimental).
+As the last step you have to choose the superclass to be used for 
+your window. In this case the layout will be used in a main 
+window, therefore you must select "Main" in the "Class" 
+submenu in the "Dialog" menu.
+You can save your work by using the "Save As" menu entry and 
+choosing an appropriate name for your IB document.
+
+.c3.7.2.3 Generating Code
+You can now generate code for the new widget class. At first you 
+have to name the new class. This name is handled like a resource 
+of the dialog class. The corresponding resource dialog is shown by 
+choosing the "Resources" entry in the "Dialog" menu. You should 
+enter the class "finder-shell" here.
+The next step is to show the coder dialog by selecting the "Coder" 
+entry in the "Tools" menu. This tool has a separate menu. You 
+can look at the generated code by selecting the "Class Code" and 
+"Constructor Function" entries in the "Show" menu. The 
+complete code is always saved in conjunction with the IB 
+document, carrying a ".lisp" extension.
+Inside the IB, the parent of the new window is not shown (in this 
+case the main window with the default menu bar). However, you 
+can control the final appearance by selecting "Create instance" 
+from the "Code" menu. This command saves and loads the 
+generated code into the running lisp and executes the constructor 
+function. In a few seconds, the newly generated main window 
+appears. You can get rid of this window by double-clicking in its 
+upper left corner.
+You should not edit the generated code in your application. 
+Instead, you can create an instance of this class and perform any 
+additions by accessing the subpart widgets as slots of the 
+instance.
+                                                          
+Figure 7-9: The coder tool.
+;;;-*-Mode:LISP; Syntax: Common-Lisp;Package:gina;-
+*-
+
+;; !!! Do not edit !!!
+;; This code was generated by the GINA Interface 
+Builder.
+
+(in-package :gina)
+
+(defclass finder-shell (document-shell)
+	((form :accessor form) 
+	(button-row :accessor button-row)
+	(file-list :accessor file-list)
+	(directory-label :accessor directory-label)
+	(parent-button :accessor parent-button)
+	(start-button :accessor start-button)
+	(refresh-button :accessor refresh-button))
+	(:documentation ""))
+
+(defun make-finder-shell (doc &key (initargs nil) 
+					(motif-resources nil)
+					(class 'finder-shell) 
+					&aux box)
+	(setq box
+		(make-document-shell doc :class class 
+					:initargs initargs
+					:motif-resources motif-resources 
+					:width 157 :height 217))
+	(setf (form box) (make-form box))
+	(setf (button-row box)
+		(make-row-column (form box) 
+					:orientation :horizontal :spacing 
+20))
+	(setf (start-button box) 
+		(make-push-button (button-row box) "Open"))
+	(setf (refresh-button box) 
+		(make-push-button (button-row box) 
+"Refresh"))
+	(setf (file-list box)
+		(make-scrollable-selection-list (form box) 
+nil 
+					:visible-item-count 3))
+	(setf (directory-label box) 
+		(make-label (form box) "/my/dir"))
+	(setf (parent-button box) 
+		(make-push-button (form box) "Parent 
+Directory"))
+
+	(define-form-constraint (button-row box) 
+		:top-attachment :none
+		:left-attachment :form :left-offset 10 
+		:right-attachment :none
+		:bottom-attachment :form :bottom-offset 10)
+	(define-form-constraint (file-list box) 
+		:top-attachment :widget 
+		:top-widget (directory-label box) :top-offset 
+5
+		:left-attachment :form :left-offset 10
+		:right-attachment :form :right-offset 10 
+		:bottom-attachment :widget 
+		:bottom-widget (button-row box) :bottom-
+offset 15)
+	(define-form-constraint (directory-label box) 
+		:top-attachment :widget
+		:top-widget (parent-button box) :top-offset 
+10 
+		:left-attachment :form :left-offset 10 
+		:right-attachment :none 
+		:bottom-attachment :none)
+	(define-form-constraint (parent-button box) 
+		:top-attachment :form :top-offset 10 
+		:left-attachment :form :left-offset 10 
+		:right-attachment :none
+		:bottom-attachment :none)
+	box)
+
+In the Finder example program you can look at the method 
+create-windows. This method creates an instance of the class 
+finder-shell and adds the necessary callbacks, as well as 
+removing some menu entries. The Finder application also sets 
+the directory label and file list contents, when appropriate.
+.c2.7.3 Using the Interface Builder
+This chapter contains a short summary of the IB features and its 
+usage.
+The interface builder consists of a main window and three tool 
+windows (menu "Tools"):
+* the palette that shows the available widget classes. Dragging a 
+widget from the palette onto the work area creates a new 
+widget there.
+* the coder tool, where the generated code can be inspected. In 
+this window, Lisp users will set the package used. C++ users 
+have to switch to "Use C++".
+* the tree tool, where you can see the widget tree. Double-clicking 
+shows the resources, you can also set widget name and label 
+string of the selected widget.
+Creating Widgets
+Prototype widgets can be dragged from the palette onto the work 
+area. The palette can be used for multiple IB documents.
+Widgets can be selected by catching them with a rectangle drawn 
+in the view. They can also be selected by clicking into. Shift Btn1 
+(Extend) and Ctrl Btn1 (Toggle) work like on the Mac.
+Widgets can be moved by dragging their selection frame. The 
+rectangle in the lower right corner can be used to resize a widget. 
+However, position and size are not relevant for the final window, 
+as geometry is determined by a manager widget. Positions are 
+used as approximations to determine layout parameters. 
+Resizing is useful for observing geometry management 
+behaviour.
+All commands, except for changing form and pane constraints, 
+can be undone. Selected widgets or all widgets can be deleted by 
+the menu entries "Clear" and "Clear all".
+Building the Hierarchy
+To arrange the widgets, you select the desired widgets and group 
+them with a command in the "Arrange" menu. The grouping tries 
+to preserve the layout of the widgets before grouping. This is 
+especially important for the form widget that tries to establish a 
+matrix from the selected widgets and align the widgets in one 
+row or column. Therefore, when creating a form, you should 
+arrange the parts approximately as you would like them to 
+appear. Use some space between the parts, then the interface 
+builder knows better which parts to align. You can reduce the 
+spacing later on when the layout is finished.
+You can cut or copy any part of the widget hierarchy with two 
+other icons below the menu bar. When grabbing these icons and 
+positioning them over a widget, a feedback is shown around the 
+widget that will be hit. By slowly moving to the corners of a 
+manager, you can select a whole subtree starting with the 
+manager for cutting. If a manager would have no children after 
+cutting, it will be included in the cut operation.
+You cannot cut widgets from a form that are referred to by other 
+widgets (indicated by a missing feedback). Set the other widget's 
+attachments to another widget before cutting again.
+You can also paste into a manager. By positioning on a child of a 
+row-column, you can insert the pasted widget before that child.
+A composite group can be destroyed by the "Ungroup" command. 
+The composite widget and all its resources are lost (except for 
+Undo, of course). However, constraints of the children remain 
+because they are stored with the children. They are used if 
+possible when the children are later enclosed again.
+Changing Resource Fields
+The resources of a widget can be inspected by dropping the 
+magnifying glass on top of it, or by double-clicking on a selected 
+widget, or by selecting "Resources" in the tree view. The form 
+and paned window dialogs contain constraints that are stored 
+with their children.
+Resource fields of the invisible root widget (dialog, main window 
+etc.) can be changed with the command "Resources" in the menu 
+"Dialog". The parent class can be chosen in the "Class" submenu 
+in "Dialog".
+Defining Callbacks
+You can set callbacks for a widget in the resource dialog. The edit 
+area for a callback is shown in Figure 7-10.
+                                                        
+Figure 7-10: Edit area for callbacks in a resource dialog.
+The callback representation consists of a list of elements. The 
+first (default <proc>) is the name of the procedure or method to 
+be called. The second (default <obj>) is the object to be used as 
+the message target. The other entries show the parameters 
+passed by the callback, so that you have a complete parameter 
+list of the destination method.
+The selected line on the left can be edited by selecting an entry 
+from the chooser, or by entering a value into the text field. You 
+will normally enter the method name when editing the <proc> 
+entry (the chooser is empty), and you will use the chooser for all 
+other entries.
+If you want to add additional callback parameters, you can insert 
+an empty object entry or delete the selected line (if possible). 
+Additional entries starting with an alphabetic character are 
+regarded as slot references, all other values are passed as 
+immediate Lisp expressions.
+The chooser offers all defined widgets of the dialog and two 
+special entries: <Document> denoting the document object 
+associated with the dialog (this is the most common target), and 
+<Constructor> if the callback is a function call that has no 
+method target.
+Example: the value-changed-callback of a text shows the 
+representation
+<proc>, <obj>, value
+Select the first line and enter "notify-changed" in the text field. 
+Select the second line and select <Document> in the chooser. 
+Select the third line and press the Insert button. A new entry 
+<arg> appears. Select modeless-dialog-box-0 from the chooser. 
+The callback now reads:
+notify-changed, <Document>, modeless-dialog-box-0, 
+value
+This process will result in the following generated code:
+(setf (value-changed-callback (text-0 box))
+		(make-callback 'notify-changed doc box))
+where "box" is the dialog box to be created and "doc" is the 
+document parameter to the window constructor.
+Saving Documents
+IB documents can be saved and restored in files with the "ibuild" 
+extension. The generated code is always saved concurrently with 
+extension ".lisp" in the same directory. For C++, two files are 
+generated for the code, a header file (".h") and the code file (".C").
+Generating Code
+Code generation can be controlled from the coder tool, displayed 
+by selecting "Coder" from the "Tools" menu. In the "Show" menu 
+you can look at the code, while in the "Code" menu, you can load 
+or compile the code into the Lisp image or create an instance of 
+the window class. The code is automatically saved with the 
+document.
+For subclasses of document shells you should be careful with the 
+menu entries when creating an instance, because they may affect 
+the IB application. Only closing the window is safely permitted.
+For loading the code into Lisp, the package name should be set 
+correctly in the coder window.
+Connecting to the Application
+The generated code implementes a widget class as a subclass of 
+either document-shell, modeless-dialog-box, tool-dialog-
+box or modal-dialog-box. You can name this new class in the 
+resource dialog for the dialog widget. Every subwidget is defined 
+as a slot of this class. The constructor function (named make-
+<class-of-root-widget>) creates an object of this class and all 
+its subwidgets with the resource fields specified in the IB 
+document. The constructor function has a document as its 
+argument, and the keyword parameters :class and :initargs 
+to allow for subclasses.
+Callbacks (if not set in the resource dialog) and application-
+dependent values may be set immediately after calling the 
+constructor function (e.g. in the method create-windows). For 
+document shells you may also modify the standard menu by 
+adding or removing entries.
+Views are handled slightly different, because an application 
+normally uses a subclass of view, which is not available in the IB. 
+You have to specify the name of this view class in the resource 
+dialog for the view. In the generated code, the constructor make-
+<view-class> is called with a document as the single 
+parameter. Any modifications (such as size) can be performed 
+inside this application-specific constructor.

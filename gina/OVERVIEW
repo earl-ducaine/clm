@@ -1,0 +1,64 @@
+Overview of the GINA Distribution
+=================================
+
+The following diagram shows the directories of the GINA distribution and
+the most important files.
+
+
++--- README                 A description what GINA is and where to get it
+|
++--- RELEASE-NOTES          The differences for this relase
+|
++--- clm                    Contains CLM
+|     |
+|     +--- INSTALL          Describes how to install CLM
+|     |
+|     +--- RELEASE-NOTES    Describes the CLM changes and installation
+|     |
+|     +--- server           The CLM server part implemented in C
+|     |     |
+|     |     +--- README     Describes how to install the server part
+|     |     ...
+|     |
+|     +--- lisp             The Lisp library part of CLM
+|     |     |
+|     |     +--- README     Describes how to install the Lisp library
+|     |     ...
+|     |
+|     +--- demos            Some demo programs in Lisp
+|     |     ...
+|     |
+|     +--- doc              The TeX documentation for CLM
+|           |
+|           +--- clm.PS     Postscript version of the CLM Manual
+|           ...
+|
++--- gina                   Contains the source code for the GINA library
+|     |
+|     +--- INSTALL          Describes how to install GINA, the demos and the IB
+|     ...
+|
++--- gina-demos             Contains demo programs for GINA
+|     ...
+|
++--- ib                     Contains source for the GINA Interface Builder
+|     ...
+|
++--- documentation          Contains the GINA documentation
+|     |
+|     +--- gina-manual.ps   The GINA User Manual with installation hints
+|     |
+|     +--- gina-overview.ps An overview paper about the GINA concepts
+|     ...
+|
++--- documents              Contains documents for the demo programs
+|     ...
+|
++--- bitmaps                Contains bitmaps needed at run-time for the demos
+|     ...
+|
++--- X-initfiles            Contains sample files for an X session
+|     ...
+|
++--- lisp-bugs+patches      Describes Lisp bugs that must be fixed for GINA
+      ...

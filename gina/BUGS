@@ -1,0 +1,58 @@
+List of Known Bugs in Version 2.2
+=================================
+
+10. Feb 92 (berlage)
+--------------------
+
+- CLM:
+  If a Lisp error occurs in a callback that is triggered by a request, the
+  message "Unexpected confirmation message" occurs. Example: error in
+  map-callback following a pop-up request. No trivial fix, but application
+  continues normally.
+
+10. Feb 92 (berlage)
+--------------------
+
+- Documentation:
+  The layout is for DIN A 4. Printing on US letter may cut off the footer.
+  Documents use some special Laserwriter Fonts (such as New Century
+  Schoolbook) that may not be available on all printers.
+
+14. Feb 92 (beilken)
+--------------------
+
+- Interface Builder:
+  Grouping or ungrouping a manager widget that contains an option menu
+  leads to a core dump in the CLM server.
+  No fix, problem with Motif 1.1.3
+
+07. Apr 92 (berlage)
+--------------------
+
+- CLM:
+  The include file lisp.h should be renamed, because it conflicts with the
+  Allegro-supplied file. If the Allegro file is not found, the error is
+  not immediately apparent.
+
+10. Apr 92 (berlage)
+--------------------
+
+- IB:
+  create-instance should use the current size in the view-constructors.
+  Patch to create a lambda list as constructor and patch create-test-view
+  to accept size as key arguments with default 1000x1000.
+
+6. Jul 92 (berlage)
+-------------------
+
+- gina:
+  Starting an app from the finder outside the current directory of the lisp
+  process uses the current directory in the app as the default.
+
+6. Jul 92 (berlage)
+-------------------
+
+- gina:
+  In Drag-and-Drop, if the pointer leaves a foreign target and the foreign
+  window in one step, feedback in the foreign window is not erased (no
+  notice that target has been left).

@@ -1,0 +1,172 @@
+From cox@Franz.COM Wed Sep 11 21:29:35 1991
+Return-Path: <cox@Franz.COM>
+Received: from gmdzi.gmd.de by f3svb.gmd.de (4.1/SMI-4.1)
+	id AA12495; Wed, 11 Sep 91 21:29:32 +0200
+Received: from relay1.UU.NET (5012789) by gmdzi.gmd.de
+	id AA07409; Wed, 11 Sep 91 21:28:33 -0200
+Received: from uunet.uu.net (via LOCALHOST.UU.NET) by relay1.UU.NET with SMTP 
+	(5.61/UUNET-internet-primary) id AA11170; Wed, 11 Sep 91 15:28:25 -0400
+Received: from franz.UUCP by uunet.uu.net with UUCP/RMAIL
+	(queueing-rmail) id 152750.19640; Wed, 11 Sep 1991 15:27:50 EDT
+Received: by franz.Franz.COM (MC 2.0/FI-1.0)
+	id AA14417; Wed, 11 Sep 91 11:32:19 PDT
+Received: by crisp.Franz.COM (4.0/FI-1.0)
+	id AA16861; Wed, 11 Sep 91 11:34:42 PDT
+Date: Wed, 11 Sep 91 11:34:42 PDT
+Message-Id: <9109111834.AA16861@crisp.Franz.COM>
+From: Patch Dispatcher <bugs@Franz.COM>
+To: spenke@f3svb
+Subject: [spr4087] patch70 for sparc
+Status: R
+
+
+Allegro CL version:	4.0
+Patch number: 		patch70.fasl
+Architecture:		sparc
+Patch Description:
+ - mp:with-process-lock unlocks prematurely with nested invocations
+
+What follows is a `uuencoded' patch for Allegro CL.  To utilize this
+patch, you must have the Allegro CL 4.0 distribution from which you
+made your `cl' binary image.  If you read your Allegro CL distribution
+into /usr/cl, for example, then you would follow these steps to apply
+this patch:
+
+    % cd /usr/cl/build
+    % mkdir update		# if the directory does not already exist
+    % chmod 777 update		# this is so `uudecode' can write in .
+    % cd update
+    % rm -f patch.uu
+    % cp <the-file-containing-this-message> patch.uu
+    % uudecode patch.uu
+    % cd ..
+
+Now, in the `build' directory, rebuild Allegro CL according to the
+instructions in your Installation Guide (they may vary from machine to
+machine).
+
+If you have any questions concerning this patch or problems installing
+it, please contact me.  I can be reached at the e-mail address or the
+telephone number given below.
+
+	INTERNET: bugs@franz.com
+	UUCP:  uunet!franz!bugs
+	Phone: (415) 548-3600
+	FAX:   (415) 548-8253
+
+---------- here starts the uuencoding of the patch file:
+
+begin 666 patch70.fasl
+M\ZQW@>,J!P >  D% "D %30N,"XQ(%M3=6XT72 H,B\X+SDQ*1L 00 $9S8S
+M.   /    P (<&%T:&YA;64  2 " @, "&%B<V]L=71E  (@!  '=&UP7VUN
+M= 0  VYE= 0 !6%K8F%R!  "8VP$  ,T+C $  5P871C: 4'!  '<&%T8V@W
+M, 0  F-L @0 *B]T;7!?;6YT+VYE="]A:V)A<B]C;"\T+C O<&%T8V@O<&%T
+M8V@W,"YC;!8    (#P, $2IS;W5R8V4M<&%T:&YA;64J  <@+P "" !D    
+M&9WCOYC>!V :G@/@"-XG8!J H.  E= @$($0  '@!V BT@=@)L0!/G^0$  0
+M@0B "#Z   G0(G_^.(  !] B?_[> 2![G\/@ (80( (0@  #D!  $) 0 !"&
+M$" !@<?@")'J   + A P  @8     "L,/    P .=&]P+6QE=F5L+69O<FT 
+M B $  IP871C:#<P+F-L&      %! 4!.P] 00 $9S8S.0 !/  ! P %<&%T
+M8V@  B #  -U<V4  B #  1L:7-P  (@ P $97AC;  "( 4#!0$#  QD969P
+M86-K86=E+3$ !R O  ,( $0    1G>._F-X'8!J> ^ (WB=@&H"@X "5T" 0
+M@1   = '8"+@!V FDA  $,0'8"K: * &S -__I_!H "&&" "@<?@")'J   +
+M A P  @8     "L,/  ! P .=&]P+6QE=F5L+69O<FT  B $  IP871C:#<P
+M+F-L&      %! 4!.P] 00 $9S8T,  "/  "%  %<&%T8V@#  DJ<&%T8VAE
+M<RK__" # !(N9VQO8F%L;'DM<W!E8VEA;"X !R # !!C;VUP:6QE<BUP=71P
+M<F]P  0@+P #" "H    *IWCOYC>!V :G@/@"-XG8!J H.  E= @$($0  '0
+M!V BX@$_V^ '8":2$  1E!  $,0'8"K: * &S -__I_!H "&&" #X@=@(J  
+M/_"A/" #X@1 $. !/Z> I$ 0,H  $- '8"+2!V BQ $^?Y 0  2!"( (/H  
+M"= B?_XX@  'T")__MX!('N?P^  AA @ A"   /0!V BT =@(H80( &!Q^ (
+MD>H   L"$#  "!@     *PP\  (#  YT;W M;&5V96PM9F]R;0 "( 0 "G!A
+M=&-H-S N8VP8     04$!0$[#T!!  1G-C0Q  0\  0$ $!M<#IW:71H+7!R
+M;V-E<W,M;&]C:R!U;FQO8VMS('!R96UA='5R96QY('=I=&@@;F5S=&5D(&EN
+M=F]C871I;VYS P )*G!A=&-H97,J__P@+P "" #\    /YWCOYC>!V :G@/@
+M"-XG8!J H.  E= @$($0  '@!V BT $]Y\0!/>N, B (@*" "#2   7,(3WG
+MW@$@/Y_#X "&$"  GA B,-XB/__@(B #HA  ",0'8";, +_^W@$_IX"A@ \R
+M@  )T $]YY 0( 7> 2"_DA   I_#X "&$" "C!  "- !/>>@$  &Q $]ZXP"
+M( B H( (-(  !<PA/>?> 2 _G\/@ (80( #B(C__X"(@ Z 0  C2!V FQ $^
+M?Y 0 !"!"( (/H  "= B?_XX@  'T")__MX!('N?P^  AA @ A"   .0$  0
+MD!  $(80( &!Q^ (D>H   L"$#  "!@     *PP\  0#  YT;W M;&5V96PM
+M9F]R;0 "( 0 "G!A=&-H-S N8VP8     @4$!0$[#T!!  1G-C0R  4\  4#
+M  )M<  "( , $VEN=&5R;F%L+6EN+7!A8VMA9V4 !R O  (( $     0G>._
+MF-X'8!J> ^ (WB=@&H"@X "5T" 0@1   = '8"*2$  $Q =@)MH H ;, W_^
+MG\&@ (88( *!Q^ (D>H   L"$#  "!@     *PP\  4#  YT;W M;&5V96PM
+M9F]R;0 "( 0 "G!A=&-H-S N8VP8     P4$!0$[#T!!  XN9S8T,RYA8S<W
+M.#%B8@ &/Q0 #VUU;'1I<')O8V5S<VEN9P, $7=I=&@M<')O8V5S<RUL;V-K
+M__@@ P )9G5S<WDM8V%R  <@ P )9G5S<WDM8V1R  <@ P '=&EM96]U=  "
+M( , #&9I;F0M:V5Y=V]R9  '( , "VYO<F5C=7)S:79E  (@ P &<V5I>F5D
+M  (@ P (=VAO<W1A=&4  B A  <A  8A  4A  ,%! , #&ME>7=O<F0M=&5S
+M=  '( , !&QE="H  2 "!0$"!0$# !0J=VET:&]U="UI;G1E<G)U<'1S*@ '
+M( 4!(0 * P !=  !( 4"!0$#  1S971Q  $@ @4! P .=6YW:6YD+7!R;W1E
+M8W0  2 #  5P<F]G;@ !( , !'=H96X  2 #  )E<0 !( , $W!R;V-E<W,M
+M;&]C:RUL;V-K97+_^" # !$J8W5R<F5N="UP<F]C97-S*O_X( 4! P &+F5R
+M<F]R  <@!  9?G,@<V5I>FEN9R!^<R!R96-U<G-I=F5L>2$ $@, #'!R;V-E
+M<W,M;&]C:__X( ,  F]R  $@ P #86YD  $@ P .<')O8V5S<RUU;FQO8VO_
+M^" $  1,;V-K P #:68J  <@(0 2!0$#  1T:&5N__@@ P %<75O=&4  2 A
+M  L% @4! P $96QS9?_X("\ ) @(S    C.=X[] W@=@&IX#X C>)V :@*#@
+M I/0(!"!$  !X =@(I 0( B2$  $E!  $)80 !C$ 3ZOV@"@!LP#?_Z?P:  
+MAA@@!- &( /$!V FV@"@!LP#?_Z?P:  AA@@ <0'8"8!    V@"@!LP#?_Z?
+MP:  AA@@ :X0  C0!B #Q =@)MH H ;, W_^G\&@ (88( '$!V J 0   -H 
+MH ;, W_^G\&@ (88( &B$  (T =@+I(0 !'$!V RV@"@!LP#?_Z?P:  AA@@
+M @$   "@$  (@*( ! *  :H!    W@0__]XGO[S0!V VDA  $<0'8#+: * &
+MS -__I_!H "&&" " 0   * 0  B H@ $ H !G@$   #>!#__WB>_N- '8#J2
+M$  1Q =@,MH H ;, W_^G\&@ (88( (!    H!  "("B  0"@ &2 0   -X$
+M/__>)[_ T =@/I(0 !'$!V RV@"@!LP#?_Z?P:  AA@@ @$   "@$  (@*( 
+M! *  88!    [ 0__] &( /$!V JV@"@!LP#?_Z?P:  AA@@ = GOZ"0$  1
+MX =@0I(0 !#$!V!&V@"@!LP#?_Z?P:  AA@@ N 'O\" I  $(H !=,0!/I>B
+M$  0Q $^E]H H ;, W_^G\&@ (88( #$ 3Z7H!  "-H H ;, W_^G\&@ (88
+M( #$ 3Z7IA  "-H H ;, W_^G\&@ (88( #$ 3Z7J!  "-H H ;, W_^G\&@
+M (88( #$ 3Z7I!  "-H H ;, W_^G\&@ (88(  !    JA  $- GO_C>!V!*
+MWB>_I) 0 !.2$  7W@$BJY_#X "&$" "T">_Z,0'O\" H( $$H !30$   #@
+M!V!.T $]Y\0!/>N, B (@*" "#2   7,(3WGW@$@/Y_#X "&$"  XB(__^ B
+M( .@$  (T $]Y\0!/>N, B (@*" "#2   7,(3WGW@$@/Y_#X "&$"  X"(_
+M_\@B( /0)[_LX =@4M !/>?$ 3WKC (@"("@@ @T@  %S"$]Y]X!(#^?P^  
+MAA @ .HB/__@(B #T">_\) 0 !+2![^\W@$BJY_#X "&$" "T">_]) 0 !22
+M$  6W@$BJY_#X "&$" "X =@5JX0  C0 3WGQ $]ZXP"( B H( (-(  !<PA
+M/>?> 2 _G\/@ (80( #>![_XWB(__^ B( .L$  (X =@6M 'O_#2![_TE!  
+M%Y80 !:8$  0Q $^G]H H ;, W_^G\&@ (88( 6@$  (T >_[)(0 !#$ 3V[
+MV@"@!LP#?_Z?P:  AA@@ J 0  C0 3WGQ $]ZXP"( B H( (-(  !<PA/>?>
+M 2 _G\/@ (80( #>![_HWB(__^ B( /0)[^HQ >_P("@@ 0"@ #J 0   - '
+M8%[@!V!BDA  $900 !#$ 3Z?V@"@!LP#?_Z?P:  AA@@ Z 0  C0 3WGQ $]
+MZXP"( B H( (-(  !<PA/>?> 2 _G\/@ (80( #@(C__R"(@ ] GO[#>!V!F
+MWB>_K-X'8&K>)[^TQ >_N("@@ 0"@ #. 0   -X'8&K>)[_$W@=@;MXGO^#N
+M!V!RX =@=I 0 !"2$  3W@$BJY_#X "&$" "X =@>JP0  B0$  7DA  %I00
+M !#$ 3Z?V@"@!LP#?_Z?P:  AA@@ ] GO^3N!V!^[ =@@N '8(:0$  7DA  
+M%I00 !"6$  3W@$BLY_#X "&$" $H!  "- 'O^#2![_DE!  $-X!(J^?P^  
+MAA @ ZP0  C>!V!>WB>_R.X'8(K@!V"&D!  %Y(0 !.4$  0EA  %)@0 !+>
+M 2'3G\/@ (80( 6@$  (T >_R)(0 !&4$  0W@$BKY_#X "&$" #H!  "- '
+MO\22$  6E!  $-X!(J^?P^  AA @ ZP0  CH!V!NX =@CI 0 !"2$  1E!  
+M%=X!(J^?P^  AA @ ^(!/8>D$  (X $_3Y 0 !#2![_XW@$BJY_#X "&$" "
+MH!  "- !/>?$ 3WKC (@"("@@ @T@  %S"$]Y]X!(#^?P^  AA @ . B/__(
+M(B #H!  ") 0 !&2$  0U >_H,0!/I_: * &S -__I_!H "&&" #H!  ") 0
+M !22$  2W@$BKY00 !"?P^  AA @ Z 0  C0![^TDA  %I00 !#> 2*OG\/@
+M (80( /D!V!NJ!  ".('8)+@!V!VD!  $)(0 !/> 2*KG\/@ (80( *@$  (
+MD!  $9(0 !7> 2*OE!  $)_#X "&$" #X =@EJ(0  B0$  0DA  $]X!(JN?
+MP^  AA @ J 0  B0$  2DA  $=X!(J^4$  0G\/@ (80( .@$  (T >_K)(0
+M !24$  0W@$BKY_#X "&$" #H!  "- !/>?$ 3WKC (@"("@@ @T@  %S"$]
+MY]X!(#^?P^  AA @ . B/__((B #H!  "- 'O["2$  0Q $]N]H H ;, W_^
+MG\&@ (88( *@$  (T >_I-('OZB4$  0Q $^G]H H ;, W_^G\&@ (88( .!
+MQ^ (D>H  !"__EK()[^\$+_^9L@GO[@0O_YRR">_P!"__GWL!V":V@"@!LP#
+M?_Z?P:  AA@@ !"__HNB$  ($+_^SL@GO^P0O_\NR">_L-X'8)[>)[_,[@=@
+M<N '8':0$  0DA  $]X!(JN?P^  AA @ N '8**L$  (D!  %Y(0 !:4$  0
+MQ $^G]H H ;, W_^G\&@ (88( /0)[_0W@=@IMXGO]30!V!>X =@JI(0 !&4
+M$  0Q $^G]H H ;, W_^G\&@ (88( /0)[_8W@=@KMXGO]SN!V!>[ =@BN '
+M8(:0$  6DA  $Y00 !"6$  4F!  $MX!(=.?P^  AA @!: 0  B0$  7DA  
+M%=X!(J^4$  0G\/@ (80( .@$  (G".@"- 'O\S2![_0U >_U-8'O]C8![_<
+MX".@7-X!(=.?P^  AA @!IP#H @0O_\WK!  " L#  PJ*FUA8W)O87)G*BH 
+M!R #  \N+F5N=FER;VYM96YT+BX !R % A P  @8    %RL^#$!!  1G-C0S
+M  @\  @# !%W:71H+7!R;V-E<W,M;&]C:__X( , &FQE>&EC86QL>2UV:7-I
+M8FQE+69U;F-T:6]N  <@/  &!@(#  YM86-R;RUF=6YC=&EO;@ !( , !&QO
+M8VO_^" #  0F:V5Y  $@ P '=&EM96]U=/_X( , "VYO<F5C=7)S:79E__@@
+M P &<V5I>F5D__@@ P (=VAO<W1A=&7_^" %!@, !29B;V1Y  $@ P $8F]D
+M>?_X( 4# P '9F)O=6YD<  !("\ !0@!'    $>=X[^8W@=@&IX#X C>)V :
+M@*#@ )70(!"!$  !T =@(N '8":2$  0Q $_"]H H ;, W_^G\&@ (88( +@
+M!V BT =@(L0'8"K: * &S -__I_!H "&&" !I!  "*( (%"C/& #D@2 $<0!
+M/G^0$  0@0B "#Z   S0(F  .(  "M B8 " HD ".(  !] B8 #> 2!WG\/@
+M (80( (0@  #X =@+N '8"[0!V BQ =@,MH H ;, W_^G\&@ (88( &D$  (
+MH@ @D*,\8 .2!( 1Q $^?Y 0 !"!"( (/H  #- B8  X@  *T")@ ("B0 (X
+M@  'T")@ -X!('>?P^  AA @ A"   /0!V BT =@(H80( &!Q^ (D>H   L"
+M$#  "!@     *PP\  @#  YT;W M;&5V96PM9F]R;0 "( 0 "G!A=&-H-S N
+78VP8    ! 4$/  &(0  !@(% CL/0 %V
+ 
+end
+

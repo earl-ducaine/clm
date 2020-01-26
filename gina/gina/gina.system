@@ -1,0 +1,8 @@
+;;; -*- Mode: Lisp; Syntax: Common-lisp; Base: 10 -*-
+
+(unless (fs:get-logical-pathname-host "gina-host" t)
+  (fs:make-logical-pathname-host "gina-host"))
+
+
+(si:set-system-source-file
+  "gina" "gina-host:gina;sysdcl.lisp.newest")

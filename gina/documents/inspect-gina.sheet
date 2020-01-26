@@ -1,0 +1,23 @@
+"Spreadsheet"
+686 338
+"*adobe-helvetica-bold-r-normal--14*"
+(263 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80)
+T ;; show-grid
+17 ;; nr of cells
+1 1 "=*running-applications*" NIL
+1 2 "" NIL
+1 3 "" NIL
+2 1 "0" NIL
+3 1 "=(nth  A2 A1)" NIL
+4 1 "=(first (document-list  A3))" NIL
+4 2 "" NIL
+5 1 "=(width (main-shell  A4))" NIL
+6 1 "" NIL
+6 3 "" NIL
+7 1 "=(length  A1)" NIL
+7 2 "" NIL
+7 5 "ihkuihui" NIL
+8 1 "" NIL
+8 3 "" NIL
+8 4 "" NIL
+8 5 "" NIL

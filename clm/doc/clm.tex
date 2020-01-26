@@ -1,0 +1,3491 @@
+\documentstyle[dina4,proglist,11pt,makeidx]{report}
+
+\renewcommand{\topfraction}{1}
+\renewcommand{\bottomfraction}{1}
+\renewcommand{\textfraction}{0}
+\renewcommand{\floatpagefraction}{0.8}
+
+\sloppy
+
+\title{CLM -- A Language Binding for Common Lisp and OSF/Motif\\[0.5cm]
+       User Guide and Reference Manual\\[0.5cm]
+       Version 2.1}
+\author{Project GINA \\[1cm] Andreas B\"acker \\ Christian Beilken \\ Thomas Berlage \\ Andreas Genau \\ Michael Spenke \\[0.4cm] GMD \\ (German National Research Center for Computer Science)\\
+P.O. Box 1240\\
+D-5205 Sankt Augustin 1\\
+Federal Republic of Germany\\ 
+e-mail: {\tt spenke@gmdzi.gmd.de}}
+\date{January 16, 1992}
+
+\makeindex
+
+\newcommand{\lisp}[1]{\index{#1@{\tt #1}}{\tt #1}}
+\newcommand{\lispfont}[1]{{\tt #1}}
+\newcommand{\motif}[1]{\index{#1@{\tt #1}}{\tt #1}}
+\newcommand{\motiffont}[1]{{\tt #1}}
+\newcommand{\kw}[1]{\index{#1@{\tt :#1}}{\tt :#1}}
+\newcommand{\motifclass}[2]{\kw{#1} (\motif{#2})}
+\newcommand{\param}[1]{{\it #1}}
+\newcommand{\fnsize}{\footnotesize}
+
+\newcommand{\lispdef}[2]{\par\noindent\rule{\textwidth}{1mm}\par\noindent%
+\addcontentsline{fcn}{function}{\protect\numberline{}{#1 (#2)}}%
+\index{#1!#1@#2 description}{\large\tt#1}\hfill(#2)\label{f:#1}%
+\par\noindent\rule{\textwidth}{0.5mm}}
+
+\newcommand{\lispdefun}[1]{\lispdef{#1}{Function}}
+\newcommand{\lispdefmacro}[1]{\lispdef{#1}{Macro}}
+\newcommand{\lispdefvar}[1]{\lispdef{#1}{Variable}}
+
+\newcommand{\defun}[2]{{{\bf #1} #2\hfill[{\it Function}]}}
+\newcommand{\defmacro}[2]{{{\bf #1} #2\hfill[{\it Macro}]}}
+\newcommand{\syntax}{\normalsize\item[Syntax:]\fnsize}
+\newcommand{\beschr}{\normalsize\item[Description:]}
+\newcommand{\parameter}{\normalsize\item[Parameters:]}
+\newcommand{\beispiel}{\normalsize\item[Example:]\fnsize}
+\newcommand{\hinweis}{\normalsize\item[Note:]}
+\newcommand{\xmref}[1]{\normalsize\item[Motif function:]\motif{#1}}
+\newcommand{\lparam}[1]{\item[\param{#1}]}
+\newenvironment{lispd}{\begin{list}{Parameter:}{\renewcommand{\makelabel}[1]{{##1}\hfill}\setlength{\leftmargin}{3cm}\setlength{\labelwidth}{3cm}\setlength{\labelsep}{0mm}}}{\end{list}}
+\newenvironment{paramd}{\begin{list}{Parameter:}{\renewcommand{\makelabel}[1]{{##1}\hfill}\setlength{\leftmargin}{3cm}\setlength{\labelwidth}{3cm}\setlength{\labelsep}{0mm}\setlength{\rightmargin}{0.5cm}}}{\end{list}}
+\newcommand{\einbild}[4]{\begin{figure}[htbp]\vspace{#2}\hspace{#3}\special{#1}\caption{#4}\end{figure}}
+
+\begin{document}
+\maketitle
+
+\chapter*{Copyright}
+
+Copyright 1992 {\sc Gmd} (German National Research Center for Computer Science)
+\vspace{0.3cm}
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that the
+above copyright notice appear in all copies and that both that copyright notice
+and this permission notice appear in supporting documentation, and that the name
+of {\sc Gmd} not be used in advertising or publicity pertaining to distribution of the
+software without specific, written prior permission.  {\sc Gmd} makes no
+representations about the suitability of this software for any purpose.  It is
+provided "as is" without express or implied warranty. 
+\vspace{0.3cm}
+
+\sc Gmd Disclaims All Warranties With Regard To This Software, Including All
+Implied Warranties Of Merchantability And Fitness, In No Event Shall Gmd Be
+Liable For Any Special, Indirect Or Consequential Damages Or Any Damages
+Whatsoever Resulting From Loss Of Use, Data Or Profits, Whether In An Action Of
+Contract, Negligence Or Other Tortious Action, Arising Out Of Or In Connection
+With The Use Or Performance Of This Software.  \rm
+
+\begin{tabbing}
+Authors: \= Andreas B\"acker (baecker@gmdzi.gmd.de)\\
+         \> Thomas Berlage (berlage@gmdzi.gmd.de)\\
+         \> P.O. Box 1240\\
+         \> D-5205 Sankt Augustin 1\\
+         \> West Germany\\
+\end{tabbing}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+CLM is a language binding for Common Lisp and OSF/Motif.  It provides access to
+the functionality of the X toolkit intrinsics and the Motif convenience 
+functions for Common Lisp. Client programs can use the OSF/Motif widget classes
+for their graphical user interface. Additionaly, client programs can use the
+CLX graphics functions to draw into Motif widgets\footnote{This functionality is
+only available when the CLX package was loaded before compiling CLM},
+especially into widgets of classes \motif{XmDrawingArea} and 
+\motif{XmDrawnButton}.
+
+CLM consists of three components: A {\it CLM daemon}, a {\it CLM server},
+and a package of Common Lisp functions.  Both the CLM daemon and server are
+implemented in ``C''.  The CLM daemon runs on an arbitrary machine in the
+network and listens for Lisp processes requesting to use CLM.  The CLM daemon
+forks CLM server processes which communicate with their Lisp processes over a
+network-transparent TCP/IP connection.  The CLM server offers the X toolkit
+and the Motif functionality as remote procedure calls.  The package of Common
+Lisp functions provides a high-level interface to these remote procedures. 
+
+From the X server's point of view, the CLM server is an ordinary X client. 
+The CLM server's functionality is to operate as a gateway between Motif and
+Common Lisp.  The CLM functions send commands to the CLM server to create and
+modify widgets.  The CLM server sends callbacks to the CLM application as a
+reaction to user actions suchs as moving a scrollbar's slider or pressing a
+push-button. 
+
+In the context of this manual, the term {\em CLM application} is a single
+(lightweight) process which runs inside a Lisp process and uses
+CLM\footnote{The {\em multiprocessing facility} is an extension to Common Lisp
+and may not be available in all Lisp systems.  In this case, it is only possible
+to run one CLM application per Lisp process.}.  The CLM daemon can serve an
+arbitrary number of Lisp processes.  There may be an arbitrary number of
+concurrent CLM applications in a single Lisp process.  The CLM daemon forks a
+CLM server process for each CLM application.  This architecture protects
+concurrent processes from getting in trouble with the non-reentrant Motif code. 
+Figure 1 shows the interaction between Lisp, the CLM daemon and server and 
+the X server.
+
+\begin{figure}[htbp]
+\begin{center}
+\begin{picture}(200,280)
+\put(70,0){\framebox(60,40){X server}}
+\put(0,240){\framebox(60,40){\fnsize CLM daemon}}
+\put(0,160){\framebox(60,40){CLM server}}
+\put(140,160){\framebox(60,40){Lisp}}
+\put(60,185){\vector(1,0){80}}
+\put(140,175){\vector(-1,0){80}}
+\put(140,100){\line(1,2){30}}
+\put(140,100){\vector(-1,-2){30}}
+\put(60,100){\vector(-1,2){30}}
+\put(60,100){\vector(1,-2){30}}
+\put(170,200){\vector(-2,1){110}}
+\put(30,240){\vector(0,-1){40}}
+\put(35,220){\makebox(0,0)[l]{{\it fork()}}}
+\put(110,240){\makebox(0,0)[lb]{{\it connect()}}}
+\put(100,170){\makebox(0,0){Commands}}
+\put(100,190){\makebox(0,0){Callbacks}}
+\put(30,100){\makebox(0,0){X Protocol}}
+\put(30,85){\makebox(0,0){(Xlib)}}
+\put(170,100){\makebox(0,0){X Protocol}}
+\put(170,85){\makebox(0,0){(CLX)}}
+\end{picture}
+\end{center}
+\caption{Communication between the CLM server, the X server and Lisp}
+\end{figure}
+
+Lisp processes must not necessarily run on the same host as the CLM daemon. 
+This allows CLM applications to run on hardware which is not capable of running
+X and Motif. CLM automatically chooses the right communication media for local
+and remote Lisp processes.
+
+The CLM server solution is very efficient and results in good performance at
+the user interface level.  Redraw operations and geometry management operations
+are performed by the X Toolkit Intrinsics and the Motif widgets and are handled
+locally in the CLM server.  User interaction like browsing through menu items
+is also handled by the Motif widgets and requires only the execution of C code. 
+Interactions like clicking a push-button lead to the execution of callbacks
+and cause an interaction with Lisp. Communication time is typically small
+and doesn't cause any substantial delays.
+
+\nocite{xlib}
+\nocite{xtoolkit}
+\nocite{motif-prog-ref}
+\nocite{clue}
+\nocite{common-lisp}
+\nocite{berlage-motif}
+
+\chapter{Getting Started}
+
+To use CLM, programmers must carry out the following three steps:
+\begin{enumerate}
+\item Start a CLM daemon.
+\item Load the CLM package.
+\item Load their CLM application(s).
+\end{enumerate}
+
+\section{The CLM Daemon}
+
+Before running any CLM application, at least one CLM daemon must be started. 
+A single CLM daemon can serve an arbitrary number of Lisp processes, but there
+may be any number of CLM daemons in a network.  A CLM application may connect
+to any CLM daemon in the network.  Multiple concurrent CLM applications in a
+single lisp process may choose to connect to different CLM daemons.  
+
+If you want two CLM daemons to run on the same machine, you must specify
+different TCP ports for them. Furthermore, all applications that connect to a
+specific CLM deamon run their interface under the user ID of the daemon.
+In particular, they use the X resource files ({\tt .Xdefaults}) of this
+user.
+
+If it is supported by the Lisp system and if Motif is available on the
+local machine, CLM server processes can be directly created from inside
+Lisp when necessary. This is the default configuration for CLM Version 2.1,
+so you normally do not need to start the CLM daemon as in previous versions.
+
+\subsection{Starting the CLM Daemon from a Command Interpreter}
+
+Running the CLM daemon from a command interpreter is useful if a single
+daemon should serve multiple Lisp processes on a single host or on multiple
+remote hosts. It is also useful if the Lisp process runs on a remote machine
+which is not capable of running UNIX, X and Motif.
+
+To start the CLM daemon, it is necessary to have a running X server because
+the CLM daemon opens an X window which displays a list of active CLM server
+processes.
+
+\pagebreak
+In a properly installed CLM system, it is sufficient to run the command
+\begin{flushleft}
+{\tt\ \ \ \ clmd}
+\end{flushleft}
+from a command interpreter.  This script should either be in the current working
+directory or should be accessible through the search path.  The script runs a
+shell script which starts the CLM daemon and supplies it with all necessary
+arguments.  The \motif{clmd} script also takes the command line options
+which are defined by the X Toolkit Intrinsics and passes them to the CLM
+daemon (e.g., \motiffont{-geometry}, \motiffont{-name}). 
+
+\subsection{The CLM Daemons Window}
+
+The CLM daemon's window contains a {\it Quit} button, a {\it Kill} button and
+a list of active CLM server processes.  The {\it Quit} button is used to 
+terminate the CLM daemon.  All CLM server child processes keep on running
+after the CLM daemon has terminated. The {\it Kill} button is used to kill
+all CLM server processes which are selected in the list of processes.
+
+For each active CLM server, the CLM daemon displays some information about
+the type of connection which is used for the TCP/IP protocol and the CLM
+server's process ID ({\em pid}). 
+
+\section{The CLM Package}
+
+The CLM package contains the Common Lisp part of CLM. It consists of a
+(compiled) lisp module and an optional set of object files which contain 
+foreign functions. CLM applications which use functions or variables from
+the CLM package must either import the CLM package into their source code
+by a \lispfont{(use-package :xtk)} statement or must use the prefix \lisp{xtk:}
+for each exported symbol in the CLM package.
+
+\subsection{Loading the CLM Package}
+
+To load the CLM package into a Lisp world after it has been installed,
+the following steps are necessary:
+\begin{itemize}
+
+\item Optionally load the CLX package.  This is not really required for CLM.  If
+the CLX package is not loaded, the functionality of CLM which deals with CLX
+windows and graphics will not be available.  This functionality of CLM will
+still not be available if the CLX package is loaded after the CLM package has
+been loaded.  This functionality will also not be available if the CLX package
+wasn't loaded when the CLM package was compiled. 
+
+\item Change to the directory where the CLM package is stored.
+
+\item Load the CLM package and optional foreign functions by calling
+\lispfont{(load~"clm")}.  These commands load the
+CLM package and the foreign function modules. 
+
+\item Optionally save the lisp image.  The CLM package contains the non-exported
+function \lispfont{(xtk::save-lisp {\em image-name})} which can be used to save
+the Lisp image.  This function may not be available on all Lisp systems. 
+
+\end{itemize}
+
+\section{Troubleshooting}
+
+\begin{itemize}
+\item When the CLM daemon, server or the CLM application fails to open a
+display connection, make sure that your applications are allowed to connect to
+the X server.  Server access is enabled with the \lisp{xhost} program.
+\item If the CLM daemon fails to come up, it may be necessary to remove the
+file \motiffont{/tmp/clm\_socket}. 
+\item If the windows of the CLM daemon or your application don't appear on
+the screen, check the name of the display host you're using.
+\end{itemize}
+
+\chapter{CLM Variables}
+
+The variables described in this chapter can be used to configure the default
+behavior of CLM. Table~\ref{tab:variables} gives an overview on the variables
+and their semantics.
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|}\hline
+Variable & Description \\\hline\hline
+\lisp{xtk::*debug-mode*} & {\small Enables/disables synchronous CLX requests} \\\hline
+\lisp{xtk::*default-display-host*} & {\small Host where the X display should be opened} \\\hline
+\lisp{xtk::*default-display-number*} & {\small Default number of the X display} \\\hline
+\lisp{xtk::*default-screen-number*} & {\small Default number of the X screen} \\\hline
+\lisp{xtk::*default-server-host*} & {\small Host where the CLM daemon is running} \\\hline
+\lisp{xtk::*clm-binary-directory*} & {\small Directory where server binary resides} \\\hline
+\lisp{xtk::*clm-binary-name*} & {\small Name of the server binary} \\\hline
+\lisp{xtk::*xt-tcp-port*} & {\small TCP port number usedby the daemon} \\\hline
+\lisp{xtk::*motif-connection*} & {\small CLM server connection (per CLM application)} \\\hline
+\lisp{xtk::*x-display*} & {\small CLX display connection (per CLM application)} \\\hline
+\end{tabular}
+\end{center}
+\caption{\label{tab:variables} CLM variables}
+\end{table}
+
+\lispdefvar{*debug-mode*}
+\begin{lispd}
+\beschr The value of this boolean variable is used as the default value for 
+the \kw{sync-clx} keyword argument of 
+\lisp{run-motif-application}~(see page~\ref{f:run-motif-application}).  The
+variable's default value is nil. 
+
+If the variable's value is non-nil, all CLX display connections are opened
+in a synchronous mode. This simplifies debugging of calls to CLX functions,
+but in general slows down execution of calls to CLX functions.
+\end{lispd}
+
+\lispdefvar{*default-display-host*}
+\begin{lispd}
+\beschr This variable contains the name of the host where the X display should
+be opened.  The default value is \lisp{"localhost"}, which addresses the X
+display
+of the host where the CLM server is running.  The value of this variable is
+used as the default value for the \kw{display-host} argument of the function
+\lisp{run-motif-application}. 
+
+If the CLM server runs on a remote host, \lisp{*default-display-host*}
+addresses a host relative to the remote host. In this case, the display host
+name \lisp{"localhost"} should not be used because it addresses the remote
+host's display. Use the name of your local host explicitly in this case.
+
+\beispiel \begin{verbatim}
+> (setf xtk::*default-display-host* "olymp")
+"olymp"
+
+> (setf xtk::*default-display-host* 
+        (or (eq xtk::*default-server-host* "localhost") "olymp"))
+"olymp"
+
+>
+\end{verbatim}
+\end{lispd}
+
+\lispdefvar{*default-display-number*}
+\begin{lispd}
+\beschr This variable contains the number of the X display that should
+be opened.  It's default value is \lispfont{0}. The value of this variable is
+used as the default value for the \kw{display-number} argument of the function
+\lisp{run-motif-application}. 
+
+\beispiel \begin{verbatim}
+> (setf xtk::*default-display-number* 1)
+1
+
+>
+\end{verbatim}
+\end{lispd}
+
+\lispdefvar{*default-screen-number*}
+\begin{lispd}
+\beschr This variable contains the number of the X screen that should
+be opened.  It's default value is \lispfont{0}. The value of this variable is
+used as the default value for the \kw{screen-number} argument of the function
+\lisp{run-motif-application}. 
+
+\beispiel \begin{verbatim}
+> (setf xtk::*default-screen-number* 1)
+1
+
+>
+\end{verbatim}
+\end{lispd}
+
+\lispdefvar{*default-server-host*}
+\begin{lispd}
+\beschr This variable contains the name of the host where the CLM server is
+running. It's default value is \lisp{nil}, which starts the CLM server
+directly from Lisp. Use the value \lisp{"localhost"} to use the CLM daemon
+running
+on the local host. The value of this variable is used as the default value for
+the \kw{server-host} argument of the function \lisp{run-motif-application}.
+
+\beispiel 
+\begin{verbatim}
+> (setf xtk::*default-server-host* "olymp")
+"olymp"
+
+> (progn
+    ;; Run the CLM server on the remote host "olymp".
+    ;; Use the local host's display.
+    ;; (Remote = "olymp" Local = "zeus")
+    (setf xtk::*default-server-host* "olymp")
+    (setf xtk::*default-display-host* "zeus"))
+"zeus"
+
+>
+\end{verbatim}
+\end{lispd}
+
+\lispdefvar{*clm-binary-directory*}
+\begin{lispd}
+\beschr This variable contains the name of a directory where the CLM server
+binary can be found. The value may either be a string or a list of strings.
+All the directories are searched in the given sequence for the binary. This
+variable is only used when \lisp{*default-server-host*} is \lisp{nil}.
+\end{lispd}
+
+\lispdefvar{*clm-binary-name*}
+\begin{lispd}
+\beschr This variable contains the name of the CLM server executable. The
+default value is \lisp{"clm-server"}.
+\end{lispd}
+
+\lispdefvar{*xt-tcp-port*}
+\begin{lispd}
+\beschr This variable contains the number of the TCP port that the CLM
+daemon uses. The default value is 7000. This variable needs to be changed
+if you want to start multiple CLM daemons on the same machine. These daemons
+must have different port numbers. This variable determines which port the
+CLM application contacts. 
+\end{lispd}
+
+\lispdefvar{*motif-connection*}
+\begin{lispd}
+\beschr This variable references the TCP/IP connection to the CLM server. 
+Each CLM application has its own instance of this variable.  Normally, there is
+no need for an application to use this variable. 
+\end{lispd}
+\pagebreak
+
+\lispdefvar{*x-display*}
+\begin{lispd}
+\beschr This variable references the application's CLX display connection. This
+connection is automatically opened if the \kw{use-clx} keyword argument of
+the \lisp{run-motif-application} is given a non-nil value. This variable can be used for the {\em display} argument of the CLX functions. Each CLM application
+has its own copy of this variable.
+\hinweis This variable is only available if the {\lisp xlib} package was present
+in the Lisp image at the time the CLM code was loaded. This variable is 
+\lisp{nil} if the \kw{use-clx} keyword argument of \lisp{run-motif-application}
+is \lisp{nil}.
+\end{lispd}
+
+\chapter{Applications}
+
+A CLM application is startet using the \lisp{run-motif-application} function. 
+Examples are discussed in detail in section~\ref{ex:xclock},
+page~\pageref{ex:xclock}. 
+
+In general, only the \lisp{init-function} argument of
+\lisp{run-motif-application} must be given, which is the name of a function that
+initializes the application and creates the application's widget hierarchy.  The
+function \lisp{run-motif-application} automatically establishes a connection to
+the CLM server, calls the \lisp{init-function} and then calls
+\lisp{app-main-loop} to run the application main loop.  The application main
+loop receives all incoming callbacks, X events and timer callbacks and handles
+them by calling the handler functions that were registered by the application. 
+It is convenient to encapsulate the call to \motif{run-motif-application} in an
+additional function.  This function defines the external interface of the CLM
+application and calls \motif{run-motif-application} with all necessary
+arguments. 
+
+\section{CLM Applications in a Distributed Environment}
+
+CLM applications can specify a remote host where the Lisp system can find a
+CLM daemon.  The keyword argument \kw{server-host} of
+\motif{run-motif-application} is used to tell a CLM application the name of a
+host where it can find the a running CLM daemon.  The default value of
+\kw{server-host} is taken from the variable \lisp{xtk::*default-server-host*}. 
+The variable's default value is \lisp{nil}, which tells CLM not to use the
+CLM daemon. 
+
+The keyword argument \kw{display-host} of \motif{run-motif-application} is used
+to tell a CLM application where it's associated CLM server process should open
+the X display.  The argument's default value is taken from the variable
+\lisp{xtk::*default-display-host*}.  The variable's default value is
+\lisp{nil}, which starts the CLM server directly from Lisp. 
+
+CLM applications can also select a display on the display host by setting the
+\kw{display-number} argument of \motif{run-motif-application}. The default
+display number is taken from the variable \lisp{xtk::*default-display-number*}.
+The variable's default value is $0$.
+
+The default values of the keyword argument mentioned above need not to be
+changed if the Lisp process, the CLM daemon and the X server all run on the
+same host. 
+
+\section{Running Multiple CLM Applications}
+
+CLM applications can run in an extra (lightweight) Lisp process.  This allows
+multiple independent CLM applications to run in a single Lisp process.  To run
+an application in an extra process, the \kw{extra-process} keyword argument must
+be given a non-nil value.  The \kw{process-name} keyword argument then names the
+process. 
+
+CLM applications can access their CLM connection and X display connection by
+using the special variables \lisp{xtk::*motif-connection*} and
+\lisp{xtk::*x-display*}.  Each CLM application runs in an environment where
+these variables are local to the application's process. 
+
+\section{Using CLX in a CLM Application}
+
+If the \kw{use-clx} keyword argument is set to a non-nil value, an additional
+CLX display connection is opened on the display specified by the
+\kw{display-host} and \kw{display-number} arguments.  This allows applications
+to use the CLX graphics routines for drawing into Motif widgets, especially into
+widgets of classes \lisp{XmDrawingArea} and \lisp{XmDrawnButton}.  The CLM
+function \lisp{make-clx-window} can be used to create a CLX window structure
+from a Motif widget ID which is suitable for use with any CLX function. 
+
+\lispdefun{make-clx-window}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun make-clx-window (widget))
+\end{verbatim}
+\beschr This function creates an CLX window structure from a given Motif widget
+ID. This window structure may be used with any CLX function. The widget must
+be realized, otherwise it does not have an associated window yet.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the Motif widget ID.
+\end{paramd}
+\beispiel\begin{verbatim}
+> (setf clx-window (make-clx-window widget))
+
+.....
+> (setf (xlib:window-event-mask clx-window)
+        (xlib:make-event-mask :focus-change :structure-notify))
+
+.....
+\end{verbatim}
+\end{lispd}
+
+\section{The Application Main Loop}
+
+The application main loop receives all incoming callbacks, X events,
+timer callbacks and protocol callbacks and dispatches them by calling the
+handler functions which were registered by the CLM application.  Normally, the
+application main loop is called automatically by \motif{run-motif-application},
+so there is no need for a CLM application to call the application main loop
+explicitely. 
+
+CLM applications may set the \kw{execute-main-loop} argument to \lisp{nil} and
+call \lisp{app-main-loop} in their init function.  This is sometimes useful when
+the application needs some dynamically bound global variables which are usually
+initialized in a \lisp{let} statement.  The \lisp{app-main-loop} function can
+then be called from inside the \lisp{let} statement, so that all callback
+handlers and event handlers are executed inside this lexical environment.  See
+the \lisp{xclock} program in secxtion~\ref{ex:xclock} for an example. 
+
+CLM applications can specify a function to be called by
+\lisp{run-motif-application} after the application main loop has terminated. 
+This function usually does cleanup actions like closing files etc.  The
+after-function is called even in case the application terminates abnormally, for
+example by an abort.  The after-function is executed in the lexical environment
+of \lisp{run-motif-application}, but outside the lexical environment of the init
+function.  The after function is specified by the \kw{after-function} keyword
+argument.  Additional arguments which are passed to the after-function may be
+specified by the \kw{after-function-args} keyword argument. 
+
+\section{Terminating an Application}
+
+If the Motif window manager mwm is running, the application main loop is
+automatically terminated when the {\it Close} function of mwm is triggered
+(usually by double-clicking the system menu button of the mwm decorations).
+
+If the Motif window manager is not running, applications must provide a way to
+terminate themselves.  This may be realized by creating a {\it Quit} Button
+somewhere in the application's menu.  The application can attach the predefined
+callback handler \lisp{quit-application} to this button.  When executed,
+\lisp{quit-application} destroys the widget hierarchy and terminates the
+application main loop.  Applications can use the function \lisp{is-mwm-running}
+to test whether mwm is currently running. 
+
+\section{Debugging Motif Applications}
+
+For debugging purposes, the CLX connection can be put in a synchronous mode
+by passing a non-nil value to the \kw{sync-clx} keyword argument.
+
+When errors occur in the init function or in the main loop, CLM installs an
+error handler that prints out the error and does not fall into the debugger.
+In the main loop, execution continues in the loop. In the init phase, the
+after function and cleanup actions are executed and an extra process exits
+cleanly. This avoids handling multiple processes in the debugger because
+interactive applications are usually restartable.
+
+To enter the debugger, you can supply the keyword \kw{just-print-errors} to
+\lisp{run-motif-application} as \lisp{nil}. Alternatively, you can supply
+your own error handler, e.g. to print a complete backtrace in addition to
+the error message. If your error handler returns, the debugger is entered.
+If the error handler wants to resume execution, it must throw to
+\lisp{xtk:proceed-from-error}.
+
+From the main loop, CLM sets up a restart choice for the debugger to restart
+the main loop. This choice will be presented by the debugger in a
+system-dependent way.
+\pagebreak
+
+\lispdefun{run-motif-application}
+\begin{lispd}
+\syntax
+\fnsize\begin{verbatim}
+(defun run-motif-application (init-function &key
+                             (init-arguments nil)
+                             (application-name "clm")
+                             (application-class "Clm")
+                             (server-host *default-server-host*)
+                             (display-host *default-display-host*)
+                             (display-number *default-display-number*)
+                             (screen-number *default-screen-number*)
+                             #+xlib (use-clx nil)
+                             (extra-process t)
+                             (process-name "Motif application")
+                             (execute-main-loop t)
+                             (sync-clx *debug-mode*)
+                             (after-function nil)
+                             (after-arguments nil)
+                             (error-handler 'default-error-handler)
+                             (just-print-errors t)))
+\end{verbatim}\normalsize
+\beschr This function is used to run a CLM application.  It establishes a
+connection to the CLM server on the host specified by the \kw{server-host}
+argument.  If the connection is opened successfully, it calls the function
+specified by the \lisp{init-function} argument.  The \lisp{init-function} is
+applied to the elements of the \kw{init-arguments} argument.  After calling the
+init function and if the \kw{execute-main-loop} argument is \lisp{t}, the
+application main loop function is called.  When the application main loop has
+terminated, the function specified by the \kw{after-function} argument is called
+with an argument list containing the elements of the \kw{after-function-args}
+argument.  The after function is called even in the case when the init function
+or the application main loop terminate abnormally.  After executing the after
+function, the connection to the CLM server and the optional CLX connection are
+closed automatically. 
+
+\parameter\begin{paramd}
+\lparam{init-function} Specifies the name of the function that initializes the
+Motif application.  This function normally creates the widget hierarchy,
+attaches callbacks to the widgets and creates all application specific data
+structures. 
+
+\lparam{init-arguments} Specifies a list of arguments to the init function. 
+
+\lparam{application-name} Specifies the application's name as a string.  This
+name can be used as a prefix for resource specifications in the application's
+default file. 
+
+\lparam{application-class} Specifies the application's class as a string.  This
+class can be used as a prefix for resource specifications in the application's
+default file. 
+
+\lparam{server-host} Specifies the host where the CLM daemon is running
+as a string.
+The value \lisp{nil} can be used to start the server directly from Lisp.
+
+\lparam{display-host} Specifies the host where the CLM application opens
+the X display. All windows corresponding to the widgets of this application 
+are created in the X server of this host. 
+
+\lparam{display-number} Specifies the number of the display that should be 
+opened by the CLM server.
+
+\lparam{screen-number} Specifies the number of the screen that should be 
+opened by the CLM server.
+
+\lparam{use-clx} Specifies whether an extra CLX display connection should be 
+opened.  If the value is non-nil, a connection is established to the display 
+specified by the \kw{display-host} and \kw{display-number} arguments.
+The CLM application can access the CLX display structure by using the
+exported variable \lisp{*x-display*}.
+
+\lparam{execute-main-loop} Specifies whether the application main loop is
+executed automatically. If the value is non-nil the main loop is started
+automatically. Otherwise, the init function is responsible for calling
+\lisp{app-main-loop}. Then the call to \lisp{app-main-loop} usually is the
+last expression in the init function.
+
+\lparam{extra-process} Specifies whether the CLM application should run in
+an extra lisp process. If the value is non-nil, an extra lisp process is 
+started which executes the init-function, the application main loop and
+the after function.
+
+\lparam{process-name} Specifies the name of the process if the CLM application
+is running in an extra lisp process.
+
+\lparam{sync-clx} Specifies whether the optional CLX display connection should
+be synchronous.  This allows easier debugging, but slows down application speed.
+
+\lparam{after-function} Specifies the function to be called after the
+application main loop has terminated. The after function is called even in case
+of an abort.
+
+\lparam{after-arguments} Specifies a list of arguments to the after function.
+
+\lparam{error-handler} Specifies a function as an error handler. The error
+condition is passed as the parameter to this function. The function may
+return to enter the debugger, or it throws to \lisp{xtk:proceed-from-error}
+to resume execution.
+
+\lparam{just-print-errors} If this parameter is \lisp{t}, the default
+error handler just prints out the error message and then resumes execution.
+If it is \lisp{nil}, the debugger is entered when errors occur.
+\end{paramd}
+\beispiel\normalsize A detailed example is discussed at the end of this chapter.
+\end{lispd}
+
+\lispdefun{app-main-loop}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun app-main-loop ())
+\end{verbatim}
+\beschr This function realizes the main loop of a CLM application.  It receives
+all incoming callbacks, X events and timer callbacks and handles them by calling
+the handler functions which were registered by the application.
+
+The application main loop is called automatically by the function
+\motif{run-motif-application} when the \kw{execute-main-loop} argument of
+\motif{run-motif-application} has a non-nil value.  If this argument is
+\lisp{nil}, then the application's init-function is responsible for calling
+\lisp{app-main-loop}. 
+
+If the application main loop is terminated abnormally, the error handler
+is invoked, which may restart the main loop.
+\end{lispd}
+
+\lispdefun{quit-application}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun quit-application (widget client-data &rest call-data))
+\end{verbatim}
+\beschr This function is a predefined callback handler. It is used to
+destroy the application's shell widget and to terminate the
+application main loop. The \lisp{client-data} argument must contain
+the widget ID of the application's shell widget, which is returned by
+the function \lisp{create-application-shell}. The other arguments are not used.
+
+\hinweis This callback handler is automatically called when the {\it Close}
+command from the Motif window manager's system menu is executed.  If mwm is not
+running, CLM applications must call \lisp{quit-application} in order to
+terminate themselves. Applications can test whether mwm is running by calling 
+\lisp{is-mwm-running}. 
+
+\begin{paramd}
+\lparam{widget} Not used.
+\lparam{client-data} Must contain the widget ID of the application's shell
+widget.
+\lparam{call-data} Not used.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{is-mwm-running}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun is-mwm-running (shell))
+\end{verbatim}
+\beschr This function returns \lisp{t} if the Motif window manager mwm
+is running on the shell's display and \lisp{nil} otherwise.
+\begin{paramd}
+\lparam{shell} Specifies the shell widget ID.
+\end{paramd}
+\end{lispd}
+
+\section{Examples}
+
+In this section, two Motif applications which use most of the features
+supplied by \lisp{run-motif-application} are described in detail. The first
+application is a simple digital clock that updates its display every second
+using the timer mechanism supplied by CLM. The second one monitors the
+(lightweight) processes currently running in the Lisp process.
+
+\subsection{The Application \lisp{xclock}}\label{ex:xclock}
+
+The \lisp{xclock} application (see programm~\ref{prog:xclock}, page
+~\pageref{prog:xclock}) is a simplified version of the {\it xclock} application
+coming with the X window system.  It displays the current time in digital format
+and is updated every second.  An update interval may be specified by the
+optional \lisp{update-interval} argument. 
+
+The timer callback function needs the ID of the label widget to be able to
+display the new time. This is achieved by creating a lexical environment in
+which the variable \lisp{*clock-widget*} is bound to the label's widget ID. The
+timer callback function must be executed inside this environment. Therefore, the
+application main loop must be called from inside the \lisp{let} statement in
+the function \lisp{init-xclock}. This is realized by setting the 
+\kw{execute-main-loop} argument to \lisp{nil} and then calling
+\lisp{app-main-loop} as the last form inside the \lisp{let} statement. 
+
+Note: The label's widget ID could also be passed to the timer callback function
+by using the client data mechanism.  In general, CLM application would prefer
+this mechanism of passing data to callback functions over using global
+variables. 
+
+\begin{proglist}[htbp]
+\fnsize\begin{verbatim}
+(in-package 'xclock)
+(use-package 'xtk)
+
+'(xclock::xclock)   ;; evaluate this to run the xclock application
+
+(defun xclock (&optional (update-interval 1000))
+  "Run the xclock application"
+  (run-motif-application 'init-xclock
+                         :init-arguments (list update-interval)
+                         :execute-main-loop nil
+                         :application-name "clock"
+                         :application-class "Clock"
+                         :process-name "Motif Clock Application"))
+
+(defun init-xclock (update-interval &aux shell)
+  "Create the widget hierarchy for the clock application"
+  ;; Create the application's main window
+  (setf shell (create-application-shell :allow-shell-resize t))
+  (let ((*clock-widget* (create-label shell "ClockLabel"))
+        (timer (create-timer update-interval 'tick nil :active-in-handler t)))
+    ;; Make *clock-widget* globally available so the
+    ;; timer callback can access the label widget
+    (declare (special *clock-widget*))
+    ;; Initialize clock
+    (tick timer nil)
+    ;; Realize widget hierarchy
+    (realize-widget shell)
+    ;; Enter application main loop
+    (app-main-loop)))
+
+(defun tick (timer client-data &aux now)
+  "one time interval is over => refresh the clock"
+  (declare (special *clock-widget*)
+           (ignore timer client-data))
+  (setq now (multiple-value-list (decode-universal-time (get-universal-time))))
+  ;; Display new time in the label widget
+  (xtk::set-values *clock-widget* :label-string
+                   (format nil "~2,'0d:~2,'0d:~2,'0d"
+                           (third now) (second now) (first now))))
+\end{verbatim}\normalsize
+\caption{\label{prog:xclock}The application \lisp{xclock}}
+\end{proglist}
+
+\subsection{The Application \lisp{xprocesses}}\label{ex:xprocesses}
+
+The \lisp{xprocesses} application (see program~\ref{prog:xprocesses},
+page~\pageref{prog:xprocesses}) displays the names of all running processes in a
+Motif list widget.  The list of processes is refreshed periodically.  An initial
+update interval may be specified by the optional \lisp{update-interval}
+argument. A Motif scale widget can be used to change the update interval.
+
+The application's structure is similar to the \lisp{xclock} application.  One
+main difference is the mechanism how data structures are passed to the timer
+callback function.  In both examples, the timer callback function needs a widget
+ID to display it's data.  In the \lisp{xclock} example, this is achieved by
+dynamically binding a global variable and executing the application main loop in
+the scope of this binding.  In the \lisp{xprocesses} application, the widget ID
+is passed as the \lisp{client-data} argument to the timer callback function. 
+
+\begin{proglist}[htbp]
+\fnsize\begin{verbatim}
+(in-package 'xprocesses)
+(use-package 'xtk)
+
+;; Evaluate this to start the xprocesses application
+'(xprocesses::xprocesses 999)
+
+(defun xprocesses (&optional (update-interval 5000))
+  "Run the xprocesses application"
+  (run-motif-application 'init-processes
+                         :init-arguments (list update-interval)
+                         :application-name "xprocesses"
+                         :application-class "Xprocesses"
+                         :process-name "Process Monitor"))
+
+(defun init-processes (update-interval &aux shell row list-w scale timer)
+  "Create the widget hierarchy for the xprocesses application"
+  ;; Create the application's main window
+  (setf shell (create-application-shell :allow-shell-resize t))
+  ;; Create a row-colum widget which contains the list widget and a scale
+  (setf row (create-row-column shell "Row"))
+  ;; Create a list widget for displaying the processes
+  (setf list-w (create-list row "ProcessList" :visible-item-count 5))
+  (setf scale (create-scale row "Scale" :orientation :horizontal
+                            :show-value t :value update-interval
+                            :minimum 500 :maximum 5000))
+  (setf timer (create-timer update-interval 'display-processes list-w))
+  ;; Add callback to adjust the timer interval
+  (add-callback scale :value-changed 'set-new-interval timer)
+  ;; Initialize contents of the list widget
+  (display-processes timer list-w)
+  ;; Realize widget hierarchy
+  (realize-widget shell))
+
+(defun set-new-interval (scale timer call-data)
+  ;; Scale's call-data is the new slider position
+  (declare (ignore scale))
+  (change-timer timer call-data))
+
+(defun display-processes (timer list-w &aux ap)
+  "Display all processes in the list widget"
+  (declare (ignore timer))
+  (setq ap (all-processes))
+  (set-values list-w :visible-item-count (length ap))
+  (apply 'set-items (cons list-w ap)))
+
+(defun all-processes ()
+  "Return a list of strings describing the processes"
+  (or #+excl (mapcar 'mp::process-name mp::*all-processes*)
+      #+lucid (mapcar 'process-name *all-processes*)
+      '("Not implemented")))
+\end{verbatim}\normalsize
+\caption{\label{prog:xprocesses}The application \lisp{xprocesses}}
+\end{proglist}
+
+\chapter{Widgets}
+
+The functions described in this chapter are used to create and manipulate the
+widget hierachy of a CLM application. Widgets are referenced to by 
+{\em widget IDs}. The functions which create widgets return a widget ID which
+can later be used as arguments to other functions to identify the widget on 
+which a certain operation is to be performed.
+
+Most of the functions described in this chapter have the same semantics as their
+corresponding function in the X Toolkit Intrinsics.  Refer to X Toolkit
+Intrinsic's documentation for a more detaild description. 
+Tables~\ref{tab:widget-functions},~\ref{tab:convenience1}
+and~\ref{tab:convenience2} show the CLM functions described in this chapter and
+their corresponding ``C'' functions. 
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|}\hline
+CLM function & OSF/Motif function \\\hline\hline
+\lisp{create-application-shell} & \motif{XtAppCreateShell()} \\\hline
+\lisp{create-widget} & \motif{XtCreateWidget()} \\
+\lisp{create-unmanaged-widget} & \motif{XtManageChild()}\\
+\lisp{create-named-widget} & \\\hline
+\lisp{destroy-widget} & \motif{XtDestroyWidget()} \\\hline
+\lisp{realize-widget} & \motif{XtRealizeWidget()} \\\hline
+\lisp{manage-widgets} & \motif{XtManageChildren()} \\\hline
+\lisp{unmanage-widgets} & \motif{XtUnmanageChildren()} \\\hline
+\lisp{map-widgets} & \motif{XtSetMappedWhenManaged()} \\\hline
+\lisp{unmap-widgets} & \motif{XtSetMappedWhenManaged()} \\\hline
+\lisp{set-sensitive} & \motif{XtSetSensitivity()} \\\hline
+\lisp{set-insensitive} & \motif{XtSetSensitivity()} \\\hline
+\lisp{get-parent} & \motif{XtParent()} \\\hline
+\lisp{make-clx-window} & {\em none} \\\hline
+\lisp{xt-translate-coordinates} & \motif{XtTranslateCoordinates()} \\\hline
+\end{tabular}
+\end{center}
+\caption{Widget functions}\label{tab:widget-functions}
+\end{table}
+
+\section{Creating Widgets}
+
+The root of the widget tree is created with the \lisp{create-application-shell}
+function.  Child widgets are created using either the \lisp{create-...}
+functions shown in tables~\ref{tab:convenience1} and~\ref{tab:convenience2}
+or one of the functions
+\lisp{create-widget}, \lisp{create-unmanaged-widget} and
+\lisp{create-named-widget}\footnote{The functions \lisp{create-widget},
+\lisp{create-unmanaged-widget} and \lisp{create-named-widget} may disappear in
+future releases.  Programmers should use the \lisp{create-...} functions.}. 
+
+\subsection{Using the \lisp{create-...} Functions}\label{sec:createdotdotdot}
+
+CLM provides a create function for each Motif widget and gadget class.  Except
+for the function \lisp{create-application-shell} all these functions have an
+identical argument list.  Their first argument is always the parent's widget ID.
+The second argument is a string which is used to name the widget.  This name can
+be used in resource specifications in the application's defaults file.  An
+arbitrary number of resources may be specified after the second argument. 
+Resources are given as an alternating sequence of resource names and values. 
+
+CLM automatically manages widgets of most classes when they are created.  The
+last column of table~\ref{tab:convenience1} and~\ref{tab:convenience2} shows
+which classes are automatically managed.  An asterisk in this column indicates
+that the widget is initially {\em unmanaged}.  This applies to all dialog
+classes and for shell classes.  For most applications, the default initial
+managed state of a widget is sufficient.  Clients may override this default
+state by supplying the resource \kw{managed} in a widget's resource list with a
+resource value of either \lisp{t} or \lisp{nil}. 
+
+The three CLM functions \lisp{create-toplevel-shell},
+\lisp{create-override-shell} and \lisp{create-transient-shell} call
+\motif{XtCreatePopupShell()} with the appropriate widget class pointer.  Dialogs
+which use one of these functions to create their shell widget must be popped up
+using the function \lisp{popup} with the shell widget ID as it's first argument.
+Dialogs which use an \motif{XmDialogShell} for their shell widget must have an
+{\em unmanaged} \motif{XmBulletinBoard} (or subclass) widget as their only
+direct child and must be popped up by calling the function \lisp{manage-widgets}
+on the \motif{XmBulletinBoard} widget.  Dialogs which are created by one of the
+\lisp{create-...-dialog} functions must be popped up using \lisp{manage-widgets}
+on the widget ID returned by the \lisp{create-...-dialog} function. 
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|c|}\hline
+CLM function & {\em C} function & unmanaged \\\hline\hline
+\lisp{create-arrow-button} & \motif{XmCreateArrowButton()} & \\\hline
+\lisp{create-arrow-button-gadget} & \motif{XmCreateArrowButtonGadget()} & \\\hline
+\lisp{create-bulletin-board} & \motif{XmCreateBulletinBoard()} & \\\hline
+\lisp{create-bulletin-board-dialog} & \motif{XmCreateBulletinBoardDialog()} & $\ast$ \\\hline
+\lisp{create-cascade-button} & \motif{XmCreateCascadeButton()} & \\\hline
+\lisp{create-cascade-button-gadget} & \motif{XmCreateCascadeButtonGadget()} & \\\hline
+\lisp{create-command} & \motif{XmCreateCommand()} & \\\hline
+\lisp{create-dialog-shell} & \motif{XmCreateDialogShell()} & \\\hline
+\lisp{create-drawing-area} & \motif{XmCreateDrawingArea()} & \\\hline
+\lisp{create-drawn-button} & \motif{XmCreateDrawnButton()} & \\\hline
+\lisp{create-error-dialog} & \motif{XmCreateErrorDialog()} & $\ast$ \\\hline
+\lisp{create-file-selection-box} & \motif{XmCreateFileSelectionBox()} & \\\hline
+\lisp{create-file-selection-dialog} & \motif{XmCreateFileSelectionDialog()} & $\ast$ \\\hline
+\lisp{create-form} & \motif{XmCreateForm()} & \\\hline
+\lisp{create-form-dialog} & \motif{XmCreateFormDialog()} & $\ast$ \\\hline
+\lisp{create-frame} & \motif{XmCreateFrame()} & \\\hline
+\lisp{create-information-dialog} & \motif{XmCreateInformationDialog()} & $\ast$ \\\hline
+\lisp{create-label} & \motif{XmCreateLabel()} & \\\hline
+\lisp{create-label-gadget} & \motif{XmCreateLabelGadget()} & \\\hline
+\lisp{create-list} & \motif{XmCreateList()} & \\\hline
+\lisp{create-main-window} & \motif{XmCreateMainWindow()} & \\\hline
+\lisp{create-menu-bar} & \motif{XmCreateMenuBar()} & \\\hline
+\lisp{create-menu-shell} & \motif{XmCreateMenuShell()} & \\\hline
+\lisp{create-message-box} & \motif{XmCreateMessageBox()} & \\\hline
+\lisp{create-message-dialog} & \motif{XmCreateMessageDialog()} & $\ast$ \\\hline
+\lisp{create-override-shell} & \motif{XtCreatePopupShell()} & \\\hline
+\lisp{create-option-menu} & \motif{XmCreateOptionMenu()} & \\\hline
+\lisp{create-paned-window} & \motif{XmCreatePanedWindow()} & \\\hline
+\lisp{create-popup-menu} & \motif{XmCreatePopupMenu()} & \\\hline
+\lisp{create-prompt-dialog} & \motif{XmCreatePromptDialog()} & $\ast$ \\\hline
+\lisp{create-pulldown-menu} & \motif{XmCreatePulldownMenu()} & \\\hline
+\lisp{create-push-button} & \motif{XmCreatePushButton()} & \\\hline
+\lisp{create-push-button-gadget} & \motif{XmCreatePushButtonGadget()} & \\\hline
+\lisp{create-question-dialog} & \motif{XmCreateQuestionDialog()} & $\ast$ \\\hline
+\lisp{create-radio-box} & \motif{XmCreateRadioBox()} & \\\hline
+\lisp{create-row-column} & \motif{XmCreateRowColumn()} & \\\hline
+\lisp{create-scale} & \motif{XmCreateScale()} & \\\hline
+\lisp{create-scroll-bar} & \motif{XmCreateScrollBar()} & \\\hline
+\end{tabular}
+\end{center}
+\caption{Widget creation functions (1)\label{tab:convenience1}}
+\end{table}
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|c|}\hline
+CLM function & {\em C} function & unmanaged \\\hline\hline
+\lisp{create-scrolled-list} & \motif{XmCreateScrolledList()} & \\\hline
+\lisp{create-scrolled-text} & \motif{XmCreateScrolledText()} & \\\hline
+\lisp{create-scrolled-window} & \motif{XmCreateScrolledWindow()} & \\\hline
+\lisp{create-selection-box} & \motif{XmCreateSelectionBox()} & \\\hline
+\lisp{create-selection-dialog} & \motif{XmCreateSelectionDialog()} & $\ast$ \\\hline
+\lisp{create-separator} & \motif{XmCreateSeparator()} & \\\hline
+\lisp{create-separator-gadget} & \motif{XmCreateSeparatorGadget()} & \\\hline
+\lisp{create-text} & \motif{XmCreateText()} & \\\hline
+\lisp{create-text-field} & \motif{XmCreateTextField()} & \\\hline
+\lisp{create-toggle-button} & \motif{XmCreateToggleButton()} & \\\hline
+\lisp{create-toggle-button-gadget} & \motif{XmCreateToggleButtonGadget()} & \\\hline
+\lisp{create-toplevel-shell} & \motif{XtCreatePopupShell()} & \\\hline
+\lisp{create-transient-shell} & \motif{XtCreatePopupShell()} & \\\hline
+\lisp{create-warning-dialog} & \motif{XmCreateWarningDialog()} & $\ast$ \\\hline
+\lisp{create-work-area} & \motif{XmCreateWorkArea()} & \\\hline
+\lisp{create-working-dialog} & \motif{XmCreateWorkingDialog()} & $\ast$ \\\hline
+\end{tabular}
+\end{center}
+\caption{Widget creation functions (2)\label{tab:convenience2}}
+\end{table}
+
+\subsection{Using the \lisp{create-widget} Function}
+
+The functions \lisp{create-widget}, \lisp{create-unmanaged-widget} and
+\lisp{create-named-widget} are used to create widgets of an arbitrary class. 
+The widget's class is specified by a keyword symbol, which can be derived from
+the Motif widget class name as follows: Remove the prefixes \lisp{Xm} and
+\lisp{Xt} and the suffix \lisp{WidgetClass}.  Insert a hyphen before all upper
+case letters except before the first one.  Substitute all upper case letters
+with the corresponding lower case letter.  Example: The Motif widget class
+\lisp{XmToggleButtonWidgetClass} is specified by the keyword \kw{toggle-button}.
+Table~\ref{tab:widget-classes} gives an overview of the supported widget
+classes. The shell classes described in this table must be created with the
+function \lisp{create-popup-shell}, which is described in 
+section~\ref{sec:dialogs}.
+
+The CLM functions \lisp{create-widget} and \lisp{create-unmanged-widget}
+actually call \lisp{create-named-widget} to create the widget.  The function
+\lisp{create-widget} creates a managed widget whose name is the symbol-name
+of the widget class keyword with all letters converted to lower case.  The
+function \lisp{create-unmanaged-widget} is equivalent to \lisp{create-widget},
+except that the widget is created unmanaged. 
+
+An arbitrary number of widget resources may be set when creating a widget. The
+widget's resources are supplied by the \verb+&rest+ argument \lisp{resources}.
+They are given as an alternating sequence of resource names and their values.
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|}\hline
+CLM widget class & Motif widget class \\\hline\hline
+\kw{dialog-shell}  & \motif{xmDialogShellWidgetClass} \\\hline
+\kw{menu-shell}  & \motif{xmMenuShellWidgetClass} \\\hline
+\kw{override-shell}  & \motif{overrideShellWidgetClass} \\\hline
+\kw{toplevel-shell} & \motif{topLevelShellWidgetClass} \\\hline
+\kw{transient-shell} & \motif{transientShellWidgetClass} \\\hline\hline
+\kw{arrow-button-gadget}  & \motif{xmArrowButtonGadgetClass} \\\hline
+\kw{arrow-button}  & \motif{xmArrowButtonWidgetClass} \\\hline
+\kw{bulletin-board}  & \motif{xmBulletinBoardWidgetClass} \\\hline
+\kw{cascade-button-gadget}  & \motif{xmCascadeButtonGadgetClass} \\\hline
+\kw{cascade-button}  & \motif{xmCascadeButtonWidgetClass} \\\hline
+\kw{command}  & \motif{xmCommandWidgetClass} \\\hline
+\kw{drawing-area}  & \motif{xmDrawingAreaWidgetClass} \\\hline
+\kw{drawn-button}  & \motif{xmDrawnButtonWidgetClass} \\\hline
+\kw{file-selection-box}  & \motif{xmFileSelectionBoxWidgetClass} \\\hline
+\kw{form}  & \motif{xmFormWidgetClass} \\\hline
+\kw{frame}  & \motif{xmFrameWidgetClass} \\\hline
+\kw{gina-view}  & \motif{xmDrawingAreaWidgetClass} \\\hline
+\kw{label-gadget}  & \motif{xmLabelGadgetClass} \\\hline
+\kw{label}  & \motif{xmLabelWidgetClass} \\\hline
+\kw{list}  & \motif{xmListWidgetClass} \\\hline
+\kw{main-window}  & \motif{xmMainWindowWidgetClass} \\\hline
+\kw{message-box}  & \motif{xmMessageBoxWidgetClass} \\\hline
+\kw{paned-window}  & \motif{xmPanedWindowWidgetClass} \\\hline
+\kw{push-button-gadget}  & \motif{xmPushButtonGadgetClass} \\\hline
+\kw{push-button}  & \motif{xmPushButtonWidgetClass} \\\hline
+\kw{row-column}  & \motif{xmRowColumnWidgetClass} \\\hline
+\kw{scale}  & \motif{xmScaleWidgetClass} \\\hline
+\kw{scroll-bar} & \motif{xmScrollBarWidgetClass} \\\hline
+\kw{scrolled-window} & \motif{xmScrolledWindowWidgetClass} \\\hline
+\kw{selection-box} & \motif{xmSelectionBoxWidgetClass} \\\hline
+\kw{separator-gadget} & \motif{xmSeparatorGadgetClass} \\\hline
+\kw{separator} & \motif{xmSeparatorWidgetClass} \\\hline
+\kw{text-field} & \motif{xmTextFieldWidgetClass} \\\hline
+\kw{text} & \motif{xmTextWidgetClass} \\\hline
+\kw{toggle-button-gadget} & \motif{xmToggleButtonGadgetClass} \\\hline
+\kw{toggle-button} & \motif{xmToggleButtonWidgetClass} \\\hline
+\end{tabular}
+\end{center}
+\caption{\label{tab:widget-classes}Widget classes of CLM}
+\end{table}
+
+\lispdefun{create-application-shell}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun create-application-shell (&rest resources))
+\end{verbatim}
+\beschr This function is used to create a CLM application's root window. It
+creates a widget of class \motif{applicationShellWidgetClass} and returns it's
+widget ID. The key \kw{name} is recognized in the resource list to set the
+name of the application shell. This should usually be identical to the
+name of the complete application.
+
+The function attaches a protocol callback (see chapter~\ref{sec:callbacks}) to 
+the shell widget, which executes the predefined callback handler
+\lisp{quit-application}. This callback is triggered upon execution of the 
+{\it Close} function of the Motif window manager \lisp{mwm}. The protocol
+callback can be removed using the function \lisp{remove-protocol-callback}.
+
+\hinweis This function must only be used to create the application's primary
+shell widget.  Application which have one primary window should use the
+ApplicationShell widget for the root of their widget hierarchy and must call
+\lisp{realize-widget} on the ApplicationShell's widget ID. 
+
+CLM applications which need more than one primary window (see example below)
+should use TopLevelShells which are created as popup children (using either
+the function \lisp{create-popup-shell} or the function
+\lisp{create-top-level-shell}) of the ApplicationShell widget.  The application
+must then call the function \lisp{popup} on each primary TopLevelShell in order
+to display it.  The application must not call the function \lisp{realize-widget}
+on the ApplicationShell. 
+
+\parameter
+\begin{paramd}
+\lparam{resources} An arbitrary number of resource/value pairs.
+\end{paramd}
+\beispiel\begin{verbatim}
+> (defun hello-world (&aux shell)
+    (setq shell (create-application-shell))
+    (create-label shell "label" :label-string "Hello, world!")
+    (realize-widget shell))
+HELLO-WORLD
+
+> (run-motif-application 'hello-world)
+\end{verbatim}
+\beispiel\begin{verbatim}
+> (defun two-primary-windows ()
+   (let* ((shell (create-application-shell))
+          ;; Use create-popup-shell for the first shell widget
+          (top-1 (create-popup-shell "top1" :toplevel-shell shell))
+          (button-1 (create-widget :push-button top-1
+		                   :label-string "Popup-1"))
+          ;; Use create-toplevel-shell for the second shell
+          (top-2 (create-toplevel-shell shell "top2"))
+          (button-2 (create-widget :push-button top-2
+		                   :label-string "Popup-2")))
+     (add-wm-protocol-callback top-1 :wm-delete-window
+                               #'xtk::quit-application shell)
+     (add-wm-protocol-callback top-2 :wm-delete-window
+                               #'xtk::quit-application shell)
+     (add-callback button-1 :activate #'xtk::quit-application shell)
+     (add-callback button-2 :activate #'xtk::quit-application shell)
+     (popup top-1)
+     (popup top-2)))
+TWO-PRIMARY-WINDOWS
+
+> (run-motif-application 'two-primary-windows)
+
+\end{verbatim}
+\end{lispd}
+
+\lispdefun{create-widget}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun create-widget (class parent &rest resources))
+\end{verbatim}
+\beschr The function instantiates a managed widget of the given class and
+returns the widget ID for the newly created widget.  The widget's name is equal
+to the symbol name of the widget's class with all upper case letters converted
+to lower case. 
+\hinweis CLM applications should use the \lisp{create-...} functions described
+in section~\ref{sec:createdotdotdot} to create widgets.
+
+To create a widget with a name different from the symbol name of the
+widget class, use the function \lisp{create-named-widget}.
+To create an unmanaged widget, use the function \lisp{create-unmanaged-widget}.
+
+This function actually calls \lisp{create-named-widget} to instantiate the
+widget.
+\parameter
+\begin{paramd}
+\lparam{class} The widget class of the widget to be created.
+\lparam{parent} The widget ID of the parent widget.
+\lparam{resources} An arbitrary number of resource/value pairs.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{create-unmanaged-widget}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun create-unmanaged-widget (class parent &rest resources))
+\end{verbatim}
+\beschr
+This function is identical to the \lisp{create-widget} function with the only
+difference that the newly created widget is unmanaged.
+\hinweis CLM applications should use the \lisp{create-...} functions described
+in section~\ref{sec:createdotdotdot} to create widgets.
+\parameter
+\begin{paramd}
+\lparam{class} The widget class of the widget to be created.
+\lparam{parent} The widget ID of the parent widget.
+\lparam{resources} An arbitrary number of resource/value pairs.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{create-named-widget}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun create-named-widget (class parent name managed resources))
+\end{verbatim}
+\beschr The function instantiates a widget of the given class and
+returns the widget ID of the newly created widget.
+\hinweis CLM applications should use the \lisp{create-...} functions described
+in section~\ref{sec:createdotdotdot} to create widgets.
+\parameter
+\begin{paramd}
+\lparam{class} The widget class of the widget to be created.
+\lparam{parent} The widget ID of the parent widget.
+\lparam{name} The name of the widget to be created.
+\lparam{managed} Specifies whether the widget is managed.
+\lparam{resources} A list containing an arbitrary number of resource and value 
+pairs.
+\end{paramd}
+\end{lispd}
+\pagebreak
+
+\lispdefun{destroy-application}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun destroy-application (widget))
+\end{verbatim}
+
+\beschr This function destroys the widget hierarchy pointed to by the given
+widget ID and causes the CLM server to terminate upon completion of the
+callback handler which contains the call to \lisp{destroy-application}.
+
+\hinweis This function is automatically called when the predefined callback
+function \lisp{quit-application} is executed. Normally, there is no need for a
+CLM application to call this function.
+
+This function must be called from inside a callback handler which in turn must
+be called from somewhere inside the call to \lisp{run-motif-application} which
+has instantiated the shell widget that is to be destroyed. It is therefore
+not possible for an application to destroy another application's widget 
+hierarchy.
+
+If a window manager other that \lisp{mwm} is used, the application is
+responsible for calling \lisp{destroy-application}.  This is normally achieved
+by creating a {\it Quit} button and attaching the callback handler
+\lisp{quit-application} to it (see example below). 
+
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID of the application shell which should
+be destroyed.
+\end{paramd}
+\beispiel\begin{verbatim}
+> (defun destroy-with-extra-button (&aux shell quit-button)
+     "An application with an extra quit button"
+     ;; Assume mwm is not running
+     (setq shell (create-application-shell :allow-shell-resize t))
+     (setq button (create-push-button shell "button"
+				      :label-string "Quit"))
+     ;; quit-application is a predefined callback function (see text)
+     (add-callback button :activate 'xtk::quit-application shell)
+     (realize-widget shell))
+destroy-with-extra-button
+
+> (run-motif-application 'destroy-with-extra-button)
+\end{verbatim}
+\end{lispd}
+
+\lispdefun{destroy-widget}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun destroy-widget (widget))
+\end{verbatim}
+\beschr This function is used to destroy a widget and all its children.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget to be destroyed.
+\end{paramd}
+\end{lispd}
+
+\section{Dialogs}\label{sec:dialogs}
+
+The X Toolkit Intrinsics and the Motif toolkit provide two types of dialogs:
+
+\begin{itemize}
+\item Dialogs which use a Motif \motif{XmDialogShell} for their shell widget.
+\item Dialogs which use one of the X Toolkit Intrinsics shell classes.
+\end{itemize}
+
+\subsection{Using \lisp{XmDialogShell} Widgets}\label{sec:xmdialogs}
+
+This section describes functions which should be used to handle dialogs which
+use an \motif{XmDialogShell} for their shell widget.  Then the
+\motif{XmDialogShell} must contain a widget of class \motif{XmBulletinBoard}
+(or subclass), which must be created {\em unmanaged}.  These dialogs are popped
+up and down by calling the functions \lisp{manage-popup-child} and
+\lisp{unmanage-popup-child} with the \motif{XmBulletinBoard}'s widget ID as
+their first argument.  CLM applications may also use the predefine callback
+functions \lisp{manage-popup} and \lisp{unmanage-popup} to pop dialogs up and
+down.  These callback functions need the \motif{XmBulletinBoard}'s widget ID as
+their client-data. 
+
+CLM applications should use the \lisp{create-....-dialog} functions described in
+tables~\ref{tab:convenience1} and~\ref{tab:convenience2} to create dialogs. 
+These functions create an \motif{XmDialogShell} with an unmanaged
+\motif{XmBulletinBoard} (or subclass) child and return these widget ID's as
+multiple values (\motif{XmBulletinBoard}'s widget ID first value !). 
+
+\lispdefun{manage-popup-child}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun manage-popup-child (widget))
+\end{verbatim}
+\beschr This function must be used to pop up dialogs which are contructed using
+the Motif classes \motif{XmDialogShell} and \motif{XmBulletinBoard}.  The
+\lisp{widget} argument must be the widget ID of the \motif{XmBulletinBoard}
+widget.  The function manages the \motif{XmBulletinBoard} widget and handles all
+callbacks which result from popping up the dialog. 
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID of the \motif{XmBulletinBoard}
+(or subclass) widget of the dialog that is to be popped up.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{unmanage-popup-child}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun unmanage-popup-child (widget))
+\end{verbatim}
+\beschr This function must be used to pop down dialogs which are contructed
+using the Motif classes \motif{XmDialogShell} and \motif{XmBulletinBoard}.  The
+\lisp{widget} argument must be the widget ID of the \motif{XmBulletinBoard}
+widget.  The function unmanages the \motif{XmBulletinBoard} widget and handles
+all callbacks which result from popping down the dialog. 
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID of the \motif{XmBulletinBoard} widget
+of the dialog that is to be popped down.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{manage-popup}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun manage-popup (widget client-data &rest call-data))
+\end{verbatim}
+\beschr This function is a predefined callback handler which can be used to
+pop up dialogs which are contructed using the Motif classes 
+\motif{XmDialogShell} and \motif{XmBulletinBoard}. The function actually calls
+\lisp{manage-popup-child} to pop up the dialog. The widget ID of the
+\motif{XmBulletinBoard} widget must be passed in by the \lisp{client-data}
+argument.
+\parameter
+\begin{paramd}
+\lparam{widget} The ID of the widget which executes the callback handler.
+\lparam{client-data} The widget ID of the \motif{XmBulletinBoard} widget that
+is to be managed.
+\lparam{call-data} Not used.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{unmanage-popup}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun unmanage-popup (widget client-data &rest call-data))
+\end{verbatim}
+\beschr This function is a predefined callback handler which can be used to
+pop down dialogs which are contructed using the Motif classes 
+\motif{XmDialogShell} and \motif{XmBulletinBoard}. The function actually calls
+\lisp{unmanage-popup-child} to pop down the dialog. The widget ID of the
+\motif{XmBulletinBoard} widget must be passed in by the \lisp{client-data}
+argument.
+\parameter
+\begin{paramd}
+\lparam{widget} The ID of the widget which executes the callback handler.
+\lparam{client-data} The widget ID of the \motif{XmBulletinBoard} widget that
+is to be unmanaged.
+\lparam{call-data} Not used.
+\end{paramd}
+\end{lispd}
+
+\subsection{Using the X Toolkit Shell Classes}
+
+The functions described in this section should only be used to create dialogs
+which use one of the shell classes defined by the X Toolkit
+Intrinsics.  These classes are \kw{toplevel-shell}, \kw{transient-shell} and
+\kw{override-shell}.  These dialogs must be popped up and down using the
+functions \lisp{popup} and \lisp{popdown}.  CLM applications may also use the
+predefined callback functions \lisp{popup-none}, \lisp{popup-exclusive} and
+\lisp{popup-nonexclusive} to pop up these type of dialogs.  These callback
+functions need the shell widget ID as their client-data. 
+
+\lispdefun{create-popup-shell}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun create-popup-shell (widget-name class parent &rest resources))
+\end{verbatim}
+\xmref{XtCreatePopupShell()}
+\beschr This function is used to create a Pop-up shell widget. It returns
+the widget ID of the newly created shell widget.
+For further information on pop-up dialogs see~\cite{xtoolkit}, page~66.
+\hinweis Applications should use the functions \lisp{create-toplevel-shell},
+\lisp{create-transient-shell} and \lisp{create-override-shell} to create
+shell widgets.
+\parameter
+\begin{paramd}
+\lparam{widget-name} The textual name of the popup shell widget.
+\lparam{class}  The widget class of the shell widget.
+\lparam{parent} The widget ID of the parent widget.
+\lparam{resources} An arbitrary number of resource/value pairs.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{popup}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun popup (widget &optional (grab-kind :grab-nonexclusive)))
+\end{verbatim}
+\xmref{XtPopup()}
+\beschr This function is used  to pop up a shell widget which was previously
+create by \lisp{create-popup-shell}, \lisp{create-toplevel-shell},
+\lisp{create-transient-shell} and \lisp{create-override-shell} 
+(see~\cite{xtoolkit}, page~67).
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the shell widget.
+\lparam{grab-kind} Specifies the grabkind. Possible values are
+\kw{grab-none}, \kw{grab-exclusive} and \kw{grab-nonexclusive}.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{popdown}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun popdown (widget))
+\end{verbatim}
+\xmref{XtPopdown()}
+\beschr This function is used to pop down a shell widget which was previously
+popped up with the function \lisp{popup}.  (see~\cite{xtoolkit}, page~69).
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the shell widget.
+\end{paramd}
+\end{lispd}
+
+\section{Menus}
+
+CLM applications should use the functions \lisp{create-popup-menu},
+\lisp{create-pulldown-menu} and \lisp{create-option-menu} to create menus
+(see tables~\ref{tab:convenience1} and ~\ref{tab:convenience2}).
+Consult the Motif documentation on how to create menu systems and option menus.
+
+Popup menus must be popped up and down using the functions described in
+section~\ref{sec:xmdialogs}. Program~\ref{prog:popup} shows a small program
+which uses a popup menu. The event handler receives a description of the
+button press event on it's \lisp{call-data} argument. The popup menu is 
+positioned by setting the $x$ and $y$ position of the menu pane.
+
+\begin{proglist}[htbp]
+\fnsize\begin{verbatim}
+(in-package 'demos)
+(use-package 'xtk)
+
+;; Pop up a menu when a button press event occurs in the label widget
+
+(defun popup-menu ()
+ (let* ((shell (create-application-shell))
+        (label (create-widget :label shell :label-string "Popup"))
+        ;; Use left button for selections
+        (menu (create-popup-menu label "Menu" :which-button 1))
+        (button-1 (create-push-button menu "Red"))
+        (button-2 (create-push-button menu "Yellow"))
+        (button-3 (create-push-button menu "Green"))
+        (button-4 (create-push-button menu "Blue")))
+   (add-event-handler label :button-press-mask #'do-popup menu)
+   (realize-widget shell)))
+
+(defun do-popup (widget client-data &rest call-data)
+  (declare (ignore widget))
+  (set-values client-data :x (fourth call-data) :y (fifth call-data))
+  (manage-widgets client-data))
+
+> (run-motif-application 'popup-menu)
+\end{verbatim}\normalsize
+\caption{\label{prog:popup}Example for popup menus}
+\end{proglist}
+
+\section{Manipulating Widgets}
+
+The following functions are used to manipulate a widget's state. They map to
+their corresponding function in the X Toolkit Intrinsics and have no additional
+functionality.
+
+\lispdefun{realize-widget}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun realize-widget (widget))
+\end{verbatim}
+\xmref{XtRealizeWidget()}
+\beschr This function realizes a widget tree.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the root widget ID of the subtree that should 
+be realized.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{manage-widgets}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun manage-widgets (&rest widgets))
+\end{verbatim}
+\xmref{XtManageChildren()}
+\beschr This function switches an arbitrary number of widgets into the managed
+state.
+\hinweis This function must not be used to pop up dialogs. Applications should
+use \lisp{manage-popup-child} for this purpose.
+\parameter
+\begin{paramd}
+\lparam{widgets} Specifies the widgets that should be managed.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{unmanage-widgets}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun unmanage-widgets (&rest widgets))
+\end{verbatim}
+\xmref{XtUnmanageChildren()}
+\beschr This function switches an arbitrary number of widgets into the unmanaged
+state.
+\hinweis This function must not be used to pop down dialogs. Applications should
+use \lisp{unmanage-popup-child} for this purpose.
+\parameter
+\begin{paramd}
+\lparam{widgets} Specifies the widgets that should be unmanaged.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{map-widgets}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun map-widgets (&rest widgets))
+\end{verbatim}
+\xmref{XtSetMappedWhenManaged()}
+\beschr This function maps an arbitrary number of widgets.
+\parameter
+\begin{paramd}
+\lparam{widgets} Specifies the widgets that should be mapped.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{unmap-widgets}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun unmap-widgets (&rest widgets))
+\end{verbatim}
+\xmref{XtSetMappedWhenManaged()}
+\beschr This function unmaps an arbitrary number of widgets.
+\parameter
+\begin{paramd}
+\lparam{widgets} Specifies the widgets that should be unmapped.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{set-insensitive}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun set-insensitive (&rest widgets))
+\end{verbatim}
+\xmref{XtSetSensitivity()}
+\beschr This function switches an arbitrary number of widgets into the
+insensitive state.
+\parameter
+\begin{paramd}
+\lparam{widgets} Specifies the IDs of the widgets that should be made 
+insensitive.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{set-sensitive}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun set-sensitive (&rest widgets))
+\end{verbatim}
+\xmref{XtSetSensitivity()}
+\beschr This function switches an arbitrary number of widgets into the
+sensitive state.
+\parameter
+\begin{paramd}
+\lparam{widgets} Specifies the IDs of the widgets that should be made
+sensitive.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{get-parent}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun get-parent (widget))
+\end{verbatim}
+\xmref{XtParent()}
+\beschr This function returns the CLM widget ID of the given widget's parent.
+If the widget's parent wasn't created through a call to a CLM function, this
+functions assigns a new CLM widget ID to the widget's parent and returns this 
+ID.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{xt-translate-coordinates}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun xt-translate-coordinates (widget x y))
+\end{verbatim}
+\beschr This function takes a pair of coordinates relative to a widget and
+returns a pair of absolute coordinates as a list.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{x} Specifies the relative x-coordinate.
+\lparam{y} Specifies the relative y-coordinate.
+\end{paramd}
+\end{lispd}
+
+\chapter{Callback Functions} \label{sec:callbacks}
+
+The functions described in this chapter are used to add and remove callback 
+handlers. To add a callback handler to a callback list, use the 
+\lisp{add-callback} function. To remove a callback handler from a callback list,
+use the \lisp{remove-callback} function. To remove all callbacks from a
+callback list, use the \lisp{remove-all-callbacks} function.
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|}\hline
+CLM function & OSF/Motif function \\\hline\hline
+\lisp{add-callback} & \motif{XtAddCallback()}\\\hline
+\lisp{remove-callback} & \motif{XtRemoveCallback()}\\\hline
+\lisp{remove-all-callbacks} & \motif{XtRemoveAllCallbacks()} \\\hline
+\end{tabular}
+\end{center}
+\caption{Callback functions}
+\end{table}
+
+Callback lists are identified by keywords.  The keyword is derived from the
+Motif name by stripping the \motif{XmN} prefix and the \motiffont{Callback}
+suffix and by replacing all upper case letters with a hyphen followed by the
+corresponding lower case letter.  Example: The Lisp name of the callback list
+\motif{XmNactivateCallback} is \lisp{:activate}. Refer to the manual pages for
+the OSF/Motif widget classes for an overview of the supported callback lists.
+
+The callback handler function can be any ordinary lisp function, a lambda 
+expression or a CLOS method. In general, callback functions should be defined
+as follows:
+
+\begin{verbatim}
+    (defun callback-function (widget client-data &rest call-data) 
+      ... )
+\end{verbatim}
+
+The \lisp{widget} parameter contains the widget ID of the widget which executes
+the callback handler.  The \lisp{client-data} parameter contains the client data
+that was passed to the \lisp{add-callback} function when the callback was added.
+The \lisp{client-data} argument may be any lisp object.  The \lisp{call-data}
+argument contains data which depends on the widget's class and on the type of
+the callback list. The format of the \lisp{call-data} arguments for the
+supported widget classes is decribed in section~\ref{sec:calldata}.
+
+If the format of the \lisp{call-data} argument is known in advance, then the
+callback functions may be declared with an argument list which matches exactly
+the number of elements in the \lisp{call-data} argument. For example, the
+\kw{ok} callback of the \motif{XmFileSelectionBox} provides it's callback
+functions with four call data arguments: the full file name, the current
+directory mask, the current base directory and the current file search pattern.
+Therefore, a callback function which handles an \kw{ok} callback may also be
+declared as
+
+\begin{verbatim}
+    (defun ok-callback-function (widget client-data
+                                 file-name dir-mask base-dir file-pattern)
+      ... )
+\end{verbatim}
+
+\lispdefun{add-callback}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun add-callback (widget callback-name function client-data))
+\end{verbatim}
+\beschr This function adds a callback handler to a callback list of a widget.
+
+\parameter\begin{paramd}
+\lparam{widget} Specifies the ID of the widget where a callback should be added.
+\lparam{callback-name} Specifies the name of the callback list.
+\lparam{function} Specifies the callback handler function.
+\lparam{client-data} Specifies the client data which should be passed to the 
+callback handler function. The client data may be any lisp object.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{remove-callback}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun remove-callback (widget callback-name function client-data))
+\end{verbatim}
+\beschr This function removes a callback handler from a widget's callback list. 
+The client data passed to \lisp{remove-callback} must be \lispfont{equal} to the
+client data that was passed to \lisp{add-callback} when the callback was added
+to the callback list. 
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the ID of the widget where a callback should be 
+removed.
+\lparam{callback-name} Specifies the name of the callback list.
+\lparam{function} Specifies the callback handler function.
+\lparam{client-data} Specifies the client data.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{remove-all-callbacks}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun remove-all-callbacks (widget callback-name))
+\end{verbatim}
+\beschr This function removes all callback handlers from a widget's callback 
+list.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the ID of the widget where the callbacks should be
+removed.
+\lparam{callback-name} Specifies the name of the callback list from which to 
+remove all callback handlers.
+\end{paramd}
+\end{lispd}
+
+\section{Contents of the \lisp{call-data} argument}\label{sec:calldata}
+
+If not stated otherwise, Callback functions have no \lisp{call-data} argument.
+Callback functions which declare their \lisp{call-data} argument as a 
+\lispfont{\&rest} argument will then have an empty list on this argument. Callback
+functions which receive no \lisp{call-data} argument may also be defined as
+
+\begin{verbatim}
+    (defun callback-function-with-no-call-data (widget client-data)
+      ... )
+\end{verbatim}
+
+%\subsection{The Class \motifclass{arrow-button}{XmArrowButton}}
+%
+%All callbacks have a single call data argument which contains the value of the
+%\motiffont{click\_count} field of the \motif{XmArrowButtonCallbackStruct}.  Callback
+%functions may be defined as
+%
+%\begin{verbatim}
+    %(defun arrow-callback-function (widget client-data)
+      %... )
+%\end{verbatim}
+
+\subsection{The Class \motifclass{command}{XmCommand}}
+
+All callbacks have two call data arguments which contain the command string
+and the length of the command string. Callback functions may be defined as
+
+\begin{verbatim}
+    (defun command-callback-function (widget client-data command length)
+      ... )
+\end{verbatim}
+
+\subsection{The Class \motifclass{drawing-area}{XmDrawingArea}}
+
+The \kw{resize} callback delivers a single call data argument which contains
+the X window ID of the window associated with the \motif{XmDrawingArea} widget.
+Callback functions may be defined as
+
+\begin{verbatim}
+    (defun drawing-area-callback-function (widget client-data x-window-id)
+      ... )
+\end{verbatim}
+
+The \kw{expose} callback delivers six call data arguments: The X window ID of
+the window associated with the \motif{XmDrawingArea} widget, and the \lisp{x},
+\lisp{y}, \lisp{width}, \lisp{height} and \lisp{count} members from the expose
+event structure.  Callback functions may be defined as
+
+\begin{verbatim}
+    (defun drawing-area-expose-callback (widget client-data x-window-id
+                                         x y width height count)
+      ... )
+\end{verbatim}
+
+The \kw{input} callback delivers a variable number of call data arguments which
+depend on the actual type of the input event. The first call data argument
+is the X window ID of the window associated with the \motif{XmDrawingArea} widget, the second argument is a keyword which indicates the type of input event:
+
+\begin{itemize}
+\item For button events, this keyword is either \kw{button-press} or
+\kw{button-release}.  There are seven additional call data arguments for button
+events: The \motif{x}, \motif{y}, \motiffont{x\_root}, \motiffont{y\_root}, \motif{state},
+\motif{button} and \motif{time} members from the \motif{xbutton} event
+structure. 
+
+\item For key events, the keyword is either \kw{key-press} or \kw{key-release}.
+There are seven additional call data arguments for events: The \motif{x}, \motif{y}, \motiffont{x\_root}, \motiffont{y\_root}, \motif{state}, \motif{key} members from
+the \motif{xkey} event structure and a translation of the \motif{key} member
+to it's string representation.
+\end{itemize}
+
+Applications should define callback functions which handle \kw{input} callbacks
+as
+
+\begin{verbatim}
+    (defun drawing-area-input-callback (widget client-data x-window-id
+                                        type x y x-root y-root state
+                                        &rest additional-call-data)
+      ... )
+\end{verbatim}
+
+The callback handler should first check for the actual input event type by
+examining the \lisp{type} argument and then access the elements in the
+\lisp{additional-call-data} argument.
+
+The X window ID may be converted to a CLX window ID with the function
+\lisp{make-clx-window}.
+
+\subsection{The Class \motifclass{drawn-button}{XmDrawnButton}}
+
+All callbacks except the \kw{expose} callback deliver a single call data
+argument which contains the X window ID of the window associated with the
+\motif{XmDrawnButton} widget.  Callback functions may be defined as
+
+\begin{verbatim}
+    (defun drawn-button-callback-function (widget client-data x-window-id)
+      ... )
+\end{verbatim}
+
+The \kw{expose} callback delivers six call data arguments: The X window ID of
+the window associated with the \motif{XmDrawnButton} widget, and the \lisp{x},
+\lisp{y}, \lisp{width}, \lisp{height} and \lisp{count} members from the expose
+event structure.  Callback functions may be defined as
+
+\begin{verbatim}
+    (defun drawn-button-expose-callback (widget client-data x-window-id
+                                         x y width height count)
+      ... )
+\end{verbatim}
+
+The X window ID may be converted to a CLX window ID with the function
+\lisp{make-clx-window}.
+
+\subsection{The Class \motifclass{file-selection-box}{XmFileSelectionBox}}
+
+All callbacks except the \kw{ok} and \kw{apply} callback have no
+\lisp{call-data} argument.  The \kw{ok} and the \kw{apply} callback have four
+call data arguments: the full file name, the current
+directory mask, the current base directory and the current file search pattern.
+Callback functions may be declared as
+
+\begin{verbatim}
+    (defun ok-callback-function (widget client-data
+                                 file-name dir-mask base-dir file-pattern)
+      ... )
+\end{verbatim}
+
+\subsection{The Class \motifclass{list}{XmList}}
+
+The contents of the \motif{XmList} widget's callbacks is shown in
+table~\ref{table:cb-list}. 
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+Callback name          & \lisp{call-data} \\ \hline\hline
+\kw{browse-select}      & \lispfont{item position} \\ \hline
+\kw{default-action}     & \lispfont{item position} \\ \hline
+\kw{single-select}      & \lispfont{item position} \\ \hline
+\kw{extended-selection} & \lispfont{type n item$_1$ ... item$_n$} \\ \hline
+\kw{multiple-selection} & \lispfont{n item$_1$ ... item$_n$} \\ \hline
+\end{tabular}
+\caption{\label{table:cb-list}Callbacks of the \motif{XmList} widget class}
+\end{center}
+\end{table}
+
+The \lisp{item} argument contains the selected item.  The \lisp{position}
+argument contains the item's position in the list of items.  For callbacks of
+type \kw{extended-selection}, the \lisp{type} argument describes the selection
+type.  It may be one of \lisp{:initial}, \lisp{:addition} and
+\lisp{:modification}.  These values correspond to the Motif values
+\lisp{XmINITIAL}, \lisp{XmADDITION} and \lisp{XmMODIFICATION}.  The argument
+\lisp{n} is the number of selected items.  The arguments
+\lispfont{item$_1$ ... item$_n$} are the selected items.  For example, callback
+functions which handle an \kw{extended-selection} callback may be declared as
+
+\fnsize\begin{verbatim}
+    (defun extended-selection (widget client-data type n &rest selected-items)
+      ... )
+\end{verbatim}\normalsize
+
+%\subsection{The Class \motifclass{push-button}{XmPushButton}}
+%
+%All callbacks have a single call data argument which contains the value of the
+%\motiffont{click\_count} field of the \motif{XmPushButtonCallbackStruct}.  Callback
+%functions may be defined as
+%
+%\begin{verbatim}
+    %(defun push-callback-function (widget client-data click-count)
+      %... )
+%\end{verbatim}
+
+\subsection{The Class \motifclass{scale}{XmScale}}
+
+The call data argument of all callbacks is a single argument which contains the
+new slider position. Callback functions may be declared as
+
+\fnsize\begin{verbatim}
+    (defun scale-callback-function (widget client-data new-slider-position)
+      ... )
+\end{verbatim}\normalsize
+
+\subsection{The Class \motifclass{scroll-bar}{XmScrollBar}}
+
+All callbacks except \kw{to-bottom} and \kw{to-top} receive a single argument
+which is the new slider value.  The \kw{to-bottom} and \kw{to-top} callbacks
+receive two arguments.  The first is the new slider position, the second is the
+relative pixel coordinate where the mouse button was pressed. 
+(see~\cite{motif-prog-ref}, page~444). Callback functions which handle
+a \kw{drag} callback may be defined as
+
+\begin{verbatim}
+    (defun drag-callback-function (widget client-data new-slider-value)
+      ... )
+\end{verbatim}
+
+\subsection{The Class \motifclass{selection-box}{XmSelectionBox}}
+
+The \kw{ok} callback has a single call data argument which contains the
+selected string item. Callback functions may be defined as
+
+\begin{verbatim}
+    (defun selection-callback-function (widget client-data selected-item)
+      ... )
+\end{verbatim}
+
+\subsection{The Class \motifclass{text}{XmText} and \motifclass{text-field}{XmTextField}}
+
+The contents of the call data arguments for the Motif widget classes
+\motif{XmText} and \motif{XmTextField} is shown in table~\ref{table:cb-text},
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+Callback name     & \lisp{call-data} \\ \hline\hline
+\kw{motion-verify} & \lispfont{current-insert new-insert} \\\hline
+\kw{losing-focus}  & \lispfont{current-insert new-insert}\\\hline
+\kw{modify-verify} & \lispfont{current-insert new-insert start-pos end-pos text length} \\\hline
+\kw{value-changed} & \lispfont{value} or \lispfont{nil} (see text)\\\hline
+\kw{activate} & \lispfont{value} or \lispfont{nil} \\\hline
+\end{tabular}
+\caption{\label{table:cb-text}Callback-Funktionen der Klasse \lisp{text}}
+\end{center}
+\end{table}
+
+The \kw{value-changed} call data for multi-line text widgets is always
+\lisp{nil}.  The text string may be retrieved with the \lisp{get-values}
+function.  For single-line \motif{XmText} widgets and for \motif{XmTextField}
+widgets, the call data argument of the \kw{value-changed} callback contains the
+widget's text string. 
+
+The return value of callback functions which handle \kw{modify-verify} and
+\kw{motion-verify} callbacks is used to determine whether a text modification or
+a cursor movement is allowed or denied.  A return value of \lisp{nil} denies, a
+non-nil return value allows a modification or a cursor movement. 
+
+\subsection{The Class \motifclass{toggle-button}{XmToggleButton}}
+
+The call data argument of all callbacks is a single argument which contains the
+state of the toggle button (\lisp{t} or \lisp{nil}). Callback functions may be
+defined as
+
+\begin{verbatim}
+    (defun toggle-callback-function (widget client-data state)
+      ... )
+\end{verbatim}
+
+\section{An Example on Using Callbacks}
+
+Program~\ref{prog:callback-demo} demonstrates the use of callback functions. 
+The widget tree consists of a shell widget, a RowColumn widget, two
+ToggleButtons and two Text widgets.  The state of the two ToggleButtons is
+displayed in the text widgets.  Callbacks are added to the ToggleButtons which
+update the contents of the text widgets when the state of the button changes. 
+The first ToggleButton uses the callback handler function \lisp{show-state} to
+update the text in the Text widget.  The second button uses a lambda expression
+to update the text.  Both callback handlers receive the ID of the text widget
+which they should use for displaying their state by their \lisp{client-data}
+parameter. 
+
+The call data the ToggleButton passes to the callback handler functions is
+either \lisp{t} or \lisp{nil} and describes the state of the button.  The
+callback handler of the first button declares the call data as a \verb+&rest+
+parameter, the second callback handler declares the call data as an ordinary
+parameter.  These second alternative is possible because the format of the call
+data is known in advance. 
+
+\begin{proglist}
+\fnsize\begin{verbatim}
+> (defun callback-demo (&aux shell row-column toggle-1 text-1 toggle-2 text-2)
+   (setf shell (create-application-shell)
+         row-column (create-row-column shell "row")
+         toggle-1 (create-toggle-button row-column "toggle-1" :set nil)
+         text-1 (create-text-field row-column "text-1"
+                                   :value "Off" :editable nil)
+         toggle-2 (create-toggle-button row-column "toggle-2" :set t)
+         text-2 (create-text-field row-column "text-2"
+                                   :value "On" :editable nil))
+   (add-callback toggle-1 :value-changed #'show-state text-1)
+   (add-callback toggle-2 :value-changed 
+                 #'(lambda (widget client-data &rest call-data)
+                     (set-values client-data 
+                                 :value (if (first call-data) "On" "Off")))
+                 text-2)
+   (realize-widget shell))
+
+CALLBACK-DEMO
+> (defun show-state (widget client-data &rest call-data)
+    (set-values client-data :value (if (first call-data) "On" "Off")))
+
+SHOW-STATE
+> (run-motif-application 'callback-demo)
+
+NIL
+\end{verbatim}\normalsize
+\caption{\label{prog:callback-demo}The program \lispfont{Callback Demo}}
+\end{proglist}
+
+\chapter{Protocol Callbacks}
+
+The functions described in this chapter are used to add and remove protocol
+callbacks from shell widgets.  The functions provide the functionality of the
+Motif functions \motif{XmAddProtocolCallback()},
+\motif{XmAddWMProtocolCallback()}, \motif{XmRemoveProtocolCallback()} and
+\motif{XmRemoveWMProtocolCallback()}.  For more information on protocol
+callbacks see~\cite{motif-prog-ref}, pages~99-100 and~102-103,
+and~\cite{motif-mwm}, and~\cite{xlib}, pages~43--46. 
+
+The X atoms used to identify the protocol and property must be given as symbols.
+They are automatically converted to X atoms by the CLM server.
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|}\hline
+CLM function & OSF/Motif function \\\hline\hline
+\lisp{add-protocol-callback} & \motif{XmAddProtocolCallback()}\\\hline
+\lisp{add-wm-protocol-callback} & \motif{XmAddWMProtocolCallback()}\\\hline
+\lisp{remove-protocol-callback} & \motif{XmRemoveProtocolCallback()}\\\hline
+\lisp{remove-wm-protocol-callback} & \motif{XmRemoveWMProtocolCallback()}\\\hline
+\end{tabular}
+\end{center}
+\caption{Callback functions}
+\end{table}
+
+\lispdefun{add-protocol-callback}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun add-protocol-callback 
+       (widget property protocol function client-data))
+\end{verbatim}
+\beschr This function adds a protocol callback to a shell widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the ID of the widget where to add a protocol callback.
+\lparam{property} Specifies the name of the property as a keyword symbol.
+\lparam{protocol} Specifies the name of the protocol as a keyword symbol.
+\lparam{function} Specifies the protocol callback handler function.
+\lparam{client-data} Specifies the client data which should be passed to the
+callback handler function.
+\end{paramd}
+\beispiel\normalsize The example shows the implementation of the function
+\lisp{create-application}.  The function adds a protocol callback to the newly
+created shell widget. The protocol callback is executed when the user selects
+the {\it Close} command of the \motif{mwm} window manager. The keywords
+\kw{wm-protocols} and \kw{wm-delete-window} correspond to the X property name
+\motiffont{{"WM\_PROTOCOLS"}} and the protocol \motiffont{{"WM\_DELETE\_WINDOW"}}.
+
+\fnsize\begin{verbatim}
+(defun create-application-shell (&rest resources &aux res wid)
+  (setq res (append resources (list :delete-response :do-nothing)))
+  (setq wid (car (convenience-function 0 1 0 "" res)))
+  (when (is-mwm-running wid)
+    (add-wm-protocol-callback wid :wm-delete-window
+			      #'quit-application wid))
+  wid)
+\end{verbatim}
+\end{lispd}
+
+\lispdefun{add-wm-protocol-callback}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun add-wm-protocol-callback 
+       (widget protocol function client-data))
+\end{verbatim}
+\beschr This function adds a window manager protocol callback to a shell widget.
+The functions actually calls \lisp{add-protocol-callback} with the property
+argument set to \kw{wm-protocols}.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the ID of the widget where to add a protocol callback.
+\lparam{protocol} Specifies the name of the protocol as a keyword symbol.
+\lparam{function} Specifies the protocol callback handler function.
+\lparam{client-data} Specifies the client data which should be passed to the
+callback handler function.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{remove-protocol-callback}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun remove-protocol-callback 
+       (widget property protocol function client-data))
+\end{verbatim}
+\beschr This function removes a protocol callback from a shell widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the ID of the widget where to remove 
+a protocol callback.
+\lparam{property} Specifies the name of the property as a keyword symbol.
+\lparam{protocol} Specifies the name of the protocol as a keyword symbol.
+\lparam{function} Specifies the protocol callback handler function.
+\lparam{client-data} Specifies the client data which should be passed to the
+callback handler function.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{remove-wm-protocol-callback}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun remove-wm-protocol-callback 
+       (widget protocol function client-data))
+\end{verbatim}
+\beschr This function removes a window manager protocol callback from a shell
+widget.  The functions actually calls \lisp{remove-protocol-callback} with the 
+property argument set to \kw{wm-protocols}.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the ID of the widget where to remove a protocol 
+callback.
+\lparam{protocol} Specifies the name of the protocol as a keyword.
+\lparam{function} Specifies the protocol callback handler symbol.
+\lparam{client-data} Specifies the client data which should be passed to the
+callback handler function.
+\end{paramd}
+\end{lispd}
+
+\chapter{Event Handlers}
+
+The functions described in this chapter are used to add and remove event
+handlers for widgets.  Refer to the X Toolkit documentation for more information
+about event handlers. 
+
+In general, an event handler function should be defined as follows:
+
+\begin{verbatim}
+    (defun event-handler (widget client-data event-type &rest event)
+       ... )
+\end{verbatim}
+
+The \lisp{widget} argument contains the ID of the widget which executes the
+event handler. The \lisp{client-data} argument contains the client data that
+was passed to \lisp{add-event-handler} when the event handler was installed.
+The \lisp{event-type} argument specifies the X event type.
+The \lisp{event} argument contains data from the X event structure. The format 
+of this data is decribed in table~\ref{tab:event-data}.
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|l|} \hline
+X Event type & Format of the \motiffont{\&rest event} argument\\
+(see~\cite{xlib}, page~145) &(see~\cite{xlib}, pages~146--182)\\\hline\hline
+KeyPress, KeyRelease & \lispfont{(x y x-root y-root state keycode keysym)} \\\hline
+ButtonPress, ButtonRelease & \lispfont{(x y x-root y-root state button time)} \\\hline
+Expose & \fnsize\lispfont{(n-events x$_1$ y$_1$ width$_1$ height$_1$ $\ldots$ x$_n$ y$_n$ width$_n$ height$_n$)} \\\hline
+MotionNotify & \fnsize\lispfont{(n-events x$_1$ y$_1$ x-root$_1$ y-root$_1$ state$_1$} $\ldots$ \\ {\tt\ } & \fnsize\lispfont{$\ldots$ x$_n$ y$_n$ x-root$_n$ y-root$_n$ state$_n$)} \\\hline
+EnterNotify, LeaveNotify & \lispfont{(x y x-root y-root mode detail focus state)} \\\hline
+FocusIn, FocusOut & \lispfont{(mode detail)} \\\hline
+ConfigureNotify & \lispfont{(x y width height)} \\\hline
+VisibilityNotify & \lispfont{(state)} \\\hline
+PropertyNotify & \lispfont{(atom-id state time)} \\\hline
+SelectionClear & \lispfont{(selection-atom time)} \\\hline
+SelectionRequest & \lispfont{(requestor slection target property time)} \\\hline
+SelectionNotify & \lispfont{(selection target propery time)} \\\hline
+ClientMessage & \lispfont{(message-type <5, 10, or 20 numbers>)} \\\hline
+\end{tabular}
+\caption{\label{tab:event-data} Format of the event data for event handlers}
+\end{center}
+\end{table}
+
+For efficiency, the CLM server buffers \motif{Expose} events for each widget
+and calls the installed event handler only when the \motif{count} field in the
+expose event is zero.  The \motif{event} argument of the event handler then
+contains the number of buffered expose events and the \motif{x}, \motif{y},
+\motif{width} and \motif{height} for each expose event.  Expose events are only
+buffered if the \motiffont{compress\_exposure} field in the widget's class record is
+\motif{False}. CLM applications may code their expose event handler as follows:
+
+\begin{verbatim}
+(defun expose-event-handler (widget client-data event-type &rest event)
+  (setq regions (cdr events))
+  (loop for n-events from 1 to (first event) do
+    (update-region widget client-data
+                   (first regions) (second regions)
+                   (third regions) (fourth regions))
+    (setq regions (cddddr regions))))
+\end{verbatim}
+
+The CLM server also calls event handlers for \motif{Motion} events only
+once if it receives more than one \motif{Motion} event at a time. The 
+\motif{event} argument of the event handler then contains the number of
+\motif{Motion} events and the \motif{x}, \motif{y}, \motiffont{x\_root}, 
+\motiffont{y\_root} and \motif{state} fields for each \motif{Motion} event.
+CLM applications may code their \motif{Motion} event handler as follows:
+
+\begin{verbatim}
+(defun motion-event-handler (widget client-data event-type &rest event)
+  (setq motions (cdr events))
+  (loop for n-events from 1 to (first event) do
+    (track-mouse widget client-data
+                 (first motions) (second motions)
+                 (third motions) (fourth motions) (fifth motions))
+    (setq motions (nthcdr 5 motions))))
+\end{verbatim}
+
+Event types are specified as keywords.  The keyword can be derived from the X
+event name (see~\cite{xlib}, pages~144-146) by inserting a hyphen before each
+upper case letter and by converting the upper case letters to lower case.  For
+example, to install an event handler which reacts to key events, the event mask
+\lispfont{'(:key-press-mask :key-release-mask)} must be used. 
+
+\lispdefun{add-event-handler}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun add-event-handler (widget event-mask function client-data 
+                          &key (non-maskable nil)))
+\end{verbatim}
+\beschr This function installs an event handler for a widget.
+An event handler may be installed for a single event type or for multiple event
+types. In the first case, the event name must be given as an atom, in the 
+second case, a list of event names must be given.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{event-mask} Specifies the event name or a list of event names.
+\lparam{function} Specifies the event handler function.
+\lparam{client-data} Specifies the client data for the event handler function.
+\lparam{non-maskable} Specifies whether the event handler should also be 
+installed for the non-maskable event types.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{remove-event-handler}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun add-event-handler (widget event-mask function client-data 
+                          &key (non-maskable nil)))
+\end{verbatim}
+\beschr This function removes an event handler from a widget.
+An event handler may be removed for a single event type or for multiple event
+types. In the first case, the event name must be given as an atom, in the 
+second case, a list of event names must be given.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{event-mask} Specifies the event name or a list of event names.
+\lparam{function} Specifies the event handler function.
+\lparam{client-data} Specifies the client data for the event handler function.
+\lparam{non-maskable} Specifies whether the event handler should also be 
+removed for the non-maskable event types.
+\end{paramd}
+\end{lispd}
+
+\chapter{Resources} \label{sec:resources}
+
+The functions described in this chapter are used to set and retrieve the
+resources of widgets. These functions map to the Motif functions 
+\motif{XtSetValues()} and \motif{XtGetValues()}.
+
+When setting a widget's resource either at widget creation time or dynamically
+using \lisp{set-values}, the resources are specified as a sequence of
+arguments containing the resource names and resource values. For example:
+
+\begin{verbatim}
+    (set-values widget :label-string "Good morning" :background "red")
+
+    (create-widget parent :text :value "Hello" :editable nil)
+
+\end{verbatim}
+
+In the example above, the keywords \kw{label-string}, \kw{background},
+\kw{value} and \kw{editable} denote the Motif resources \motif{XmNlabelString},
+\motif{XmNbackground}, \motif{XmNvalue} and \motif{XmNeditable}, respectively. 
+Their values are \lispfont{"Good morning"}, \lispfont{"red"}, \lispfont{"Hello"}
+and \lispfont{nil}, respectively. 
+
+Table~\ref{tab:resource-classes} shows how Motif resources are specified in
+Lisp.  The left column contains the ``C'' resource type.  The right column
+contains their possible Lisp values.  Table~\ref{tab:enum-resources} lists the
+possible values for enumerative resources which have the ``C'' type
+\motif{unsigned char}.  The left column contains the Motif resource class and
+the right column contains the possible values for this class. 
+
+Refer to the Motif Programmer's Guide for which resources should be best
+specified in the program and which resources should be best specified in the
+application's default file. 
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+Motif type & Lisp representation \\\hline\hline
+Dimension, Integer & Fixnum \\
+Short              & \\\hline
+String, XmString & String \\\hline
+Widget & The widget ID \\\hline
+FontList & String name of the font \\\hline
+Boolean, Bool & \lisp{t} \lisp{nil} \\\hline
+Atom & Atom name as string \\\hline
+Pixel & String or rgb-value (e.g. \lispfont{"red"} or \lispfont{"\#222333444"}) \\\hline
+Pixmap & Path name of pixmap file \\\hline
+Translations & String \\\hline
+Char, UChar & String of length 1 \\\hline
+\end{tabular}
+\end{center}
+\caption{\label{tab:resource-classes} Resource types and values}
+\end{table}
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+Motif resource class & Lisp resource values \\\hline\hline
+\lisp{XmCAlignment} & \kw{center} \kw{end} \kw{beginning} \\\hline
+\lisp{XmCArrowDirection} & \kw{arrow-down} \kw{arrow-left} \kw{arrow-right} \kw{arrow-up} \\\hline
+\lisp{XmCAttachment} & \kw{form} \kw{position} \kw{widget} \kw{self} \kw{none} \\
+           & \kw{opposite-form} \kw{opposite-widget} \\\hline
+\lisp{XmCCommandWindowLocation} & \kw{above-workspace} \kw{below-workspace} \\\hline
+\lisp{XmCDefaultButtonType} & \kw{cancel} \kw{ok} \kw{help} \\\hline
+\lisp{XmCDeleteResponse} & \kw{destroy} \kw{unmap} \kw{do-nothing} \\\hline
+\lisp{XmCDialogStyle} & \kw{system-modal} \kw{application-modal} \kw{modeless} \\
+	    & \kw{work-area} \\\hline
+\lisp{XmCDialogType} & \kw{file-selection} \kw{prompt} \kw{selection} \kw{work-area} \\
+	   & \kw{error} \kw{message} \kw{question} \kw{warning} \\
+	   & \kw{information} \\\hline
+\lisp{XmCEditMode} & \kw{multi-line-edit} \kw{single-line-edit} \\\hline
+\lisp{XmCFileTypeMask} & \kw{regular} \kw{directory} \kw{any-type} \\\hline
+\lisp{XmCIndicatorType} & \kw{one-of-many} \kw{n-of-many} \\\hline
+\lisp{XmCInitialState} & \kw{iconic} \kw{normal} \\\hline
+\lisp{XmCKeyboardFocusPolicy} & \kw{pointer} \kw{explicit} \\\hline
+\lisp{XmCLabelType} & \kw{string} \kw{pixmap} \\\hline
+\lisp{XmCListSizePolicy} & \kw{constant} \kw{variable} \kw{resize-if-possible} \\\hline
+\lisp{XmCMultiClick} & \kw{keep} \kw{discard} \\\hline
+\lisp{XmCNavigationType} & \kw{none} \kw{sticky-tab-group} \kw{tab-group} \\
+	       & \kw{exclusive-tab-group} \\\hline
+\lisp{XmCOrientation} & \kw{horizontal} \kw{vertical} \\\hline
+\lisp{XmCPacking} & \kw{pack-tight} \kw{pack-none} \kw{pack-column} \\\hline
+\lisp{XmCProcessingDirection} & \kw{max-on-top} \kw{max-on-left} \kw{max-on-right} \\
+		    & \kw{max-on-bottom} \\\hline
+\lisp{XmCResizePolicy} & \kw{any} \kw{grow} \kw{none} \\\hline
+\lisp{XmCRowColumnType} & \kw{work-area} \kw{menu-bar} \kw{menu-pulldown} \\
+              & \kw{menu-popup} \kw{menu-option} \\\hline
+\lisp{XmCScrollBarDisplayPolicy} & \kw{as-needed} \kw{static} \\\hline
+\lisp{XmCScrollBarPlacement} & \kw{top-left} \kw{top-right} \kw{bottom-left} \kw{bottom-right} \\\hline
+\lisp{XmCScrollingPolicy} & \kw{automatic} \kw{application-defined} \\\hline
+\lisp{XmCSelectionPolicy} & \kw{single} \kw{multiple} \kw{extended} \kw{browse}\\\hline
+\lisp{XmCSeparatorType} & \kw{single-line} \kw{double-line} \kw{double-dashed-line} \\
+              & \kw{single-dashed-line} \kw{no-line} \kw{shadow-etched-in} \\
+              & \kw{shadow-etched-out} \\\hline
+\lisp{XmCShadowType} & \kw{in} \kw{out} \kw{etched-in} \kw{etched-out} \\\hline
+\lisp{XmCStringDirection} & \kw{l-to-r} \kw{r-to-l} \\\hline
+\lisp{XmCUnitType} & \kw{100th-millimeters} \kw{1000th-inches} \kw{100th-points}\\
+         & \kw{100th-font-units} \kw{pixels} \\\hline
+\lisp{XmCVisualPolicy} & \kw{constant} \kw{variable} \\\hline
+\end{tabular}
+\end{center}
+\caption{\label{tab:enum-resources} Enumerative resource classes and values}
+\end{table}
+
+\lispdefun{set-values}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun set-values (widget &rest resources))
+\end{verbatim}
+\beschr This function is used to set a widget's resources.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{resources} Specifies an arbitrary number of name/value pairs.
+\end{paramd}
+\end{lispd}
+\pagebreak
+
+\lispdefun{get-values}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun get-values (widget &rest resource-names))
+\end{verbatim}
+\beschr This function is used to retrieve an arbitrary number of widget
+resources.  The resource names are given with the \lisp{resource-names}
+argument.  The function returns a list which contains the resource values.  The
+order of the resource values in the returned list corresponds to the order of
+the resource names in the argument list. 
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{resources} Specifies the resource names.
+\end{paramd}
+\end{lispd}
+
+\chapter{Translations}
+
+The functions described in this chapter are used to manipulate a widget's
+translation tables.  The functions take a string argument which describes the
+translation table.  The syntax is the same as for the X Toolkit Intrinsics.  The
+strings are automatically converted to translation tables suitable for
+\motif{XmAugmentTranslations()} and \motif{XmOverrideTranslations()}. 
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+CLM function & OSF/Motif function \\\hline\hline
+\lisp{augment-translations} & \motif{XtParseTranslationTable()} \\
+                            & \motif{XtAugmentTranslations()} \\\hline
+\lisp{override-translations} & \motif{XtParseTranslationTable()} \\
+                             & \motif{XtOverrideTranslations()} \\\hline
+\lisp{push-translations} & {\it none} \\\hline
+\lisp{pop-translations} & {\it none} \\\hline
+\end{tabular}
+\caption{Translation table functions}
+\end{center}
+\end{table}
+
+\lispdefun{augment-translations}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun augment-translations (widget translation-table))
+\end{verbatim}
+\beschr This function is used to augment a widget's translations.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{translation-table} Specifies the translation table.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{override-translations}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun override-translations (widget translation-table))
+\end{verbatim}
+\beschr This function is used to override a widget's translations.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{translation-table} Specifies the translation table.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{push-translations}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun push-translations (widget))
+\end{verbatim}
+\beschr This function replaces a widget's translations with the empty
+translation table until the old translation table is restored with
+\lisp{pop-translations}. This disables the widget from dispatching any events
+except expose events.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{pop-translations}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun pop-translations (widget))
+\end{verbatim}
+\beschr This function restores the original translation table of a widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\end{paramd}
+\end{lispd}
+
+\chapter{Tab Groups}
+
+The functions in this chapter are used to add and remove tab groups and to
+simulate keyboard traversal actions.  Refer to the Motif documentation for
+details. 
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+CLM function & OSF/Motif function \\\hline\hline
+\lisp{add-tab-group} & \motif{XmAddTabGroup()} \\\hline
+\lisp{remove-tab-group} & \motif{XmRemoveTabGroup()} \\\hline
+\lisp{process-traversal} & \motif{XmProcessTraversal()} \\\hline
+\end{tabular}
+\caption{Tab group functions}
+\end{center}
+\end{table}
+
+\lispdefun{add-tab-group}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun add-tab-group (widget))
+\end{verbatim}
+\beschr This function adds a tab group to a shell widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID of the tab group
+\end{paramd}
+\end{lispd}
+
+\lispdefun{remove-tab-group}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun remove-tab-group (widget))
+\end{verbatim}
+\beschr This function removes a tab group from a shell widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID tof the tab group.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{process-traversal}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun process-traversal (widget direction))
+\end{verbatim}
+\xmref{XmProcessTraversal()}
+\beschr This function moves the keyboard focus to another widget. It returns
+\lispfont{t} if the traversal action could be performed and \lispfont{nil}
+otherwise.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID of the focus widget.
+\lparam{direction} Specifies the direction of traversal. Possible values are
+\kw{current}, \kw{down}, \kw{home}, \kw{left}, \kw{next}, \kw{next-tab-group},
+\kw{prev}, \kw{prev-tab-group}, \kw{right} and \kw{up}.
+\end{paramd}
+\end{lispd}
+
+\chapter{Timers}\label{chap:timers}
+
+The functions described in this chapter are used to create and manipulate
+timers.  These functions provide a high level interface to the functions
+\motif{XtAddTimeout()} and \motif{XtRemoveTimeout()} which are defined by the X
+Toolkit Intrinsics.  Examples on the usage of timers are discussed in
+the examples in sections~\ref{ex:xclock} and~\ref{ex:xprocesses}. 
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+CLM function & Description \\\hline\hline
+\lisp{create-timer} & Create a timer and return it's ID \\\hline
+\lisp{destroy-timer} & Destroy a timer \\\hline
+\lisp{change-timer} & Change a timer's interval \\\hline
+\lisp{start-timer} & Start a timer \\\hline
+\lisp{stop-timer} & Stop a timer \\\hline
+\end{tabular}
+\caption{Timer functions}
+\end{center}
+\end{table}
+
+Timers are created using the function \lisp{create-timer}.  This function
+returns a unique timer ID which may be used for further operations on the timer.
+When a timer is created, the programmer must specify an initial timer interval
+(in milliseconds), a handler function which is called each time the time
+interval elapses and a client data argument which is passed to the timer
+function.  The \lisp{create-timer} function also provides several keyword
+arguments which can be used to modify the general behavior of a timer. 
+
+Timer handler functions must be declared as follows:
+
+\begin{verbatim}
+    (defun timer-handler (timer-id client-data)
+	... )
+\end{verbatim}
+
+The \lisp{timer-id} argument is the ID of the timer which executes the timer
+handler function.  The \lisp{client-data} argument contains the client data
+which was passed to the function \lisp{create-timer} when the timer was created.
+
+The timer handler function is called each timer the timer interval expires.  By
+default, the next timer interval starts immediately after the execution of the
+timer handler.  This behavior can be changed with the \kw{active-in-handler}
+argument of the function \lisp{create-timer}.  If this argument's value is
+non-nil, then the next time interval starts immediately after the previous
+interval has elapsed. 
+
+A timer starts running immediately after it has been created.  To create a timer
+which is initially disabled, the \kw{enabled} argument of the function
+\lisp{create-timer} must be given a value of \lisp{nil}.  The timer is started
+with the function \lisp{start-timer}.  A timer is stopped with the function
+\lisp{stop-timer}.  A timer is destroyed with the function \lisp{destroy-timer}.
+It is always save to start, stop and destroy a timer during the execution of
+it's timer callback function. 
+
+\lispdefun{create-timer}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun create-timer (interval function client-data
+		     &key (enabled t)
+			  (active-in-handler nil)
+			  (active-in-recursive-main-loop nil)
+			  (once nil)))
+\end{verbatim}
+\beschr This function creates a timer and returns it's timer ID.
+\parameter
+\begin{paramd}
+\lparam{interval} Specifies the timer interval in milliseconds
+\lparam{function} Specifies the timer handler function.
+\lparam{client-data} Specifies the client data which is is passed to the timer
+function each time it is executed.
+\lparam{enabled} Specifies whether the timer starts immediately after it has 
+been created. A non-nil value creates a disabled timer, which must be started
+using the function \lisp{start-timer}.
+\lparam{active-in-handler} Specifies the beginning of the next timer interval.
+A non-nil value starts the next time interval immediately after the previous 
+interval has elapsed. A value of \lisp{nil} starts the next time interval
+immediately after the execution of the timer handler function has finished.
+\lparam{active-in-recursive-main-loop} Specifies whether the timer handler
+should be called when CLM is executing a recursive application main loop. An
+implicit recursive main loop is executed during the execution of the functions
+\lisp{alert-dialog} and \lisp{wait-for-input}.
+\lparam{once} A non-nil value causes the timer to be destroyed automatically
+immediately after the first execution of the timer handler function.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{destroy-timer}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun destroy-timer (timer-id))
+\end{verbatim}
+\beschr This function destroys a timer.
+\parameter
+\begin{paramd}
+\lparam{timer-id} Specifies the timer.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{change-timer}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun change-timer (timer-id new-interval))
+\end{verbatim}
+\beschr This function changes the time interval of a timer. The function doesn't
+affect the current time interval. The new time interval is used after the
+current interval has expired.
+\parameter
+\begin{paramd}
+\lparam{timer-id} Specifies the timer.
+\lparam{new-interval} Specifies the new timer interval in milliseconds.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{start-timer}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun start-timer (timer-id &key (new-interval -1)))
+\end{verbatim}
+\beschr This function starts a disabled timer. A value of $-1$ doesn't affect 
+the current time interval.
+\parameter
+\begin{paramd}
+\lparam{timer-id} Specifies the timer.
+\lparam{new-interval} Specifies an optional new timer interval in milliseconds.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{stop-timer}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun stop-timer (timer-id))
+\end{verbatim}
+\beschr This function disables a running timer.
+\parameter
+\begin{paramd}
+\lparam{timer-id} Specifies the timer.
+\end{paramd}
+\end{lispd}
+
+\chapter{Cursors}
+
+The functions described in this chapter are use to create cursors and to
+change a widget's cursor. 
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+CLM function & OSF/Motif function \\\hline\hline
+\lisp{create-font-cursor} & \motif{XCreateFontCursor()} \\\hline
+\lisp{create-pixmap-cursor} & \motif{XCreatePixmapCursor()} \\\hline
+\lisp{define-cursor} & \motif{XDefineCursor()} \\\hline
+\lisp{change-grab-cursor} & \motif{XChangeActivePointerGrab()} \\\hline
+\end{tabular}
+\caption{Cursor functions}
+\end{center}
+\end{table}
+
+To use a certain cursor shape for a widget, a cursor must first be created and
+then must be defined for the widget. CLM supports two cursor types:
+
+\begin{itemize}
+\item {\em Font cursors} are cursors from the X cursor font. The cursor shape
+is specified using a keyword symbol. A list of possible font cursors is 
+returned by the function \lisp{xtk::all-cursors}. Font cursors are created
+with the function \lisp{create-font-cursor}.
+\item {\em Pixmap cursors} are constructed from two bitmaps of equal size.
+A description of the bitmaps must be stored in a file which can be read by the
+\motif{XReadBitmapFile()} function from the X library (see~\cite{xlib}).
+\end{itemize}
+
+The functions which create cursors return an X cursor ID. This cursor ID must
+be used for defining a new cursor shape for a widget. The function
+\lisp{define-cursor} can be used to permanently define a new cursor shape
+for a widget. The function \lisp{change-grab-cursor} can be used to change a
+widget's cursor during an active pointer grab.
+
+\lispdefun{create-font-cursor}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun create-font-cursor (shape))
+\end{verbatim}
+\beschr This function creates a font cursor from the X cursor font and returns
+an X cursor ID.
+\parameter
+\begin{paramd}
+\lparam{shape} Specifies the font shape as a keyword. A list of all possible
+shapes is returned by the function \lisp{xtk::all-cursors}.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{create-pixmap-cursor}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun create-pixmap-cursor (source mask &key (foreground "black")
+					      (background "white")))
+\end{verbatim}
+\xmref{XCreatePixmapCursor()}
+\beschr This function creates a bitmap cursor from two bitmap files and returns
+an X cursor ID.  The bitmaps must be stored in the X bitmap format.  Bitmaps may
+be created by using the \motif{bitmap} utility from the X distribution.  The two
+bitmaps must have an equal size and the \lisp{source} bitmap must have a
+{\em hot spot} defined. 
+
+\parameter
+\begin{paramd}
+\lparam{source} Specifies the pathname of the X bitmap file which contains the
+source bitmap.
+\lparam{mask} Specifies the pathname of the X bitmap file which contains the
+mask bitmap.
+\lparam{foreground} Specifies the cursors foreground color.
+\lparam{background} Specifies the cursors background color.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{define-cursor}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun define-cursor (cursor-id &rest widgets))
+\end{verbatim}
+\xmref{XDefineCursor()}
+\beschr This function is used to define a new cursor shape for an arbitrary
+number of widgets. If the symbol \kw{restore} is used instead of a cursor shape,
+then the widget's old cursor shape is restored.
+\parameter
+\begin{paramd}
+\lparam{cursor-id} Specifies the cursor-id or \kw{restore}.
+\lparam{mask} Specifies the widgets for which a new cursor should be defined.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{change-grab-cursor}
+\begin{lispd}
+\syntax\fnsize\begin{verbatim}
+(defun change-grab-cursor (cursor-id &key (add-mask nil) (remove-mask nil)))
+\end{verbatim}\normalsize
+\xmref{XChangeActivePointerGrab()}
+\beschr This function is used to define a cursor shape during an active pointer
+grab. The two keyword arguments may be set to modify the X event mask used
+during the pointer grab. The two event masks have the same format as the
+event mask used for installing event handlers. The event mask are first converted to X event masks. The event mask used during the pointer grab is computed as
+
+\begin{verbatim}
+    mask = (ButtonReleaseMask | ButtonMotionMask | add_mask)
+	   & ~ remove_mask
+\end{verbatim}
+
+\parameter
+\begin{paramd}
+\lparam{cursor-id} Specifies the cursor-id.
+\lparam{add-mask} Specifies the events which should be reported during an active
+pointer grab.
+\lparam{remove-mask} Specifies the events which should {\em not} be reported
+during an active pointer grab.
+\end{paramd}
+\end{lispd}
+
+\chapter{Query functions}
+
+The functions described in this chapter are used to alert dialogs. These 
+functions have no corresponding Motif functions.
+
+\lispdefun{alert-dialog}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun alert-dialog (widget))
+\end{verbatim}
+\beschr This function pops up a dialog and blocks until the dialog is popped
+down.  The dialog must be popped down using the \motif{unmanage-popup} function.
+The dialog must be created using a \motif{XmDialogShell} widget with and
+\motif{XmBulletinBoard} child.  The \lisp{widget} argument of
+\lisp{alert-dialog} must be the widget ID of the \motif{XmBulletinBoard} widget.
+\hinweis The \motif{XmBulletinBoard} widget's \kw{auto-unmanage} resource must
+be set to \lisp{nil} at widget creation time.  The \kw{unmap} callback list of
+the \motif{XmBulletinBoard} widget must not be modified. 
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID of the \motif{XmBulletinBoard} widget.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{wait-for-input}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun wait-for-input (widget))
+\end{verbatim}
+\beschr This function waits for the user to type in some text into a
+\motif{XmText} or \motif{XmTextField} widget and blocks until the user presses a
+key which causes the text widget's \motif{:activate} callback to be executed. 
+This callback is normally executed when the {\it Activate} key is pressed. 
+\hinweis The \motif{XmText} widget's \kw{activate} callback list must not be 
+modified. The widget's \kw{edit-mode} resource is forced to 
+\kw{single-line-edit}.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID of the text widget.
+\end{paramd}
+\end{lispd}
+
+\chapter{Interface to Widget Classes}
+
+The functions described in this chapter correspond to Motif functions which are
+exported by the Motif widget classes. Refer to the widget's manual pages for 
+more information about these functions.
+
+\section{The \motif{XmText} Widget Class}
+
+The functions described in this section provide an interface to the functions
+exported by the \motif{XmText} widget class. The functions \lisp{text-insert}
+and \lisp{text-append} are used for inserting and appending text to a multi-line
+text widget.
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+CLM function & OSF/Motif function \\\hline\hline
+\lisp{text-insert} & \motif{XmTextInsert} \\\hline
+\lisp{text-append} & \motif{XmTextAppend} \\\hline
+\lisp{text-get-selection} & \motif{XmTextGetSelection} \\\hline
+\lisp{text-clear-selection} & \motif{XmTextClearSelection} \\\hline
+\lisp{text-cut} & \motif{XmTextCut} \\\hline
+\lisp{text-copy} & \motif{XmTextCopy} \\\hline
+\lisp{text-get-baseline} & \motif{XmTextGetBaseline} \\\hline
+\lisp{text-get-selection-position} & \motif{XmTextGetSelectionPosition} \\\hline
+\lisp{text-paste} & \motif{XmTextpaste} \\\hline
+\lisp{text-pos-to-xy} & \motif{XmTextPosToXY} \\\hline
+\lisp{text-remove} & \motif{XmTextRemove} \\\hline
+\lisp{text-scroll} & \motif{XmTextScroll} \\\hline
+\lisp{text-set-add-mode} & \motif{XmTextSetAddMode} \\\hline
+\lisp{text-show-position} & \motif{XmTextShowPosition} \\\hline
+\lisp{text-xy-to-pos} & \motif{XmTextXYToPos} \\\hline
+\lisp{text-get-last-pos} & \motif{XmTextGetLastPos} \\\hline
+\lisp{text-set-selection} & \motif{XmTextSetSelection} \\\hline
+\lisp{text-replace} & \motif{XmTextReplace} \\\hline
+\lisp{text-get-insertion-position} & \motif{XmTextGetInsertionPosition} \\\hline
+\lisp{text-set-highlight} & \motif{XmTextSetHighlight} \\\hline
+\lisp{text-get-substring} & none \\\hline
+\lisp{text-search} & none \\\hline
+\end{tabular}
+\caption{\label{tab:xmtext-functions} Functions for the \motif{XmText} class}
+\end{center}
+\end{table}
+
+\lispdefun{text-insert}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun text-insert (widget position text &key (move-cursor t)
+                                              (scroll-window nil)))
+\end{verbatim}
+\beschr This functions inserts a text string in a text widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{position} Specifies the position where to insert the text.
+\lparam{text} Specifies the text to be inserted.
+\lparam{move-cursor} Specifies whether the cursor should be positioned after
+the last inserted character.
+\lparam{scroll-window} Specifies whether the text widget should be scrolled to the position where the new text was inserted.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{text-append}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun text-append (widget text &key (move-cursor t)
+                                     (scroll-window nil)))
+\end{verbatim}
+\beschr This function appends a string to a text widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the text widget.
+\lparam{text} Specifies the text to be inserted.
+\lparam{move-cursor} Specifies whether the cursor should be positioned after
+the last inserted character.
+\lparam{scroll-window} Specifies whether the text widget should be scrolled to the position where the new text was inserted.
+\end{paramd}
+\end{lispd}
+
+There are a number of other Motif text functions available. They are listed in
+Table~\ref{tab:xmtext-functions}. See the Motif documentation and the CLM
+source code (file \lisp{text.lisp}) for details.
+
+\section{The \motif{XmList}, \motif{XmCommand} and \motif{XmSelectionBox} Widget Classes}
+
+The functions described in this section provide an interface to the exported
+functions of the \motif{XmList} widget class. The functions \lisp{set-items},
+\lisp{get-items} and \lisp{get-selected-items} may also be used with widgets
+of the classes \motif{XmCommand} and \motif{XmSelectionBox}.
+\pagebreak
+
+\lispdefun{set-items}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun set-items (widget &rest items))
+\end{verbatim}
+\beschr This function replaces the items of a widget by the items given
+in the \lisp{items} parameter. This function is applicable to widget of the
+classes \motif{XmList}, \motif{XmCommand} and \motif{XmSelectionBox}.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{items} Specifies the new items.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{get-items}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun get-items (widget))
+\end{verbatim}
+\beschr This functions returns the list of items of a widget.  This function
+is applicable to widget of the classes \motif{XmList}, \motif{XmCommand} and
+\motif{XmSelectionBox}. 
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{get-selected-items}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun get-selected-items (widget))
+\end{verbatim}
+\beschr This functions returns the list of selected items of a widget.  This 
+function is applicable to widget of the classes \motif{XmList}, 
+\motif{XmCommand} and \motif{XmSelectionBox}. 
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\end{paramd}
+\end{lispd}
+
+\section{The \motif{XmList} Widget Class}
+
+The functions described in this section are used to manipulate the item list
+of an \motif{XmList} widget. Refer to the documentation for 
+details (see~\cite{motif-prog-ref}, pages~326--350). 
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+CLM function & OSF/Motif function \\\hline\hline
+\lisp{list-add-item} & \motif{XmListAddItem()} \\\hline
+\lisp{list-add-item-unselected} & \motif{XmListAddItemUnselected()} \\\hline
+\lisp{list-delete-item} & \motif{XmListDeleteItem()} \\\hline
+\lisp{list-delete-pos} & \motif{XmListDeletePos()} \\\hline
+\lisp{list-deselect-all-items} & \motif{XmListDeselectAllItems()} \\\hline
+\lisp{list-deselect-item} & \motif{XmListDeselectItem()} \\\hline
+\lisp{list-deselect-pos} & \motif{XmListDeselectPos()} \\\hline
+\lisp{list-select-item} & \motif{XmListSelectItem()} \\\hline
+\lisp{list-select-pos} & \motif{XmListSelectPos()} \\\hline
+\lisp{list-set-bottom-item} & \motif{XmListSetBottomItem()} \\\hline
+\lisp{list-set-bottom-pos} & \motif{XmListSetBottomPos()} \\\hline
+\lisp{list-set-horiz-pos} & \motif{XmListSetHorizPos()} \\\hline
+\lisp{list-set-top-item} & \motif{XmListSetItem()} \\\hline
+\lisp{list-set-top-pos} & \motif{XmListSetPos()} \\\hline
+\end{tabular}
+\caption{Functions for the \motif{XmList} class}
+\end{center}
+\end{table}
+
+\lispdefun{list-add-item}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-add-item (widget item position))
+\end{verbatim}
+\beschr This function adds an item to an XmList widget at a given position. If
+\lisp{position} is $0$, the item is appended to the item list.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{item} Specifies the new item.
+\lparam{position} Specifies the item position.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-add-item-unselected}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-add-item-unselected (widget item position))
+\end{verbatim}
+\beschr This function adds an item to an XmList widget at a given position. If
+\lisp{position} is $0$, the item is appended to the item list.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{item} Specifies the new item.
+\lparam{position} Specifies the item position.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-delete-item}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-delete-item (widget item))
+\end{verbatim}
+\beschr This function deletes an item from a list widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{position} Specifies the item.
+\end{paramd}
+\end{lispd}
+\pagebreak
+
+\lispdefun{list-delete-pos}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-delete-pos (widget item))
+\end{verbatim}
+\beschr This function deletes an item from a list widget at a given position.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{position} Specifies the item position.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-deselect-all-items}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-deselect-all-items (widget))
+\end{verbatim}
+\beschr This function deselects all items of a list widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-deselect-item}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-deselect-item (widget))
+\end{verbatim}
+\beschr This function deselects an item of a list widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{item} Specifies the item.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-deselect-pos}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-deselect-pos (widget))
+\end{verbatim}
+\beschr This function deselects an item of a list widget at a given position.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{position} Specifies the item position.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-select-item}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-select-item (widget item))
+\end{verbatim}
+\beschr This function selects an item in a list widget.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{item} Specifies the item.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-select-pos}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-select-pos (widget position))
+\end{verbatim}
+\beschr This function selects an item at a given position.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{position} Specifies the item position.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-set-bottom-item}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-set-bottom-item (widget item))
+\end{verbatim}
+\beschr This function moves the visible part of the item list and makes 
+the given item the last one to be visible in the list widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\lparam{item} Specifies the item.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-set-bottom-pos}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-set-bottom-pos (widget position))
+\end{verbatim}
+\beschr This function moves the visible part of the item list and makes the 
+item at the given position the last one to be visible in the list widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\lparam{item} Specifies the item position.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-set-horiz-pos}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-set-horiz-pos (widget position))
+\end{verbatim}
+\beschr This function moves the horizontal scrollbar of a list widget to the 
+given position.
+\parameter
+\begin{paramd}
+\lparam{widget} Specifies the widget ID.
+\lparam{position} Specifies the new horizontal position.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-set-top-item}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-set-top-item (widget item))
+\end{verbatim}
+\beschr This function moves the visible part of the item list and makes the 
+given item the first one to be visible in the list widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\lparam{item} Specifies the item.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{list-set-top-pos}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun list-set-top-pos (widget position))
+\end{verbatim}
+\beschr This function moves the visible part of the item list and makes the
+item at the given position the first one to be visible in the list widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\lparam{item} Specifies the item position.
+\end{paramd}
+\end{lispd}
+
+\section{Getting Automatically Created Children}
+
+A number of Motif widgets automatically create children. The following functions
+return the widget IDs of these children to make them accessible from CLM.
+The desired child is denoted by a keyword which is formed from the constants
+used in the Motif documentation by the usual CLM conventions.
+
+\lispdefun{message-box-get-child}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun message-box-get-child (widget child-name))
+\end{verbatim}
+\beschr This function returns one of the children of a message-box widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\lparam{item} Specifies the child-name (e.g. \kw{ok-button}).
+\end{paramd}
+\end{lispd}
+
+\lispdefun{selection-box-get-child}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun selection-box-get-child (widget child-name))
+\end{verbatim}
+\beschr This function returns one of the children of a selection-box widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\lparam{item} Specifies the child-name (e.g. \kw{ok-button}).
+\end{paramd}
+\end{lispd}
+
+\lispdefun{file-selection-box-get-child}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun file-selection-box-get-child (widget child-name))
+\end{verbatim}
+\beschr This function returns one of the children of a file-selection-box
+widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\lparam{item} Specifies the child-name (e.g. \kw{ok-button}).
+\end{paramd}
+\end{lispd}
+
+\lispdefun{command-get-child}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun command-get-child (widget child-name))
+\end{verbatim}
+\beschr This function returns one of the children of a command widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\lparam{item} Specifies the child-name (e.g. \kw{ok-button}).
+\end{paramd}
+\end{lispd}
+
+\lispdefun{option-label-gadget}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun message-box-get-child (widget))
+\end{verbatim}
+\beschr This function returns the label-gadget child of an option-menu.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{option-button-child}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun option-button-child (widget))
+\end{verbatim}
+\beschr This function returns the cascade-button-gadget child of an option-menu.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID.
+\end{paramd}
+\end{lispd}
+
+\section{Setting Child Roles}
+
+The following functions specify the roles of the different children of a
+scrolled-window or main-window.
+
+\lispdefun{scrolled-window-set-areas}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun scrolled-window-set-areas (widget
+				  &key (horizontal-scroll-bar-widget nil)
+				  (vertical-scroll-bar-widget nil)
+				  (work-region-widget nil)))
+\end{verbatim}
+\beschr This function returns one of the children of a message-box widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID of the scrolled-window.
+\end{paramd}
+\end{lispd}
+
+\lispdefun{main-window-set-areas}
+\begin{lispd}
+\syntax\begin{verbatim}
+(defun main-window-set-areas (widget
+			      &key (menu-widget nil)
+			      (command-widget nil)
+			      (horizontal-scroll-bar-widget nil)
+			      (vertical-scroll-bar-widget nil)
+			      (work-region-widget nil)))
+\end{verbatim}
+\beschr This function returns one of the children of a message-box widget.
+\parameter
+\begin{paramd}
+\lparam{widget}  Specifies the widget ID of the main-window.
+\end{paramd}
+\end{lispd}
+
+\appendix
+
+\chapter{Changes from Release 2.0 to 2.1}
+
+\small\begin{verbatim}
+- Changed CurrentTime to XtLastTimestampProcessed() in ClmFchangeCursor to
+  avoid race conditions.
+
+- Resource converters for accessing enumeration resources were added.
+  Additional converters will be easier to define in the future.
+
+- The keywords for the following resources have been changed in order to meet
+  the unique naming conventions:
+
+     XmNresizePolicy          ==> :resize-{any,grow,none}
+     XmNdefaultButtonType     ==> :dialog-{cancel,ok,help}-button
+     XmNfileTypeMask          ==> :file-{regular,directory,any-type}
+     XmNcommandWindowLocation ==> :command-{above,below}-workspace
+     XmNmultiClick            ==> :multiclick-{keep,discard}
+     XmNselectionPolicy       ==> :{single,multiple,extended,browse}-select
+     XmNshadowType            ==> :shadow-{in,out,etched-in,etched-out}
+     XmNalignment             ==> :alignment-{center,end,beginning}
+     XmNdialogStyle           ==> :dialog-{....}
+     XmNdialogType            ==> :dialog-{....}
+
+  To avoid many code changes, the old values are still
+  available, but might disappear in the future.
+
+- Resource converters for accessing Pixel and Bitmap resources were added,
+  as well as some other converters.
+
+- Added various #if's to allow compilation under Motif 1.0. Not all
+  features are available under 1.0.
+
+- Timers now have integers and not addresses as IDs.
+
+- New functions added with their opcodes
+  (Thanks to Peter Cousseau (Peter.Cousseau@a.nl.cs.cmu.edu)
+             Christopher Hoover (ch@lks.csi.com)
+             Chris Richardson (cer@Franz.COM)
+   for most of these functions and a number of other patches)
+    message-box-get-child          99
+    selection-box-get-child       108
+    file-selection-box-get-child   93
+    command-get-child              90
+    option-label-gagdet           101
+    option-button-gadget          100
+    main-window-set-areas         150
+    scrolled-window-set-areas     107
+    is-realized                   143
+    get-multi-click-time          144
+    is-valid-widget-id            146
+    widget-full-name              147
+    widget-full-class             148
+    cascade-button-highlight       87
+    last-timestamp-processed      145
+    text-set-highlight            128
+    text-get-last-position        116
+    text-set-selection            118
+    text-get-insertion-position   115
+    text-replace                  125
+    text-get-substring            151
+    text-search                   152
+
+- Added the following text functions:
+    text-clear-selection
+    text-cut
+    text-copy
+    text-get-baseline
+    text-get-selection
+    text-get-selection-position
+    text-paste
+    text-pos-to-xy
+    text-remove
+    text-scroll
+    text-set-add-mode
+    text-show-position
+    text-xy-to-pos
+
+- Added run-status support for Franz.
+
+- Added uppercasing when sending symbols if Allegro Lisp uses lowercase.
+
+- Added silent operation and some customization flags to td. Renamed td
+  to clm-td, toolkits to clm-server and toolkitd to clmd.
+
+- The CLM server can now be started from Lisp.
+
+- Text functions are consistently renamed text-<bla>. Affects the documented
+  functions insert-text and append-text.
+
+- A number of events pass more details to their event handler function:
+    ClientMessage:          message-type {5/10/20 numbers}
+    FocusIn, FocusOut:      mode detail
+    ConfigureNotify:        x y width height
+    VisibilityNotify:       state
+    PropertyNotify:         atom state time
+    SelectionClear:         selection time
+    SelectionRequest:       requestor selection target property time
+    SelectionNotify:        selection target property time
+  For an explanation of these values, see the Xlib documentation.
+
+- Errors and warnings are now really distinguished. When errors are raised,
+  the execution of the application should probably not be continued
+  (because e.g. a widget could not be created). Implementation bugs are
+  also signalled as errors. Warnings indicate that the requested function
+  could not be performed, but execution may continue.
+
+- An error handler has been added that allows to resume execution after an
+  error without entering the debugger. The question "Restart main loop ?"
+  has been changed into a debugger selection.\end{verbatim}
+\normalsize
+\nocite{motif-uil}
+\nocite{motif-style-guide}
+\bibliography{literatur}
+\bibliographystyle{plain}
+\printindex
+\end{document}

@@ -1,0 +1,6 @@
+# @(#)README	1.4 9/8/93
+
+This directory contains a number of demo applications for CLM. Only "demo"
+is up-to-date, however. The others may contain errors and probably do not
+work without changes. Because we are using GINA and not CLM directly, we
+do not have the time to develop new demos for CLM.

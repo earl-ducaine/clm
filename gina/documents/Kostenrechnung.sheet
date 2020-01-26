@@ -1,0 +1,35 @@
+"Spreadsheet"
+591 457
+"*adobe-helvetica-bold-r-normal--14*"
+(146 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80)
+T ;; show-grid
+29 ;; nr of cells
+1 1 "Stueckzahl:" NIL
+1 2 "3000" NIL
+2 1 "Preis:" NIL
+2 2 "35.0" NIL
+3 1 "Fixkosten:" NIL
+3 2 "24000" NIL
+4 1 "Var. Kosten:" NIL
+4 2 "24.0" NIL
+5 1 "" NIL
+5 2 "" NIL
+6 1 "Stueckkosten:" NIL
+6 2 "= (+ (/ B3 B1) B4)" NIL
+7 1 "Deckungsbeitrag:" NIL
+7 2 "=(-  B2 B4)" NIL
+8 1 "Gesamtdeckung:" NIL
+8 2 "=(*  B1 B7)" NIL
+9 1 "Gesamtkosten:" NIL
+9 2 "=(*  B1 B6)" NIL
+10 1 "Gesamterloes" NIL
+10 2 "=(*  B1 B2)" NIL
+11 1 "" NIL
+11 2 "" NIL
+12 1 "Betriebsgewinn:" NIL
+12 2 "=(-  B8 B3)" NIL
+13 1 "" NIL
+13 2 "" NIL
+14 1 "(define Betriebsgewinn  (B1 B2 B3 B4)  B12)" NIL
+14 2 "" NIL
+15 1 "" NIL

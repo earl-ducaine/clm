@@ -1,0 +1,23 @@
+;;; -*- Mode: Lisp; Syntax: Common-lisp; Base: 10 -*-
+
+(fs:set-logical-pathname-host
+     "gina-host" 
+  :physical-host "Rainbow"
+  :translations '(("**;*.*.*" ">gina-stuff>**>")))
+
+
+
+;; examples
+
+;; You've created the toplevel directory "gina-stuff" on host "Rainbow",
+;; then there is no need to change this file
+
+;; You've created the toplevel gina directory called "gmd-gina" under
+;; your home directory called "moon" on machine "MIT-1", then the right
+;; entry looks like
+
+;;(fs:set-logical-pathname-host
+;;     "gina-host" 
+;;  :physical-host "MIT-1"
+;;  :translations '(("**;*.*.*" ">moon>gmd-gina>**>")))
+

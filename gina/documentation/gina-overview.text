@@ -1,0 +1,967 @@
+	1	
+
+	1	
+
+	1	
+
+
+An Overview of GINA Ñ the 
+Generic Interactive 
+Application
+Michael Spenke and Christian Beilken
+Gesellschaft fŸr Mathematik und 
+Datenverarbeitung mbH
+(German National Research Center for 
+Computer Science)
+P.O. Box 1240
+D-5205 Sankt Augustin 1
+Federal Republic of Germany
+Email: spenke@gmdzi.uucp and 
+cici@gmdzi.uucp
+
+Abstract
+GINA is an object-oriented application 
+framework written in CommonLisp and CLOS. 
+It is based on an interface between CommonLisp 
+and the OSF/Motif software. The generic 
+interactive application is executable and has a 
+complete graphical user interface, but lacks any 
+application-specific behaviour. New applications 
+are created by defining subclasses of GINA 
+classes and adding or overriding methods. The 
+standard functionality of a typical application is 
+already implemented in GINA. Only the 
+differences to the standard application have to 
+be coded. For example, commands for opening, 
+closing, saving and creating new documents are 
+already available in GINA. The programmer 
+only has to write a method to translate the 
+document contents into a stream of characters 
+and vice versa. 
+Motif widgets are encapsulated in CLOS objects. 
+Instantiating an object implicitly creates a 
+widget within OSF/Motif. Graphic output and 
+direct manipulation with individual graphical 
+feedback are also supported.
+The combination of framework concepts, the 
+flexible Motif toolkit, and the interactive Lisp 
+environment leads to an extremely powerful 
+user interface development environment 
+(UIDE). There is already a dozen demo 
+applications including a Finder to start 
+applications and documents, a simple text editor 
+and a simple graphic editor, each consisting of 
+only a few pages of code. Even the first version 
+of an interface builder, which treats Motif 
+widgets like MacDraw objects, could be 
+completed within a few days. The interface 
+builder is not just a demo, but an important 
+component of our UIDE: The resources of each 
+widget can be modified by a dialog box, and Lisp 
+code to be used in connection with GINA can be 
+generated.
+A version of GINA for C++ is currently under 
+development. 
+Keywords: Object-oriented application 
+framework, generic application, OSF/Motif, X 
+Window System, CommonLisp, CLOS, interface 
+builder, user interface development 
+environment.
+1. Introduction
+GINA (the Generic INteractive Application) has 
+been developed as part of GMD«s long term 
+project Assisting Computer (AC) started in 1989. 
+From our point of view, the AC will be a set of 
+integrated AI-based applications Ñ the so called 
+assistants Ñ with a graphical user interface, 
+which will cooperate to assist the knowledge 
+worker in the context of office tasks. The 
+assistants will be implemented in CommonLisp 
+and its object-oriented extension CLOS 
+[Keene89], or alternatively in C++. OSF/Motif 
+[OSF89] was chosen as the user interface 
+toolkit.
+Using a graphical, direct-manipulation interface 
+makes life easier for the user, but much more 
+difficult for the programmer. Therefore, the 
+object-oriented application framework GINA 
+was designed and implemented. It contains code 
+which is identical for all assistants. Because a 
+uniform user interface and behaviour of the 
+assistants is one of the design goals of the AC, a 
+large part of the functionality has to be 
+implemented only once, namely within GINA. 
+The common code is mainly concerned with user 
+interface issues, but other aspects like loading 
+and saving documents are also handled. New 
+applications are created by defining subclasses 
+of GINA classes and adding or overriding 
+methods. Only the application-specific 
+differences to the standard application have to 
+be coded.
+The power of a generic application can be 
+explained by a metaphor: Using an interface 
+toolkit is like building a house from scratch, 
+whereby a lot of guidelines have to be followed. 
+Using a generic application is like starting with 
+a complete standard house, already following 
+the guidelines, and adding some specific modi-
+fications.
+Reprint of "An Overview of GINA" in D.A. Duce 
+et. al. (Eds.): User Interface Management and 
+Design, Proc. of the Workshop on UIMS, Lisbon, 
+June 1990, p 273, Springer-Verlag Berlin, 1991.
+                             
+Figure 1: Toolkit vs. generic application
+The concept of an application framework has 
+some advantages which are of special 
+importance in the context of the Assisting 
+Computer project:
+*	Guidelines for the user interface of the 
+different assistants cannot only be written on 
+paper, but can be implemented in software. 
+Thus, a uniform interface can be guaranteed 
+to a large extent.
+*	The implementation time for an individual 
+assistant can be considerably reduced.
+*	Because there is a common layer of software 
+for all assistants, better integration and 
+cooperation among the components of the AC 
+is possible.
+*	Further development of the AC user 
+interface can be done in a central project 
+group. Future extensions and new interface 
+features can be incorporated into existing 
+assistants with the release of a new GINA 
+version. This is very important because 
+research in the user interface area and in 
+artificial intelligence is conducted in parallel.
+GINA is based on concepts known from MacApp 
+[Schm86] and ET++ [WGM88] and the resulting 
+applications have a lot of similarities to typical 
+Macintosh applications. Because the OSF/Motif 
+toolkit is very powerful and flexible, and 
+because CLOS (the Common Lisp Object 
+System) is very well suited for the 
+implementation of generic code, the scope of 
+MacApp was reached quite fast. We are now 
+working on extensions like animation of user 
+actions, a more flexible menu system, 
+constraint-based techniques to couple user 
+interface and application objects, better 
+integration of different (small) applications, and 
+last not least an interface builder for the 
+graphical construction of user interfaces.
+2. Interface between Lisp and OSF/Motif
+OSF/Motif is based on the X Window System 
+and the X toolkit. It consists of a special window 
+manager and a set of interface objects (widgets) 
+such as e.g. push-buttons and scrollbars. The 
+widgets are implemented in C and therefore 
+cannot be used in connection with CLX and 
+CLUE [KO88], the Lisp counterparts of the X 
+library and  the X toolkit [ASP89].
+                               
+Figure 2: Architecture of X and Motif
+Therefore, it is necessary to run the Motif 
+software in an extra Motif server process 
+implemented in C [BŠcker89]. From the point of 
+view of the Lisp application, this is a second 
+server similar to the X server. From the point of 
+view of the X server, the Motif server is just 
+another client creating windows and receiving 
+events.
+                            
+Figure 3: Running Motif as a separate server
+The Lisp application communicates with the 
+Motif server using a special protocol, similar to 
+the X protocol, but at a higher semantic level: 
+The application tells the server to create or 
+modify widgets, and the server informs the 
+application when callbacks are to be executed, 
+i.e. a Lisp function has to be called as a result of 
+a user action. Low level interactions can be 
+handled by the Motif server, without the need to 
+run any Lisp code, which results in good 
+performance at the user interface level. 
+The Lisp application can also directly contact 
+the X server in order to perform graphic output 
+into drawing areas or to receive low level events. 
+For example, dragging operations with semantic 
+feedback cannot be handled by  Motif,  and 
+therefore are implemented using this direct 
+connection.
+The three components can be arbitrarily 
+distributed in the local net, so that e.g. our 
+Lispmachines can be used for application 
+development. Furthermore, this solution is 
+highly portable because the Lisp side is 
+completely implemented in pure CommonLisp 
+and no foreign-function interface from Lisp to C 
+is used.
+3. The Empty Application
+New applications are developed starting with 
+the (empty) generic application. It has a 
+complete graphical user interface, but lacks any 
+application-specific behaviour. To add specific 
+behaviour, subclasses of GINA classes are 
+defined and methods are overridden or added. 
+Thus, the programmer can work with an 
+executable application from the very beginning, 
+and new features added can be immediately 
+tested. In connection with a powerful Lisp 
+environment, this leads to an incremental 
+programming style.
+                              
+Figure 4: Screen dump of the empty application
+The empty application already contains a lot of 
+functionality that is inherited by other 
+applications:
+*	A main window (shell) representing a 
+document is displayed. It contains the names 
+of the application and the document as a title 
+and can be resized, moved, zoomed, and 
+turned into an icon.
+*	The menu bar already contains the standard 
+commands new, open, close, save, save 
+as, revert, print, and quit.
+*	The window can be scrolled using the two 
+scrollbars.
+*	Multiple documents, each with its own 
+window, can be created (new).
+*	Documents can be saved in a file and existing 
+documents can be opened again, using 
+predefined dialogs to select a file. The 
+current size of the window is automatically 
+stored.
+*	Documents can be started from the Finder 
+(see below), because they know which 
+application can handle them.
+*	The document contents can be printed 
+according to WYSIWYG paradigm.
+*	The debug menu contains entries to inspect 
+the current state of the most important 
+CLOS objects, making up the empty 
+application. The slots of each object are 
+shown in a scrollable list. Following the 
+pointers to further objects, the complete 
+internal state of an application can be 
+inspected. Each widget shown at the surface 
+can be inspected by a special mouse click 
+(control-right, the "inspect click").
+*	Finally, the window contains some buttons 
+labeled "GINA", which will beep when they 
+are pressed. This behavior will be overridden 
+by every application.
+The functionality of the empty application 
+reveals a certain common model on which all 
+applications are based. It is closely related to 
+the Macintosh application model. As the 
+Macintosh shows, the model is sufficiently 
+general to cover nearly all types of applications.
+4. Hello-World using GINA
+The first experiment with a new programming 
+environment is always the implementation of 
+the hello-world program. The traditional version 
+just prints out "Hello world!" on standard 
+output. Of course, this is too simple in the 
+context of graphical user interfaces. 
+Our version of hello-world is somewhat more 
+complex: The user can click the mouse within 
+the main area of our window and at this position 
+the string "Hi!" will appear. An entry in the 
+menu bar allows the user to clear all strings 
+again. Hello-world documents can be saved in a 
+file and remember the position of each string.
+Additionally, all the features of the empty 
+application described above are inherited by 
+hello-world. 
+                              
+Figure 5: The hello-world application
+We will show the implementation of the hello-
+world application and thereby explain the most 
+important classes of GINA.
+First of all, we have to define a subclass of the 
+GINA class application. At run-time, exactly 
+one instance of this class will exist. It contains 
+the main event loop and transforms incoming 
+events or callbacks into messages to other 
+objects.
+(defclass hello-world-application (application)
+  ((name          	:initform "Hello World")
+   (document-type 	:initform 'hello-world-document)
+   (signature     	:initform "hello")
+   (file-type     	:initform "hello")))
+
+(defun make-hello-world-application 
+	        (display-host &key (document-pathname nil))
+  "start the hello-world-application"
+  (make-application 	
+	:display-host display-host
+	:document-pathname document-pathname
+	:class 'hello-world-application))
+Figure 6: Defining a subclass of class application
+The initial values for some slots of the 
+superclass are overridden. The slot name is used 
+e.g. in the title of each document window. 
+Document-type denotes the type of document 
+to be created when the new-command is 
+executed. Hello-world-document is a 
+subclass of the GINA class document explained 
+below. The file-type implies that the 
+document shown in Figure 5 will be stored in 
+the file named "THE-S.hello" when saved. 
+The signature will be stored inside that file 
+and will be later used to find the application 
+which can handle the document.
+Besides the definition of the new class, a 
+constructor function is defined, that can be used 
+to create instances of the new class. This is an 
+elegant way to document required and optional 
+parameters and their defaults.  The constructor 
+function of the subclass calls the constructor of 
+the superclass.
+Next, a subclass of the GINA class document is 
+defined. An instance of this class will represent 
+an open document at run-time. It contains the 
+internal representation of the document 
+contents and has methods to transform the 
+contents into a stream of characters and vice 
+versa.
+(defclass hello-world-document (document)
+  ((hi-list   :initform nil  :accessor hi-list
+  	:documentation "List of coordinates of HIs")))
+
+(defmethod write-to-stream 
+		((doc hello-world-document) stream)
+  "write the document to the specified stream"
+  (print (hi-list doc) stream))
+
+(defmethod read-from-stream 
+		((doc hello-world-document) stream) 
+  "read the document from the specified stream"
+  (setf (hi-list doc) (read stream)))
+
+(defmethod create-windows 
+	((doc hello-world-document)  &aux scroller)
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+     (setq main-shell (make-document-shell doc))
+     (setq scroller     (make-scroller  main-shell))
+     (setq main-view (make-hello-world-view scroller doc))
+
+    ;; add an application specific command
+    (add-menu-command (main-menu main-shell) "Hello" 
+	"Clear all" (make-callback #'clear-all doc))))
+
+(defmethod clear-all ((doc hello-world-document))
+  "reset hi-list and redraw"
+  (with-slots (hi-list modified main-view) doc
+    (setq hi-list  nil)
+    (force-redraw main-view)
+    (setq modified t)))
+Figure 7: Defining a subclass of class document
+The class hello-world-document contains a 
+slot to hold the list of mouse click positions. 
+Read-from-stream and write-to-stream 
+are called by GINA whenever a documented is 
+opened or saved. The document defines its own 
+representation on the screen by overriding the 
+method create-windows. In this case a shell 
+containing a scrollable view is created. The 
+menu bar is implicitly created as part of the 
+document-shell. The actual display of the Hi-
+strings and the reaction to mouse clicks is 
+handled by the class hello-world-view. 
+Finally, an application-specific command "Clear 
+all" is added to the menu bar. When the menu 
+item is chosen, the method clear-all will be 
+called, which clears the hi-list and 
+redisplays. Marking the document as modified 
+tells GINA to ask the user whether he wants to 
+save the document first, if it is closed.
+Finally, a subclass of the GINA class view has 
+to be defined. Views are drawing areas, often 
+larger than the screen and therefore scrollable, 
+where documents display their contents. The 
+contents of a view are normally not drawn by 
+Motif, but by the Lisp application itself, using 
+graphic primitives of the X library. Also, mouse 
+clicks in the view are directly reported to the 
+Lisp application.
+(defclass hello-world-view (view)
+  ())
+
+(defun make-hello-world-view (parent doc)
+  "create a new hello-world-view"
+  (make-view parent 	:document doc 
+			:class 'hello-world-view))
+
+(defmethod draw ((view hello-world-view) 
+			count x y width height)
+  "draw window contents"
+   (when (zerop count) 
+      ;; Ignore all but the last exposure event
+      (loop for (x  y) in (hi-list (document view))
+	     do (draw-glyphs view x y "Hi!")))))
+
+(defmethod button-press ((view hello-world-view) 
+				code x y root-x root-y)
+  "react to button-press event in the window"
+  (with-slots (hi-list modified) (document view)
+    (push (list x y) hi-list)
+    (force-redraw view)
+    (setq modified t)))
+Figure 8: Defining a subclass of class view
+The class hello-world-view overrides the 
+method draw, which is called by GINA 
+whenever the view or some part of it is exposed. 
+It uses the method draw-glyphs, which 
+directly corresponds to the CLX function draw-
+glyphs to draw the Hi-strings. The button-
+press method is called whenever the mouse 
+button goes down in the view. It adds a new pair 
+of coordinates to the document contents and 
+redisplays.
+The main program which starts the hello-world 
+application is quite simple: We just create an 
+instance of class hello-world-application 
+using the constructor function. This creates a 
+separate Lisp process executing the main event 
+loop.
+
+(make-hello-world-application *default-display-host*)
+
+Figure 9: The main program
+GINA also contains an application-independent 
+undo/redo mechanism with unlimited history. 
+However, in order to exploit this facility, we 
+need a slight extension of the code shown so far. 
+Instead of directly modifying the hi-list when 
+the user presses the mouse button, we have to 
+define a subclass of the GINA class command, 
+and create a new instance of it each time the 
+user clicks the mouse. The command object 
+contains all the necessary information to 
+execute and later undo the command. In this 
+case, the coordinates of the mouse click are 
+sufficient. GINA calls the method doit to 
+execute the command and then pushes it onto a 
+stack of commands already executed. Later, 
+when the user calls the undo facility, GINA 
+executes the method undoit. If the command is 
+repeated in a redo operation, doit is called 
+again. If repeating a command is different from 
+executing it for the first time, the programmer 
+can also override the method redoit.
+(defmethod button-press ((view hello-world-view) 
+				code x y root-x root-y)
+  "react to button-press event in the window"
+  (make-add-hi-command (document view) x y))
+
+(defclass add-hi-command (command)
+  ((name    :initform "Add Hi")
+   (hi           :accessor hi 	:initarg :hi)))
+
+(defun make-add-hi-command (document x y)
+  "store coordinates in a command object "
+  (make-command document
+		:class 'add-hi-command
+		:initargs (list :hi (list x y))))
+
+(defmethod doit ((cmd add-hi-command))
+  "add a new pair to hi-list"
+  (with-slots (document hi) cmd
+    (push hi (hi-list document))
+    (force-redraw (main-view document))))
+
+(defmethod undoit ((cmd add-hi-command))
+  "pop hi-list"
+  (with-slots (document) cmd
+    (pop (hi-list document))
+    (force-redraw (main-view document))))
+Figure 10: Extension for undoable commands
+The method button-press creates an add-hi-
+command object. The method doit pushes the 
+new coordinates on the hi-list, undoit pops 
+it. A similar extension is necessary to make the 
+clear-all command undoable.
+The user can call undo and redo operations 
+using the menu entries undo and redo in the 
+edit menu. However, the history can become 
+quite long and it may be necessary to go back a 
+long way. Therefore, GINA also offers a history 
+scroller as an alternative user interface.
+                               
+Figure 11: The history scroller
+Using this device, the user can replay a 
+sequence of commands like a video movie, or 
+jump back and forth in the history. Single steps 
+are activated by the two buttons at the bottom 
+labeled with the command names.
+We are planning to use the animation of user 
+actions as a base for help components and 
+tutorials for applications. Storing commands as 
+objects will also constitute the base for context-
+sensitive help and adaptive systems. 
+Furthermore, it seems to be possible to define 
+macros using a programming-by-example 
+technique.
+5. Object-Oriented Toolkit
+Windows on the screen are constructed as a tree 
+of Motif widgets. Conceptually, widgets are 
+objects, and widget classes are arranged in an 
+inheritance hierarchy, even though Motif is 
+implemented in pure C and not in any object-
+oriented programming language. Therefore, it is 
+a straightforward idea to encapsulate Motif 
+widgets in CLOS objects on the Lisp side. 
+Instantiating such an object implicitly creates a 
+widget within the Motif server. So, for each 
+Motif widget class there is a corresponding 
+CLOS class and a constructor function. For 
+example,
+(make-push-button parent " Beep" 
+	:activate-callback '(lambda () (xlib:bell *display*)))
+creates a CLOS object of type push-button and 
+a widget of class XmPushButton in the Motif 
+server. The first parameter of the constructor is 
+always the parent object within the tree of 
+widgets. Shells (main windows) do not have a 
+parent, they represent the root of a widget tree. 
+Inner nodes are composite widgets such as row-
+column or form which are not visible, but 
+layout their children according to a certain 
+scheme. The leaves of the tree are primitive 
+widgets like push-button, label, scrollbar 
+and text.
+The remaining positional and keyword 
+parameters of a constructor function document 
+the most important Motif resources and their 
+defaults. (Resources are the attributes of the 
+widgets which determine their appearance and 
+behaviour.) There is also a bulk of resources for 
+each widget class, which are modified in very 
+rare cases only. These resources can be specified 
+in the keyword parameter :motif-resources 
+as in the following example:
+(make-push-button parent  "Doit"
+	:motif-resources (list  :shadow-thickness 5 
+				:margin-height 4))
+A widget class also defines some callbacks. 
+Callbacks are linked to Lisp functions which are 
+called whenever the user produces certain input 
+events. For example, an activate-callback 
+is executed when a push-button is pressed and a 
+value-changed-callback is executed when 
+the user has dragged the slider of a scale-
+widget. Each callback defines certain 
+parameters passed to the Lisp function. For 
+example, when a push-button is pressed, a 
+function with no parameters is called. When a 
+scale is dragged, the new value is passed as a 
+parameter to the value-changed-callback. 
+The programmer can determine which Lisp 
+function should be called by specifying a 
+lambda-expression, the name of a compiled 
+function, or a callback object. Callback objects 
+are CLOS objects storing the name of a function 
+plus additional parameters to be passed to the 
+function each time the callback is executed. In 
+this way it can be specified e.g. that a method of 
+a certain object is called in response to a user 
+action:
+(make-scale parent 
+	:value-changed-callback 
+	(make-callback #'set-volume speaker))
+A scale is created which calls the method set-
+volume of the object speaker each time the 
+user drags the elevator. Besides the reference to 
+the speaker object, the method set-volume 
+must have a second parameter new-value. 
+For each Motif widget class there is one 
+corresponding CLOS class. However, there are 
+also predefined CLOS classes in GINA which 
+have no direct counterpart in Motif. For 
+example, there is a CLOS class radio-button-
+group. When an instance of this class is 
+created, not only a single Motif widget but a 
+whole subtree is created. 
+(make-radio-button-group 
+	parent '(("Red" :r) ("Green" :g) ("Blue" :b))
+	:label-string "Color"
+	:initial-value :b
+	:value-changed-callback
+	'(lambda (new-value old-value) ... ))
+
+                            
+Figure 12: Lisp code to create a radio-button-group
+The radio-button-group consists of a label 
+("Color") and a frame organized in a column 
+(row-column widget). The frame contains a 
+column of toggle-button widgets. The 
+programmer need not know the detailed 
+structure of this subtree, but can treat the 
+radio-button-group as a single object. For 
+example, he can specify a value-changed-
+callback for the whole group, whereas at the 
+Motif level there are callbacks for each single 
+toggle-button.
+New subclasses representing widgets with a 
+special appearance or behaviour can easily be 
+defined.
+We give an overview of the most important 
+widgets and how they are created from Lisp:
+(make-toggle-button 
+	parent "Print page numbers"
+	:value-changed-callback
+	'(lambda (set) (when set (xlib:bell *display*))))
+
+                          
+
+
+(make-push-button parent " Beep "
+	:activate-callback '(lambda () (xlib:bell *display*)))
+
+                 
+
+
+(make-push-button parent "woman" :label-type :pixmap)
+
+                     
+
+
+(make-scale 
+	parent
+	:title-string "Pressure"
+	:maximum 250
+	:value-changed-callback
+	'(lambda (new-value) 
+	    (format t "New Pressure ~d~%" new-value)))
+
+                      
+
+(make-scrollbar 
+	parent	
+	:orientation :horizontal
+	:maximum 100
+	:page-increment 20
+	:value-changed-callback
+	'(lambda (new-value)  
+		(format t "New Value ~d~%" new-value)))
+
+                       
+
+(make-label (make-frame parent) 
+		"A text with a frame around it")
+
+                               
+
+(setq rc (make-row-column parent :orientation :vertical))
+(make-label rc "One")   (make-label rc "Two")
+(make-separator rc)
+(make-label rc "Three")   (make-label rc "Four")
+
+                  
+
+(make-scrollable-selection-list 
+	parent 
+	'("Red" "Green" "Blue" "Yellow" "Black" "White")
+	:visible-item-count 4)
+
+                         
+
+(make-text  parent   :value "Untitled 1" :columns 15)
+
+                           
+
+6. Graphic Output in Views
+In general, the Motif widgets are not suited to 
+represent the complete contents of a document. 
+For example, the objects manipulated by a 
+graphic editor cannot be implemented as Motif 
+widgets.
+                              
+Figure 13: A simple graphic editor
+Instead, the central drawing area where the 
+graphical objects are shown is represented by a 
+CLOS object of class view. The contents of the 
+view are displayed using the graphic primitives 
+of the X Window System like e.g. draw-
+rectangle.
+The programmer can choose between a 
+procedural and an object-oriented interface for 
+graphic output. 
+Using the procedural interface, the programmer 
+overrides the draw-method of his view as in the 
+hello-world example. In this method he can call 
+the CLX primitives which are available as 
+methods of class view. GINA calls the draw-
+method in response to expose events. Each view 
+has an associated X graphics context containing 
+attributes like font, line width and clipping area 
+and a reference to the underlying X window. 
+Encapsulating the CLX primitives in methods of 
+class view makes it possible to hardcopy views 
+according to the WYSIWYG paradigm. GINA 
+simply switches to hardcopy mode and calls 
+draw for the whole view. In hardcopy mode, 
+methods of class view, such as draw-
+rectangle, do not call the corresponding CLX 
+function but generate Postscript calls. The 
+programmer need not write a single line of code 
+to enable printing. However, this feature is not 
+yet implemented in the current version of GINA.
+The object-oriented interface to graphic output is 
+implemented on top of the procedural one. A 
+view can store a list of so called view-objects. 
+The class view-object is the superclass of 
+graphical objects like circle, rectangle, and 
+line. View objects can be installed at a certain 
+position in a view and later be moved or resized. 
+They remember their own size and position. The 
+view makes sure that an installed view-object 
+will be redisplayed whenever the corresponding 
+part of the view is redrawn. This is done by 
+calling the method draw of each view-object.
+Each view-object knows how to display itself, i.e. 
+has a method draw. The predefined view-objects 
+correspond to the CLX graphic functions: Their 
+draw-method contains a single call to a CLX 
+function. More complex application-dependent 
+subclasses can be easily implemented. For 
+example, in the implementation of a 
+spreadsheet a subclass grid could be defined, 
+which draws a lot of horizontal and vertical 
+lines in its draw-method.
+The procedural and object-oriented interfaces 
+can be both used in a single view. It is possible 
+to override the draw-method of a view and 
+additionally install some objects.
+7. Mouse Input
+GINA also supports the implementation of 
+direct manipulation commands with graphical 
+feedback like moving or resizing objects in a 
+graphic editor. A special reaction of a view to 
+mouse input can be implemented by overriding 
+the method button-press of class view as in 
+the hello-world example. A view also calls the 
+method button-press of an installed view-
+object if it is hit. This is another hook to react to 
+a mouse click.
+If a graphical feedback is desired, an instance of 
+a subclass of the GINA class mouse-down-
+command must be created when the mouse 
+button goes down. Mouse-down-command is a 
+subclass of command. The methods doit and 
+undoit are inherited. However, doit is not 
+called before the mouse button is released. As 
+long as the mouse button remains pressed and 
+the mouse is moved around, the feedback is 
+drawn and additional parameters for the 
+command can be collected (e.g. all intermediate 
+mouse positions). The feedback is defined by 
+overriding the method draw-feedback of class 
+mouse-down-command. The default feedback is 
+a rubberband line from the place where the 
+mouse went down to its current position.
+Furthermore, it is possible to modify the 
+coordinates reported to draw-feedback by 
+overriding the method constrain-mouse. For 
+example, forcing the y-coordinate to the y-value 
+of the point where the mouse was pressed, 
+results in a horizontal feedback line.
+Autoscrolling is completely implemented in 
+GINA: Moving the mouse outside the view while 
+the button is pressed, causes the view to be 
+automatically scrolled.
+The class mouse-down-command represents a 
+special but very frequent type of mouse 
+command: The feedback is shown as long as the 
+button is held down. When the button comes up, 
+the command is executed. Other types of mouse 
+commands, e.g. with multiple mouse clicks, are 
+possible. We expect, however, that a finite set of 
+types is sufficient in practice, which is also 
+confirmed by Myers [Myers89]. 
+As an extension, we are planning to implement 
+subclasses of view-objects which are already 
+coupled with undoable mouse commands for 
+selecting, moving, and resizing them.
+8. Demo Applications
+Up to now, we have implemented a dozen demo 
+applications demonstrating different aspects of 
+GINA. Each of these applications consists of 
+only a few pages of code. So, even though they 
+are quite different, at least 95% of the code 
+executed is part of GINA. We will give a short 
+overview of some of these applications.
+The Micky application was heavily influenced by 
+Schmucker's demo for MacApp [Schm86]. Our 
+version, however, allows the user to stretch the 
+width and height of Micky«s head using the two 
+scales. The size is stored as the document 
+contents on disk. 
+                              
+Figure 14: The Micky application
+We also have implemented a simple Finder to 
+start applications and documents in a 
+hierarchical file system. Its function is similar 
+to the Macintosh Finder. Double-clicking a file 
+name opens a document and starts the 
+corresponding application if necessary. The 
+contents of a Finder document (a folder) are 
+stored as a directory. Extra information like the 
+size of the window for a folder is stored in a file 
+within the directory.
+                              
+Figure 15: A simple Finder
+
+The text editor demo shows, how with a few 
+lines of code the Motif text-widget can be turned 
+into a complete and useful application.
+                              
+Figure 16: The text editor
+The graphic editor shown in Section 6 
+demonstrates the use of object-oriented graphics 
+and mouse commands with feedback. It can be 
+used to draw and move rectangles.
+9. Interface Builder
+Starting with the code for the graphic editor, it 
+was quite easy to implement a first version of an 
+interface builder, which treats widgets like 
+MacDraw objects (Figure 17). All kinds of 
+widgets can be created, moved around, resized, 
+and deleted. Each Motif widget is placed on top 
+of a so called widget-plate, a special view-object 
+with dashed borders. Clicking the mouse into 
+the widget itself activates it: The elevator of a 
+scrollbar is moved, a toggle button is selected, 
+and so on. If the mouse is pressed near the 
+dashed line, the widget-plate is notified and a 
+mouse command to move or resize the widget is 
+created.
+
+                                                           
+Figure 17: The Interface Builder
+
+Double clicking a widget-plate pops up a 
+modeless dialog box to modify the resources of a 
+widget.
+                       
+Figure 18: Resource dialog for a push-button
+The result of the modification of a resource is 
+immediately shown in the main view. For 
+example, modifying the label-string causes the 
+push-button to be resized and to show the new 
+label immediately after each character is typed.
+Just like several objects can be arranged in a 
+group in MacDraw, it is possible to arrange 
+several widgets in a row or a column creating a 
+row-column widget. The whole column is then 
+treated as a single object which can be moved 
+around. Also, the resources of a column can be 
+edited using a dialog box. For example, the 
+spacing between widgets in a row can be 
+adjusted using a scale.
+Of course, the interface builder is more than 
+just a demo application. It will soon be an 
+essential part of our user interface development 
+environment. For each shell or dialog box of an 
+application there will be a corresponding 
+interface builder document defining its layout. 
+The Lisp code generated will consist of one new 
+subclass of class shell or dialog-box, 
+together with a constructor function defining 
+the layout. The programmer can create an 
+instance of this class using the constructor. 
+Components of the dialog box, such as push-
+buttons, can be accessed as slots of the new 
+class. In this way, callback functions can be set 
+or the items of a selection-list can be modified. 
+As a result, the interface code is clearly 
+separated from the semantics of the application. 
+It is even possible to change the layout of a 
+dialog box with the interface builder while the 
+program is running. The resulting Lisp code can 
+be compiled and produces a new version of the 
+constructor function which will be used as soon 
+as the next instance of the dialog box is created. 
+It will also be possible to generate C++ code.
+10. Conclusions
+Our experience has shown that an object-
+oriented application framework is very well 
+suited to simplify the construction of 
+applications with a graphical user interfaces. An 
+interface builder, which allows to define 
+interfaces by drawing them, is not an 
+alternative but an important supplement for the 
+framework. It is an excellent tool to define the 
+layout of windows, but there is much more about 
+a user interface. Using an application 
+framework, it is also possible to predefine the 
+behaviour of the interface. For example, the 
+algorithms and dialogs for opening and closing 
+documents are completely defined in GINA. 
+Also, an application-independent framework for 
+undo/redo means much more than defining two 
+menu entries.
+An application framework is an excellent vehicle 
+to define a common basic model for a set of 
+applications and to propagate user interface 
+guidelines. This is very important in the context 
+of our Assisting Computer project. Because 
+research in the user interface area and in 
+artificial intelligence is conducted in parallel, it 
+is a great advantage that new interface features 
+can be incorporated into existing assistants with 
+the release of a new GINA version.
+11. References
+[Apple88] Apple Computer: Human Interface 
+Guidelines: The Apple Desktop Interface, 
+Addison Wesley (1988).
+[ASP89] ASP Inc.: X Manual Set, Addison 
+Wesley Publishing Company, 1989.
+[BŠcker89] Andreas BŠcker, CLM: An 
+Interface from CommonLisp to OSF/Motif, 
+Manual, GMD Report, March 1990.
+[HSC86] D. Austin Henderson, Jr., Stuart K. 
+Card: Rooms: The Use of Multiple Virtual 
+Workspaces to Reduce Space Contention 
+in a Window-Based Graphical User 
+Interface, ACM Transactions on Graphics, Vol 
+5, No 3, pp 211-243, July 1986.
+[HH89] Rex Hartson, Deborah Hix: Human-
+Computer Interface Development: 
+Concepts and Systems for its Management, 
+ACM Computing Surveys, Vol. 2, No. 1, March 
+1989, pp 5-92.
+[Keene89] Sonya E. Keene: Object-Oriented 
+Programming in COMMON LISP - A 
+Programmer's Guide to CLOS, Addison-
+Wesley Publishing Company, 1989.
+[KO88] Kerry Kimbrough, LaMott Oren: 
+Common Lisp User Interface Environment, 
+Version 1.15, Texas Instruments, 1. Sept. 1988.
+[Myers89] Brad A. Myers: Encapsulating 
+Interactive Behaviors, CHI '89 Conference, 
+30.4-4.5.89, Austin, Texas, ACM, pp 319-324.
+[OSF89] Open Software Foundation: Motif 
+Toolkit Programmers's Guide, Prentice Hall, 
+1989.
+[SG86] Robert W. Scheifler, Jim Gettys: The X 
+Window System, Transactions on Graphics, 
+Vol 5, No 2, pp 79-109, April 1986.
+[Schm86] Kurt J. Schmucker: Object-Oriented 
+Programming for the Macintosh, Hayden 
+Book Company, New Jersey 1986.
+[SM88] Pedro A. Szekely, Brad A. Myers: A 
+User Interface Toolkit Based on Graphical 
+Objects and Constraints, OOPSLA '88 
+Proceedings, pp 36-45,ACM, 25-30. Sept. 88.
+[WGM88] AndrŽ Weinand, Erich Gamma, 
+Rudolf Marty: ET++ - An Object-Oriented 
+Application Framework in C++, OOPSLA '88 
+Proceedings, pp 46-57, ACM, 25-30. Sept. 88.
+[Will84] G. Williams: Software Frameworks, 
+Byte, Vol. 9, No. 13 (1984).

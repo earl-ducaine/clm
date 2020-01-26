@@ -1,0 +1,81 @@
+Subject: A bug and a performance leak
+
+The folowing dribble file reveals two problems I have encountered using
+Allegro Common Lisp:
+
+1. The macro mp:with-process-lock does not work correctly when nested:
+   At the end of the inner critical section the lock is freed even though
+   we are still in the outer critical section!!!
+
+2. The function directory is *EXTREMELY* slow:
+   Listing a directory with about 100 files takes 3.5 seconds
+   (on a Sparc II !!!!). In Lucid the same operation takes about 0.2
+   seconds. Also an ls from a shell takes about 0.2 seconds.
+
+
+Michael Spenke (spenke@gmdzi.gmd.de)
+GMD (German National Research Center for Computer Science)
+P.O. Box 1240
+W-5205 St. Augustin 1
+Germany
+Phone: +49 2241 14-2642
+
+
+==========================================================================
+dribbling to file "/home/spenke/gina/bug1"
+ 
+LISP-IMPLEMENTATION-TYPE: Allegro CL
+LISP-IMPLEMENTATION-VERSION: 4.0.1 [Sun4] (2/8/91)
+MACHINE-TYPE: Sun4
+MACHINE-VERSION: 
+SOFTWARE-TYPE: SunOS
+SOFTWARE-VERSION: 
+SHORT-SITE-NAME: mike
+*features*: (:MOTIF-SERVER :CLX-MIT-R4 :XLIB :CLX :LOOP LOOP :MULTIPROCESSING :CLOS :UNIX :SUN4 :SPARC :SUN :SUNOS4 :FLAVORS :IEEE :IEEE-FLOATING-POINT :CONFORMING-IEEE :COMMON-LISP :ALLEGRO :EXCL :FRANZ-INC :ALLEGRO-VERSION>= :ALLEGRO-V4.0 :GSGC :BIG-ENDIAN :DYNAFASL)
+*modules*: ("CLX" "MDPROC" "LOOP" "PROCESS" "FOREIGN" "FOREIGN-FUNCTIONS" "RINSTRS" "QSTRUCTS")
+PATCH::*PATCHES*:
+ (17 . "Fixes bug in destructuring-bind")
+ (16 . "fix clos class slot value accessor discrimination functions")
+ (15 . "use checking discriminator for multi-type class slot access")
+ (1 . "comp of recursive tagbodies/blocks that turn into catch")
+mdproc: $aclHeader: mdproc.cl,v 1.23 90/04/12 19:57:08 layer Rel $
+loop: $aclHeader: loop.cl,v 1.6 90/09/19 00:33:22 layer Rel $
+process: $aclHeader: process.cl,v 1.59 90/12/18 19:55:53 layer Rel $
+foreign: $aclHeader: foreign.cl,v 1.59 90/12/14 00:15:02 layer Rel $
+
+(setq lock1 (mp:make-process-lock))
+#<process-lock @ #x10c35ce> 
+
+(mp:with-process-lock (lock1)
+  (print (mp:process-lock-locker lock1))
+  (mp:with-process-lock (lock1)
+	 (print "hallo"))
+  (print (mp:process-lock-locker lock1)) ;; lock is free !!
+)
+
+#<process Initial Lisp Listener @ #x4875fe> 
+"hallo" 
+NIL 
+NIL 
+ 
+
+(time (directory "/home/spenke/gina-demos/"))
+cpu time (non-gc) 750 msec user, 300 msec system
+cpu time (gc)     0 msec user, 0 msec system
+cpu time (total)  750 msec user, 300 msec system
+real time  3524 msec
+space allocation:
+ 19625 cons cells, 0 symbols, 92864 other bytes,
+(#p"/home/spenke/gina-demos/clm-simple-restart.lisp"  ...) 
+
+(length (directory "/home/spenke/gina-demos/"))
+111 
+
+(time (excl:shell "ls /home/spenke/gina-demos >/dev/null"))
+cpu time (non-gc) 0 msec user, 0 msec system
+cpu time (gc)     0 msec user, 0 msec system
+cpu time (total)  0 msec user, 0 msec system
+real time  263 msec
+space allocation:
+ 2 cons cells, 0 symbols, 0 other bytes,
+0

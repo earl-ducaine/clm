@@ -1,0 +1,14 @@
+"hyper"
+722 338
+1
+4
+4
+:view-element 461 233 "View1" "Code3" 8 7
+:scale-element 80 218 "Scale2" "Code4" 2 488 20
+:code-element 535 136 "Code3" "(loop for i from 0 to 6.24 by 0.05
+      for j from 1
+      do (draw-rectangle View1
+            (round (* 100 i))
+            (+ 100 (round (* 100 (sin (* Scale2 i)))))
+          3 3 t))" NIL 16 490
+:code-element 292 59 "Code4" "(force-redraw View1)" NIL 17 405

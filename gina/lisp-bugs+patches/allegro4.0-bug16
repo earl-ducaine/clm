@@ -1,0 +1,69 @@
+Bug Description:
+Calling the accessor of a shared CLOS slot repeatedly allocates around 1K
+per access if the accessor is in state N-N-READER. 
+
+A space profile (not shown) indicates that the memory is allocated
+by CLOS::N-N-READERS-MISS.
+
+Thomas Berlage, F3.MMK (berlage@gmdzi.gmd.de)
+GMD (German National Research Center for Computer Science)
+P.O. Box 1240
+W-5205 Sankt Augustin 1, Germany
+Phone: +49 2241 14-2078
+
+
+Dribble:
+========================================================================
+dribbling to file "/tmp_mnt/home/berlage/all40/clos-bug2"
+ 
+LISP-IMPLEMENTATION-TYPE: Allegro CL
+LISP-IMPLEMENTATION-VERSION: 4.0.1 [Sun4] (2/8/91)
+MACHINE-TYPE: Sun4
+MACHINE-VERSION: 
+SOFTWARE-TYPE: SunOS
+SOFTWARE-VERSION: 
+SHORT-SITE-NAME: n32
+*features*: (:CLOS :UNIX :SUN4 :SPARC :SUN :SUNOS4 :FLAVORS :IEEE :IEEE-FLOATING-POINT :CONFORMING-IEEE :COMMON-LISP :ALLEGRO :EXCL :FRANZ-INC :ALLEGRO-VERSION>= :ALLEGRO-V4.0 :GSGC :BIG-ENDIAN :DYNAFASL)
+*modules*: ("RINSTRS" "QSTRUCTS")
+PATCH::*PATCHES*:
+ (1 . "comp of recursive tagbodies/blocks that turn into catch")
+
+NIL 
+<COMMON-LISP-USER 4> (load "clos-test2")
+
+; Loading /tmp_mnt/home/berlage/all40/clos-test2.lisp.
+cpu time (non-gc) 17 msec user, 0 msec system
+cpu time (gc)     0 msec user, 0 msec system
+cpu time (total)  17 msec user, 0 msec system
+real time  26 msec
+space allocation:
+ 844 cons cells, 0 symbols, 832 other bytes,cpu time (non-gc) 233 msec user, 16 msec system
+cpu time (gc)     0 msec user, 0 msec system
+cpu time (total)  233 msec user, 16 msec system
+real time  248 msec
+space allocation:
+ 4605 cons cells, 0 symbols, 116800 other bytes,
+T 
+<COMMON-LISP-USER 5> (dribble)
+
+
+Contents of the file "clos-test2.lisp"
+============================================================================
+(defclass a ()
+  ((sn :accessor sn :initform nil :allocation :class)))
+
+(defclass b (a) ;; need not be a subclass
+  ((sn :accessor sn :initform t :allocation :class)))
+
+(let ((x (make-instance 'a)))
+  (time (dotimes (i 100) (sn x)))
+  (sn (make-instance 'b))
+  ; observe additional space used when sn is n-n-reader
+  (time (dotimes (i 100) (sn x))))
+
+
+
+
+
+
+

@@ -1,0 +1,14 @@
+\def\listofproglists{\section*{List of Programs\markboth
+ {List of Programs}{List of Programs}}\@starttoc{prl}}
+\def\l@proglist{\@dottedtocline{1}{1.5em}{2.3em}}
+ 
+\newcounter{proglist}
+\def\theproglist{\@arabic\c@proglist}
+\def\fps@proglist{tbp}
+\def\ftype@proglist{1}
+\def\ext@proglist{prl}
+\def\fnum@proglist{Programm \theproglist}
+\def\proglist{\@float{proglist}}
+\let\endproglist\end@float
+\@namedef{proglist*}{\@dblfloat{proglist}}
+\@namedef{endproglist*}{\end@dblfloat}

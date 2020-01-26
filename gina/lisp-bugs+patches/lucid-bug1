@@ -1,0 +1,30 @@
+After-deamons for accessor functions are not always called in Lucid4.0. 
+For example, GINA sets callbacks for a push-button by something like
+  
+    (setf (activate-callback button1) ....)
+
+This sets the slot but also activates an after deamon which tells
+the CLM-server about the callback. But this deamon is not called
+in Lucid4.0. And so there are no callbacks at all.
+
+To prove this I have made a minimal test:
+
+   (defclass label-1 ()
+       ((slot-1 :accessor slot-1 :initform 1)))
+
+   (DEFMETHOD (SETF slot-1) :AFTER (NEW-value (X label-1))
+           (format t "hello-1~%"))
+
+   (setq l1 (make-instance 'label-1))
+
+   (setf (slot-1 l1) 5)
+
+This works fine: whenever the last expression is called, the deamon prints
+out his message. But as soon as I define another class
+
+(defclass lab ()
+   ((slot-1 :accessor slot-1 :initform 1)))
+
+
+the deamon is not called anymore. It seems, that the reason is that
+in the class lab there is also a slot named slot-1.

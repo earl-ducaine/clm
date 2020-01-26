@@ -1,0 +1,22 @@
+# sccsid = @(#)Makefile.sun3	1.2 1/28/92
+
+# Directories where the Motif header files and the Motif toolkit
+# header files are stored.
+XM_INCLUDE = -I/vol/motif/include
+
+# Directories where the include files for Allegro CL reside
+EXCL_INCLUDE = -I/vol/allegro4.0/lib/misc
+
+# Libraries
+LIB_PATH = -L/vol/motif/lib
+
+# Any additional CFLAGS
+ADD_CFLAGS = -D_NO_PROTO
+# CFLAGS only for the foreign functions loaded into Lisp
+LISP_CFLAGS =
+# Additional flags for loader operation
+ADD_LFLAGS = -Bstatic -O
+
+# Any additional libraries
+ADD_LIBS =
+

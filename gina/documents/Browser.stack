@@ -1,0 +1,27 @@
+"hyper"
+1115 567
+1
+12
+11
+:code-element 446 79 "Code12" "(setf Text3 (gina::description-text List10))" NIL 19 686
+:list-element 205 377 "List10" "Code12" NIL 229 4
+:button-element 164 47 "Button9" "Code8" "Methods of Class" 253 440
+:code-element 417 81 "Code8" "(setf (items List10)
+   (gina::sort-methods List1))" NIL 483 597
+:button-element 164 47 "Button7" "Code5" "All Methods" 253 390
+:button-element 153 45 "Button6" "Code2" "All Classes" 30 391
+:code-element 454 75 "Code5" "(setf (items List10) (gina::all-gina-methods))" T 472 505
+:code-element 445 64 "Code4" "(setf Text3 (gina::description-text List1))" NIL 19 606
+:text-element 541 380 "Text3" "- last actions after application has stopped to process events
+
+(defmethod cleanup-actions ((gina::app application))
+   ...)
+
+You override this method to cleanup at the end of the application.
+The default version does not do anything.
+Normally, you do NOT call this method.
+It is called by GINA before an application is stopped.
+It is NEVER overridden by GINA.
+" NIL 461 9
+:code-element 442 76 "Code2" "(setf (items List1) (gina::all-gina-classes))" T 17 519
+:list-element 219 381 "List1" "Code4" NIL 5 4

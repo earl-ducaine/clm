@@ -1,0 +1,411 @@
+                       CLM Version 2.3 RELEASE NOTES
+
+                            Thomas Berlage
+          GMD (German National Research Center for Computer Science)
+                P.O. Box 1316, 53731 Sankt Augustin, Germany
+                         Thomas.Berlage@gmd.de
+
+This distribution contains CLM Version 2.3. CLM is a package to use the
+OSF/Motif toolkit from Common Lisp.
+
+NOTE: I did not find the time to update the manual, it still reflects version
+2.1. Additionally, the demos except for "demo" are not up to date and
+probably do not work without small changes.
+
+Requirements
+------------
+CLM 2.3 requires the following software:
+
+  - A UNIX or UNIX-like OS that supports OSF/Motif
+    Our reference implementation is SunOS 4.1.3. Support for a number of other
+    systems was contributed by CLM users, but we cannot test these systems
+    directly.
+    CLM can use the following Motif versions:
+      1.0: should compile, but not all features of CLM are available
+      1.1: supported
+      1.2: supported, but not all new features of 1.2 are available
+    As of CLM 2.3, our new reference is now OSF/Motif 1.2.3.
+
+  - A Common Lisp implementation
+    All major Lisps are supported. We have tested the following versions
+    (although we have no time to re-test all systems with a new CLM version):
+        Allegro CL 3.1/4.0/4.1
+        Lucid CL 3.0/4.0
+        Genera 8
+        CMU CL 16e/16f
+        Ibuki CL version 02/01
+    We have included external ports to, which we could not test ourselves:
+        AKCL 1.600
+        Harlequin LispWorks
+        
+Installation
+------------
+
+Installation of CLM requires the following steps:
+
+1. Create the Motif daemon and server executables in ./server.
+   see "Installing the CLM server" below
+
+2. Compile the Lisp interface for the Motif server in ./lisp.
+   see "Installing the Lisp interface" below
+
+3. Install the CLM software (automatic installation only supported for
+   Allegro and Lucid):
+
+   - Edit the definitions for CLM_LIB and CLM_BIN in server/Makefile,
+     lisp/Makefile and optionally demos/Makefile.
+
+     CLM_LIB: This directory contains the compiled lisp code and the compiled
+	      C modules. Call it something like /vol/gina/clm/lib.sun4
+
+     CLM_BIN: This directory contains the executables for the CLM daemon,
+	      the CLM server and the generated shell script 'clmd' 
+	      which starts up the CLM daemon. Call it something 
+	      like /vol/gina/clm/bin.sun4.
+
+   - Type 'make install' in this directory.
+
+4. To make a lisp image which contains CLM (only supported on Allegro and
+   Lucid):
+
+   - Go to the CLM_LIB directory.
+   - Run lisp
+   - type (load "clm") to load the compiled modules and the foreign functions.
+   - type (xtk::save-lisp "name-of-your-image") to save the lisp image.
+
+
+NOTE: If you have Allegro 4.0 or Lucid 4.0, there are some bugs in these
+early versions that create problems with CLM and GINA. See the directory
+lisp-bugs+patches in the GINA distribution for details. However, you should
+ask your vendor to upgrade to the latest version 4.1 if possible.
+
+Installing the CLM server
+-------------------------
+
+To compile and test the Motif daemon and server, the following steps are 
+necessary:
+
+1. Adapt the variables in the Makefile to your installation:
+
+   First, set the ARCH variable on top of the Makefile to your system
+   architecture. See what files Makefile.<ARCH> are supplied. These files
+   set variables that are different on different architectures. They can
+   also be used if you have to support multiple architectures on your site.
+   If you only need one architecture, you can also set the site-specific
+   definitions in the main Makefile.
+
+   The following variables are set to default values in the Makefile and
+   can be overridden in the architecture-specific Makefile. You can set them
+   in either location, depending on whether the parameter is constant for
+   all architectures at your site or depends on the architecture.
+
+   XM_INCLUDE:  -I Directory where the Motif include files are stored.
+   XT_INCLUDE:  -I Directory where the X11 include files are stored
+                   (if non-standard)
+   LIB_PATH:    -L Directory where the Motif and X11 libraries are stored.
+
+   ADD_CFLAGS:  any flags that should be added to every C compilation
+   LISP_CFLAGS: any flags that should be added when compiling the foreign
+                C functions to be loaded into Lisp
+   ADD_LFLAGS:  any flags to be added for loader operation
+   ADD_LIBS:    any libraries that need to be linked for Motif (e.g. -lPW)
+
+   When compiling for Allegro CL, the variable EXCL_INCLUDE must be set to the
+   directory where the include file misc/lisp.h is stored. This is supplied by 
+   Franz Inc.
+
+   The following variables are usually site-specific, but in principle they
+   can also be set in architecture-specific files.
+
+   CLM_LIB: Directory where the foreign C modules are installed. This must be
+	    the same path as CLM_LIB in ../lisp/Makefile and ../demos/Makefile.
+   CLM_BIN: Directory where the Motif daemon and server executables are 
+	    installed.
+
+   When you're NOT using Allegro CL, the definition for LISP_OBJECTS must
+   be commented out.
+
+2. make
+
+3. type 'clm-td ./clm-server &' to start the Motif daemon. The Motif daemon 
+   brings up a small window containing a quit button and a kill button.
+
+   Please make sure your DISPLAY variable points to the right display.
+
+4. To install the binaries, type 'make install'
+
+Installing the Lisp interface
+-----------------------------
+
+On Genera, see the description in "sysdcl.lisp" how to establish a system
+definition. On UNIX systems, use the following steps to compile and test
+CLM:
+
+1. Make sure you have links to or copies of unixsocket.o and io.o in this
+   directory. When using Allegro CL, you should also have exclio.o and
+   runstatus.o.
+   If these links are not present, make sure that these object files exist in
+   ../server. Then run 'make excl_links' (Allegro) or 'make lucid_links' 
+   (Lucid).
+
+2. Look at the top of defs.lisp and see if you want to change any of the
+   defined parameters. The parameter *clm-binary-directory* must be set
+   to a directory where the executable "clm-server" can be found at run-time.
+   This code is used when you start the CLM server as a child of the Lisp
+   image (which is the default setting).
+
+3. Start your basic Lisp image. Compile and load CLM by typing (load "load").
+   This compiles the source files if necessary, then loads the foreign C code
+   and the compiled binary files.
+
+4. Change directory to ../demos. Compile and load the demo 
+   demo.lisp by using (xtk::ld "demo"). Then run this demo with
+   (xtk::clm-demo).
+
+   This demo should display the following: A main window with a menu bar
+   and a number of elements below. There is a label that shows the current
+   time, which should be updated by a timer. Below there are a list with
+   three dummy entries and a scrollable work area. At the bottom there is
+   a text field.
+
+   The first pull-down menu contains an "Exit" entry to stop the demo. In the
+   second pull-down menu you find two entries that stop and start the timer.
+   One of them should always be insensitive. You can pop up a simple info
+   dialog with no further functionality, and you can add an item to the list.
+   The item can be specified in a prompt dialog. OK adds the item, Cancel
+   does nothing.
+
+   When selecting an item, the item and its number appear in the text field.
+   If you click into the drawing area, the event data reported by the
+   button press are shown in the text field. You can edit the text without
+   any effect.
+
+   If this demo runs without crashing CLM, you can expect CLM to work properly.
+
+5. To install CLM, edit the Makefile and adapt the following variables to
+   your installation:
+
+   LISP: The pathname of your Common Lisp executable
+   LISP_SYSTEM: either 'excl' or 'lucid'
+   CLM_LIB: Directory where the compiled C modules and the CLM library
+	    file clm.fasl (excl) or clm.sbin (Lucid) should be installed.
+
+   To install only the Lisp part of CLM, type 'make install'
+   To install all parts of CLM, go to ".." and type 'make install'
+
+6. Save a Lisp image which contains CLM:
+
+   Go to the CLM_LIB directory, start lisp and load CLM by typing (load "clm").
+   Save the lisp image using (xtk::save-lisp "name-of-saved-image").
+
+Adding a new widget class in CLM
+--------------------------------
+
+If you have written a new widget class in C, it must be added in the CLM
+server. The lines marked by #ifdef GRAPHWIDGET show an example where
+changes must be made. There are four aspects that may be associated with a
+new class
+
+  (a) Adding the class name and its resources.
+  (b) Adding a convenience creator
+  (c) Adding new methods
+  (d) Adding new resource converters.
+
+The classes and resources are contained in the file ClassTable.inc, which is
+created automatically during the make process by a program contained in
+GenTable.c. In GenTable.c, there is a procedure InitializeClassTable that
+performs this task. For a new class an additional statement must be added
+that calls BootClass (see the example enclosed by #ifdef GRAPHWIDGET).
+
+The resources are read automatically from the class record. If there are any
+resources that are not readable by XtGetResourceList or XtGetConstraint-
+ResourceList, they must be declared manually by calling AddExtraResource for
+each resource. This is necessary for some shell and text widget resources.
+
+If a convenience function is present for creating a widget of this class, it
+can be declared in Convenience.c. An entry to the table must be added at the
+end, because the convenience functions are identified by their index in the
+table. The element structure ConvFunc is explained in this file. A
+corresponding Lisp function must be declared in convenience.lisp (see the
+examples there).
+
+If the new class has a new method (or for adding any other methods and
+procedures that are currently not made available), a new opcode for the
+CLM protocol must be reserved and implemented. Private opcodes are available
+starting from 1024, lower values are reserved for future CLM expansion. 
+In main.c, the function (called ClmFxxx according to convention) must be
+imported and mentioned in the appropriate place in the user function table
+(increase UserMaxID if necessary).
+
+The functions ClmFtextSetHighlight and ClmFtextGetLastPosition can be used
+as prototypes for implementing new functions that do or do not return a value.
+The macros GenWarn and GenError may only be called from the toplevel function
+because they return directly to the main loop.
+
+On the lisp side, corresponding functions must be defined that call
+execute-request.
+
+If the new widget class uses a new resource type to be used from CLM, the
+resource type (XmR...) must be added to TypeTable.c. Two different
+converters may be specified that are usually imported into this file. The
+standard converters are defined in ResourceSet.c and ResourceGet.c. You
+can also define converters for enumerated resources in EnumSetGet.c.
+
+
+Summary of Changes:
+-------------------
+
+2.3:
+
+  - included support for AKCL and LispWorks
+
+  - fixed problems with Motif 1.2 in GenTable.c, added converters for most
+    new 1.2 resources
+
+  - smaller bug fixes: Cursor.c, using _exit instead of exit in unixsocket.c,
+    removed some memory leaks that were easy to fix
+
+  - Allegro now detects when the CLM socket dies and stops accordingly, the
+    other Lisps should do the same (could not test)
+
+  - fixed an obscure bug with deadlocks in modal dialogs in background
+    processes
+
+  - included support for multi-font label strings contributed by Peter Cousseau
+    (long ago). This feature can be enabled by defining MULTI_FONT.
+
+  - added is-managed
+
+  - added motif-version, which reports XmVersion, but reads it only once at
+    application startup.
+
+  - added with-pointer-grab to temporarily inhibit input
+
+  - created a user function table to allow private extensions to CLM
+    without conflicts with future CLM opcodes.
+
+2.2:
+
+  - Some restructuring to allow ports to CMU CL and Ibuki, which do not have
+    multiple processes. These changes are mainly in low.lisp. In particular,
+    the main loop has been unrolled, and there is a wrapper mechanism where
+    you can save special bindings across invocations of callbacks.
+
+  - Timeout handlers were removed. Please use the timer mechanism described
+    in the manual.
+
+  - Some minor bug fixes.
+
+  - Some changes in the Makefiles for the different architectures, so you
+    should have fewer problems on your machine. (Please send us any changes
+    you had to make for your machine type so that we can incorporate those
+    changes in the next version).
+
+2.1:
+
+  - The CLM server can now be started from Lisp if hostname is NIL.
+
+  - Added silent operation and some customization flags to td. Renamed td
+    to clm-td, toolkits to clm-server and toolkitd to clmd.
+
+  - Errors and warnings are now really distinguished. When errors are raised,
+    the execution of the application should probably not be continued
+    (because e.g. a widget could not be created). Implementation bugs are
+    also signalled as errors. Warnings indicate that the requested function
+    could not be performed, but execution may continue.
+
+  - An error handler has been added that allows to resume execution after an
+    error without entering the debugger. The question "Restart main loop ?"
+    has been changed into a debugger selection.
+
+  - Resource converters for accessing enumeration resources were added.
+    Additional converters will be easier to define in the future.
+
+  - Resource converters for accessing Pixel and Bitmap resources were added,
+    as well as some other converters.
+
+  - The keywords for the following resources have been changed in order to meet
+    the unique naming conventions:
+
+     XmNresizePolicy          ==> :resize-{any,grow,none}
+     XmNdefaultButtonType     ==> :dialog-{cancel,ok,help}-button
+     XmNfileTypeMask          ==> :file-{regular,directory,any-type}
+     XmNcommandWindowLocation ==> :command-{above,below}-workspace
+     XmNmultiClick            ==> :multiclick-{keep,discard}
+     XmNselectionPolicy       ==> :{single,multiple,extended,browse}-select
+     XmNshadowType            ==> :shadow-{in,out,etched-in,etched-out}
+     XmNalignment             ==> :alignment-{center,end,beginning}
+     XmNdialogStyle           ==> :dialog-{....}
+     XmNdialogType            ==> :dialog-{....}
+
+    To avoid many code changes, the old values are still
+    available, but might disappear in the future.
+
+  - Added various #if's to allow compilation under Motif 1.0. Not all
+    features are available under 1.0.
+
+  - New functions with their opcodes
+    (Thanks to Peter Cousseau (Peter.Cousseau@a.nl.cs.cmu.edu)
+               Christopher Hoover (ch@lks.csi.com)
+             Chris Richardson (cer@Franz.COM)
+     for most of these functions and a number of other patches)
+      message-box-get-child          99
+      selection-box-get-child       108
+      file-selection-box-get-child   93
+      command-get-child              90
+      option-label-gagdet           101
+      option-button-gadget          100
+      main-window-set-areas         150
+      scrolled-window-set-areas     107
+      is-realized                   143
+      get-multi-click-time          144
+      is-valid-widget-id            146
+      widget-full-name              147
+      widget-full-class             148
+      cascade-button-highlight       87
+      last-timestamp-processed      145
+      text-set-highlight            128
+      text-get-last-position        116
+      text-set-selection            118
+      text-get-insertion-position   115
+      text-replace                  125
+      text-get-substring            151
+      text-search                   152
+
+  - Added the following text functions:
+      text-clear-selection
+      text-cut
+      text-copy
+      text-get-baseline
+      text-get-selection
+      text-get-selection-position
+      text-paste
+      text-pos-to-xy
+      text-remove
+      text-scroll
+      text-set-add-mode
+      text-show-position
+      text-xy-to-pos
+
+  - Added run-status support for Franz.
+
+  - Added uppercasing when sending symbols if Allegro Lisp uses lowercase.
+
+  - Changed CurrentTime to XtLastTimestampProcessed() in ClmFchangeCursor to
+    avoid race conditions.
+
+  - Timers now have integers and not adresses as IDs.
+
+  - Text functions are consistently renamed text-<bla>. Affects the documented
+    functions insert-text and append-text.
+
+  - A number of events pass more details to their event handler function:
+      ClientMessage:          message-type {5/10/20 numbers}
+      FocusIn, FocusOut:      mode detail
+      ConfigureNotify:        x y width height
+      VisibilityNotify:       state
+      PropertyNotify:         atom state time
+      SelectionClear:         selection time
+      SelectionRequest:       requestor selection target property time
+      SelectionNotify:        selection target property time
+    For an explanation of these values, see the Xlib documentation.

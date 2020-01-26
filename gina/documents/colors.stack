@@ -1,0 +1,12 @@
+"hyper"
+595 371
+1
+4
+4
+:button-element 229 201 "Button1" NIL "aquamarine" 22 21
+:list-element 145 201 "List2" "Code4" NIL 293 21
+:code-element 405 54 "Code3" "(setf (items List2) *all-colors*)" T 21 235
+:code-element 408 122 "Code4" "(progn 
+    (set-motif-resources (widget Button1) 
+          :background List2)
+    (setf Button1 List2))" NIL 16 380

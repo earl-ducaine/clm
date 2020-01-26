@@ -1,0 +1,95 @@
+*XmText*translations: #override \
+      Shift<Key>osfDelete: delete-previous-word()\n\
+      ~Shift ~Ctrl ~Alt ~Meta<Key>osfDelete:      delete-previous-character()
+
+*fontList: *times-bold-r-normal--14*
+
+
+Mwm*ibuild*iconImage: /vol/gina/gina2/bitmaps/ibuild
+Mwm*IB-demo*iconImage: /vol/gina/gina2/bitmaps/ibdemo
+Mwm*browser*iconImage: /vol/gina/gina2/bitmaps/browser
+Mwm*GINA*iconImage: /vol/gina/gina2/bitmaps/empty
+Mwm*clmd*iconImage: /vol/gina/gina2/bitmaps/clmd
+
+Mwm*hello*iconImage: /vol/gina/gina2/bitmaps/hello
+Mwm*micky*iconImage: /vol/gina/gina2/bitmaps/micky
+Mwm*txedit*iconImage: /vol/gina/gina2/bitmaps/editor
+Mwm*clock*iconImage: /vol/gina/gina2/bitmaps/clock
+Mwm*finder*iconImage: /vol/gina/gina2/bitmaps/finder
+Mwm*gredit*iconImage: /vol/gina/gina2/bitmaps/gredit
+Mwm*output*iconImage: /vol/gina/gina2/bitmaps/output
+Mwm*bitedit*iconImage: /vol/gina/gina2/bitmaps/bitedit
+Mwm*lisp-widgets*iconImage: /vol/gina/gina2/bitmaps/lisp-widgets
+Mwm*tetris*iconImage: /vol/gina/gina2/bitmaps/tetris
+Mwm*Pac*iconImage: /vol/gina/gina2/bitmaps/pac
+Mwm*Spreadsheet*iconImage: /vol/gina/gina2/bitmaps/spreadsheet
+Mwm*hyper*iconImage: /vol/gina/gina2/bitmaps/hyper
+Mwm*listener*iconImage: /vol/gina/gina2/bitmaps/listener
+Mwm*chess*iconImage: /vol/gina/gina2/bitmaps/chess
+Mwm*calc*iconImage: /vol/gina/gina2/bitmaps/calc
+Mwm*drag*iconImage: /vol/gina/gina2/bitmaps/drag
+Mwm*drop*iconImage: /vol/gina/gina2/bitmaps/drop
+Mwm*mandel*iconImage: /vol/gina/gina2/bitmaps/mandel
+
+Mwm*XTerm*iconImage: /vol/gina/gina2/bitmaps/term
+Mwm*emacs*iconImage: /vol/gina/gina2/bitmaps/emacs
+
+
+XTerm*Font: 9x15
+emacs.font: 9x15
+emacs.geometry: 81x57+320+0
+
+mwm_co*background: gray85
+mwm_co*activeBackground: gray55
+
+mwm_bw*cleanText: true
+mwm_bw*activeForeground:                      white
+mwm_bw*activeBackground:                      black
+mwm_bw*activeBackgroundPixmap:                50_foreground
+mwm_bw*activeTopShadowPixmap:                 50_foreground
+mwm_bw*activeTopShadowColor:                  white
+mwm_bw*activeBottomShadowPixmap:              foreground
+mwm_bw*activeBottomShadowColor:               black
+mwm_bw*foreground:                black
+mwm_bw*background:                white
+mwm_bw*backgroundPixmap:          75_foreground
+mwm_bw*topShadowPixmap:           foreground
+mwm_bw*topShadowColor:            white
+mwm_bw*bottomShadowPixmap:        foreground
+mwm_bw*bottomShadowColor:       black
+mwm_bw*menu*foreground:         white
+mwm_bw*menu*background:         black
+mwm_bw*menu*backgroundPixmap:   background
+mwm_bw*menu*topShadowPixmap:    foreground
+mwm_bw*menu*topShadowColor:     white
+mwm_bw*menu*bottomShadowPixmap: 50_foreground
+mwm_bw*menu*bottomShadowColor:  white
+
+Mwm*XClock*clientDecoration:  none
+Mwm*XLogo*clientDecoration:   none
+
+Mwm*icon*Font: 9x15
+Mwm*fontList: *-courier-bold-r-normal--12-*
+Mwm*iconPlacement: bottom right
+Mwm*useIconBox: False
+Mwm*resizeCursors: False
+Mwm*buttonBindings: DefaultButtonBindings
+Mwm*resizeBorderWidth:  10
+Mwm*maximumClientSize: 1200x1500
+
+*XmText.traversalOn: False
+*XmTextField.traversalOn: False
+*XmPushButton.traversalOn: False
+*XmPushButtonGadget.traversalOn: False
+*XmToggleButton.traversalOn: False
+*XmToggleButtonGadget.traversalOn: False
+*XmCascadeButton.traversalOn: False
+*XmCascadeButtonGadget.traversalOn: False
+*XmArrowButton.traversalOn: False
+*XmArrowButtonGadget.traversalOn: False
+*XmScrollBar.traversalOn: False
+*XmList.traversalOn: False
+*XmScale*traversalOn: False
+*XmScrolledWindow*traversalOn: False
+
+*highlightThickness: 0

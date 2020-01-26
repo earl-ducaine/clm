@@ -1,0 +1,26 @@
+# sccsid = @(#)Makefile.indigo	1.3 11/9/92
+
+# Directories where the Motif header files and the Motif toolkit
+# header files are stored.
+XM_INCLUDE = -I/usr/include/Xm
+
+# Directories where the include files for Allegro CL reside
+EXCL_INCLUDE = -I/vol/allegro4.0/lib/misc
+
+# Libraries
+LIB_PATH = -L/usr/lib
+
+# Any additional CFLAGS
+# make the C compiler more tolerant
+ADD_CFLAGS = -cckr
+# CFLAGS only for the foreign functions loaded into Lisp
+# NOVFORK: use fork
+LISP_CFLAGS = -G 0 -DNOVFORK
+# Additional flags for loader operation
+ADD_LFLAGS = -O
+
+# Any additional libraries
+ADD_LIBS = -lPW
+
+SHELL=/bin/sh
+

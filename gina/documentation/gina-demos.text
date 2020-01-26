@@ -1,0 +1,4194 @@
+GINA Demo Applications 
+GINA Version 2.1 for Common Lisp
+
+
+Michael Spenke
+Christian Beilken
+Thomas Berlage
+Andreas BŠcker
+Andreas Genau
+
+Gesellschaft fŸr Mathematik und Datenverarbeitung mbH (GMD)
+(German National Research Center for Computer Science)
+P.O. Box 1316
+D-5205 Sankt Augustin 1
+Federal Republic of Germany
+
+Contents
+0. Overview of the Demo Programs	3
+1. Hello	6
+2. Micky	10
+3. Text-Editor	14
+4. Clock	16
+5. Finder	17
+6. Graphic-Editor	22
+7. Graphic-Output	28
+8. Bitmap-Editor	32
+9. Lisp-Widgets	39
+10. Tetris	42
+11. Pacmen	44
+12. Spreadsheet	47
+13. Hyper-GINA	50
+14. Lisp Listener	53
+15. Chess Interface	57
+16. Drag and Drop Demo	59
+17. Mandelbrot Demo	64
+18. Desk Calculator	68
+
+0. Overview of the Demo Programs
+This is a collection of simple, well-documented demo applications 
+demonstrating most of the concepts of GINA. The documentation of 
+each demo consists of 
+*	a description of the functionality
+*	a screen dump of the application window
+*	an overview of the implementation and the GINA-features being 
+used
+*	limitations of the demo and suggestions for further extensions 
+(sometimes).
+
+The complete source code of all demo programs belongs to the GINA 
+distribution. For the shorter demo programs the source code is also 
+printed within this manual. 
+Each of the demo applications consists of only a few pages of code. So, 
+even though they are quite different, at least 95% of the code executed 
+is part of GINA.
+
+These are the demo applications:
+1.	Hello
+	A simple Hello-World application. The string "Hi!" appears, where 
+the mouse is clicked in the main view.
+2.	Micky
+	Similar to Schmucker's demo for MacApp. Our version, however, 
+allows the user to stretch the width and height of Micky«s head 
+using two scales.
+3.	Text-Editor
+	This demo shows, how with a few lines of code the Motif text-widget 
+can be turned into a complete and useful application.
+4.	Clock
+	A simple digital clock.
+5.	Finder
+	This application shows directory contents in a scrollable list and 
+launches applications and documents.
+6.	Graphic-Editor
+	Circles and rectangles can be created, moved, resized, and deleted.
+7.	Graphic-Output
+	Demonstrates the use of the drawing primitives and graphic-
+contexts of CLX .
+8.	Bitmap-Editor
+	A simple tool to draw bitmaps. Includes zooming and full undo/redo.
+9.	Lisp-Widgets
+	This demo shows how new types of widgets can be implemented in 
+Lisp.
+10.	Tetris
+	A simple version of the well known arcade game.
+11.	Pacmen 
+	Demo of background processes. Not really a game.
+12.	Spreadsheet 
+	A usable spreadsheet program. Lisp expressions containing cell 
+references can be used as formulas.
+13.	Hyper-GINA
+	Similar to HyperCard using widgets.
+14.	Lisp Listener 
+	A text widget is used as a lisp listener. 
+15.	Chess Interface
+	Chesspieces (movable icons) can be dragged around. Connection to 
+GNU chess.
+16.	Drag and Drop Demo
+	Demonstration of drag and drop labels provided by GINA.
+17.	Mandelbrot Demo
+	Mandelbrot sets are displayed while computed in a background 
+process.
+18.	Desk Calculator
+	Desk Calculator made with the help of the GINA interface builder.
+
+If you are interested in examples for certain implementation 
+techniques, this overview lists some important topics and the demos 
+covering them:
+*	Saving documents to file
+	Hello, Micky, Text-Editor, Finder, Graphic-Editor, Bitmap-Editor, 
+Chess, Spreadsheet, Hyper-GINA
+*	Use of the Interface Builder
+	Calculator, Finder, Chess (for the promotion dialog)
+*	Graphical output into views
+	Graphic-Output, Hello, Micky, Graphic-Editor, Bitmap-Editor, 
+Tetris, Lisp-Widgets, Chess, Pacmen, Spreadsheet, Hyper-GINA, 
+Mandelbrot
+*	Undoable commands
+	Hello, Graphic-Editor, Bitmap-Editor, Lisp-Widgets, Chess, 
+Spreadsheet, Hyper-GINA, Drag and Drop Demo, Mandelbrot
+*	Mouse input in views
+	Hello, Graphic-Editor, Bitmap-Editor, Lisp-Widgets, Spreadsheet, 
+Chess, Hyper-GINA, Mandelbrot, Drag and Drop Demo
+*	Mouse commands with graphical feedback
+	Graphic-Editor, Bitmap-Editor, Lisp-Widgets, Chess, Spreadsheet, 
+Hyper-GINA, Mandelbrot
+*	View-objects
+	Tetris, Graphic-Editor, Chess, Hyper-GINA, Drag and Drop Demo
+*	Direct-manipulation objects
+	Graphic-Editor, Chess, Hyper-GINA
+*	Movable icons
+	Chess
+*	Timer
+	Clock, Tetris
+*	Starting foreign documents and applications
+	Finder
+*	Toggle buttons within a menu
+	Micky, Chess
+*	Applications without a menu bar
+	Clock, Tetris, Calculator 
+*	Color
+	Tetris
+*	Background processes (progress bar)
+	Mandelbrot, Pacmen, Chess, Lisp-Listener
+*	Drag and Drop
+	Drag and Drop Demo, (Interface-Builder)
+*	Double Buffering
+	Mandelbrot, Chess
+1. Hello
+1.1 Functionality
+The first experiment with a new programming environment is always 
+the implementation of the hello-world program. The traditional version 
+just prints out "Hello world!" on standard output. Of course, this is too 
+simple in the context of graphical user interfaces. 
+Our version of hello-world is somewhat more complex: The user can 
+click the mouse within the main area of our window and at this 
+position the string "Hi!" will appear. An entry in the menu bar allows 
+the user to clear all strings again. Hello-world documents can be saved 
+in a file and remember the position of each string. Unlimited undo/redo 
+is possible and the history scroller can be used to move back and forth 
+in the command history.
+	                                                     
+1.2 Implementation
+
+First of all, we have to define a subclass of the GINA class 
+application. At run-time, exactly one instance of this class will exist. 
+It contains the main event loop and transforms incoming events or 
+callbacks into messages to other objects.
+The initial values for some slots of the superclass are overridden. The 
+slot name is used e.g. in the title of each document window. Document-
+type denotes the type of document to be created when the new-
+command is executed. Hello-world-document is a subclass of the 
+GINA class document explained below. The file-type implies that 
+the document shown above will be stored in the file named THE-
+S.hello when it is saved. The signature will be stored inside that file 
+and will be later used to find the application which can handle the 
+document.
+Besides the definition of the new class, a constructor function is 
+defined, that can be used to create instances of the new class. The 
+constructor function of the subclass calls the constructor of the 
+superclass.
+Next, a subclass of the GINA class document is defined. An instance of 
+this class will represent an open document at run-time. It contains the 
+internal representation of the document contents and has methods to 
+transform the contents into a stream of characters and vice versa.
+The class hello-world-document contains a slot to hold the list of 
+mouse click positions. The document defines its own representation on 
+the screen by overriding the method create-windows. In this case a 
+shell containing a scrollable view of class hello-world-view is 
+created. The menu bar is implicitly created as part of the document-
+shell. An application-specific command "Clear all" is added to the 
+menu bar. When the menu item is chosen, an object of class clear-
+all-command will be created.
+Next, a subclass of the GINA class view has to be defined. Views are 
+drawing areas, often larger than the screen and therefore scrollable, 
+where documents display their contents. The contents of a view are 
+normally not drawn by Motif, but by the Lisp application itself, using 
+graphic primitives of the X library. Also, mouse clicks in the view are 
+directly reported to the Lisp application.
+The class hello-world-view overrides the method draw, which is 
+called by GINA whenever the view or some part of it is exposed. It uses 
+the method draw-glyphs, which directly corresponds to the CLX 
+function draw-glyphs to draw the Hi-strings. 
+The button-press method is called whenever the mouse button goes 
+down in the view. It creates a new instance of the class add-hi-
+command. This is a subclass of the GINA class command. An instance of 
+this class contains the coordinates of the mouse click. The method doit 
+pushes the coordinate pair onto the hi-list, undoit pops the hi-list 
+again. In both cases force-redraw is called to completely redraw the 
+view. A possible optimization would be to draw or clear just one single 
+"Hi!".
+Clear-all-command is a subclass of the GINA class command. An 
+instance of this class contains all the necessary information to execute 
+and later undo the command. In this case, the current hi-list is 
+stored. GINA calls the method doit (which clears the hi-list and 
+redisplays) to execute the command and then pushes it onto a stack of 
+commands already executed. Later, when the user calls the undo 
+facility, GINA executes the method undoit. If the command is 
+repeated in a redo operation, doit is called again. If repeating a 
+command is different from executing it for the first time, the 
+programmer can also override the method redoit.
+Finally, signature, class, and file type of the the new application are 
+registered in a central table of GINA. Opening a document of type hello 
+will create an instance of class hello-world-application. In 
+addition, we create a file hello.appl which just contains the signature 
+"hello" (in double quotes). Clicking this file in the Finder will start 
+the new application with an empty document. In order to test the 
+application, we can also directly call the creator function of our 
+application subclass.
+1.3 Source Code
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: hello; Base: 10 -*-
+
+(in-package :GINA)
+(defginapackage :hello)
+(in-package :hello)
+(setq *sccs-id* "@(#)hello.lisp	1.4  1/15/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class hello-world-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass hello-world-application (application)
+  (;; overrides
+   (name          :initform "Hello World"         :allocation :class)
+   (document-type :initform 'hello-world-document :allocation :class)
+   (signature     :initform "hello"               :allocation :class)
+   (file-type     :initform "hello"               :allocation :class))
+  (:documentation "a simple demo application"))
+
+(defun make-hello-world-application ()
+  "start the hello-world-application"
+  (make-application :class 'hello-world-application))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class hello-world-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass hello-world-document (document)
+  (;; instance-variables
+   (hi-list       :initform nil :accessor hi-list
+		  :documentation "List of coordinates where HIs are displayed"))
+  (:documentation "application dependent document type"))
+
+(defmethod write-to-stream ((doc hello-world-document) stream)
+  "write the document to the specified stream"
+  (prin1 (hi-list doc) stream))
+
+(defmethod read-from-stream ((doc hello-world-document) stream) 
+  "read the document from the specified stream"
+  (setf (hi-list doc) (read stream)))
+
+(defmethod create-windows ((doc hello-world-document) &aux scroller)
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+    (setq main-shell (make-document-shell doc))
+    (setq scroller   (make-scroller main-shell))
+    (setq main-view  (make-hello-world-view scroller doc))
+
+    ;; add an application specific command
+    (add-menu-command (main-menu main-shell)
+		      "Hello" "Clear all" (make-callback #'make-clear-all-command doc))
+    ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class hello-world-view
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass hello-world-view (view)
+  ()
+  (:documentation "a view with special draw method and reaction to clicks"))
+
+(defun make-hello-world-view (parent doc)
+  "create a new hello-world-view"
+  (make-view parent :document doc :class 'hello-world-view))
+
+(defmethod draw ((view hello-world-view) count x y width height)
+  "draw window contents"
+  (declare (ignore x y width height))
+  (when (zerop count) ;; Ignore all but the last exposure event
+    (loop for (x y) in (hi-list (document view))
+	  do (draw-glyphs view x y "Hi!"))))
+
+(defmethod button-press ((view hello-world-view) code repetition x y)
+  "react to button-press event in the window"
+  (declare (ignore code repetition))
+  (make-add-hi-command (document view) x y))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; undoable clear-all-command
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass clear-all-command (command)
+  ((name :initform "Clear All Command" :allocation :class)
+   (old-hi-list :accessor old-hi-list :initarg :old-hi-list)))
+
+(defun make-clear-all-command (document)
+  "create command object storing the current hi-list"
+  (make-command document
+		:class 'clear-all-command
+		:initargs (list :old-hi-list (hi-list document))))
+
+(defmethod doit ((cmd clear-all-command))
+  "clear hi-list"
+  (with-slots (document) cmd
+    (setf (hi-list document) nil)
+    (force-redraw (main-view document))))
+
+
+(defmethod undoit ((cmd clear-all-command))
+  "restore hi-list"
+  (with-slots (document old-hi-list) cmd
+    (setf (hi-list document) old-hi-list)
+    (force-redraw (main-view document))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; undoable add-hi-command
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass add-hi-command (command)
+  ((name :initform "Add Hi Command" :allocation :class)
+   (hi :accessor hi :initarg :hi)))
+
+(defun make-add-hi-command (document x y)
+  "create command object storing the x/y coordinates of the mouse-click"
+  (make-command document
+		:class 'add-hi-command
+		:initargs (list :hi (list x y))))
+
+(defmethod doit ((cmd add-hi-command))
+  "add a new pair to hi-list"
+  (with-slots (document hi) cmd
+    (push hi (hi-list document))
+    (force-redraw (main-view document))))
+
+(defmethod undoit ((cmd add-hi-command))
+  "pop hi-list"
+  (with-slots (document) cmd
+    (pop (hi-list document))
+    (force-redraw (main-view document))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "hello" 'hello-world-application "hello")
+'(make-hello-world-application)
+2. Micky
+2.1 Functionality
+The Micky application was heavily influenced by Kurt Schmucker's 
+demo for MacApp. Our version, however, allows the user to stretch the 
+width and height of Micky«s head using the two scales. The size is 
+stored as the document contents on disk. Because of performance 
+problems of a former X release (X11R3) there is a menu containing a 
+radio button group to choose between a circular and a rectangular 
+shape.
+                                                                 
+
+
+2.2 Implementation
+An application subclass is defined as usual. The document class 
+contains the width and height of Micky«s head, a flag indicating the 
+shape of the head, and references to the two scales. The slots shell-
+width and shell-height are overridden so that a certain initial size is 
+used for the shell. By default the size of a shell is determined by the 
+widgets contained in it. The user can resize the shell, and the new size 
+will be stored on disk when the document is saved.
+The shell contains a form widget which organizes the layout of the two 
+scales and the scroller. The form constraints are defined in such a way 
+that mainly the scroller is resized when the shell is resized.
+Whenever a scale is operated, the method new-micky-width or new-
+micky-height is called at the document object with the new value of 
+the scale as an argument. Note that the value-changed-callback of 
+a scale can be set by a keyword parameter, while the less frequently 
+used drag-callback must be explicitly assigned using setf.The 
+methods new-micky-width and new-micky-height store the new 
+size and redraw the view. In addition, the document is marked as 
+modified. We must use the accessor function for the slot modified 
+because it has a demon which makes then Save menu entry sensitive.
+A radio button group is inserted in the main menu of the shell which 
+allows to choose between the two possible shapes. Whenever the shape 
+is changed the method toggle-shape is called. 
+The method write-to-stream simply writes out the width and height 
+of Micky. When the method read-from-stream is called, GINA 
+automatically redraws the main view of the document, so that the new 
+size of Micky is displayed. However, we explicitly have to indicate the 
+new size in the two scales. Alternatively, we could override the method 
+redraw-views which by default just redraws the views showing the 
+document contents.
+Finally, the draw method of class micky-view contains a lot of calls to 
+draw-arc and draw-rectangle to display Micky«s head.
+2.3 Limitations and Extensions
+As a further extension, reshaping could be made undoable. To achieve 
+this, a command object would have to be created each time a scale is 
+operated.
+2.4 Source Code
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: micky;Base: 10-*-
+
+(in-package :GINA)
+(defginapackage :micky)
+(in-package :micky)
+(setq *sccs-id* "@(#)micky.lisp	1.4  1/15/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class micky-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass micky-application (application)
+  (;; overrides
+   (name          :initform "Micky"         :allocation :class)
+   (document-type :initform 'micky-document :allocation :class)
+   (signature     :initform "micky"         :allocation :class)
+   (file-type     :initform "micky"         :allocation :class))
+  (:documentation "a simple demo application"))
+
+(defun make-micky-application ()
+  "start the micky-application"
+  (make-application :class 'micky-application))
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class micky-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass micky-document (document)
+  (;; instance-variables
+   (circles      :accessor circles :initform t)
+   (micky-width  :initform 100 :accessor micky-width
+		 :documentation "Width of scalable Micky-Mouse")
+   (micky-height :initform 100 :accessor micky-height
+		 :documentation "Height of scalable Micky-Mouse")
+   (h-scale      :accessor h-scale)
+   (v-scale      :accessor v-scale)
+   
+   ;; overrides
+   (shell-width  :initform 300)
+   (shell-height :initform 400))
+  (:documentation "application dependent document type"))
+
+(defmethod create-windows ((doc micky-document) &aux form scroller)
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view h-scale v-scale) doc
+    ;; create document-shell
+    (setq main-shell (make-document-shell doc))
+    ;; the main-part of the window is organized as a form
+    (setq form (make-form main-shell))
+    ;; horizontal scale to change the width of Micky
+    (setq h-scale (make-scale form
+			      :orientation :horizontal
+			      :value (micky-width  doc)
+			      :maximum 500
+			      :value-changed-callback
+			      (make-callback #'new-micky-width doc)
+			      ))
+    (setf (drag-callback h-scale) (make-callback #'new-micky-width doc))
+    
+    ;; vertical scale to change the height of Micky
+    (setq v-scale (make-scale form
+			      :orientation :vertical
+			      :processing-direction :max-on-bottom
+			      :value (micky-height doc)
+			      :maximum 500
+			      :value-changed-callback
+			      (make-callback #'new-micky-height doc)
+			      ))
+    (setf (drag-callback v-scale) (make-callback #'new-micky-height doc))
+    
+    (setq scroller (make-scroller form :motif-resources (list :width 250 :height 300)))
+    
+    ;; create the view
+    (setq main-view (make-view scroller
+			       :width 500 :height 500 :document doc
+			       :class 'micky-view))
+    ;; define the layout of the form
+    (define-form-constraint h-scale
+			    :top-attachment   :form 
+			    :left-attachment  :widget :left-widget v-scale
+			    :right-attachment :form)
+    (define-form-constraint v-scale
+			    :top-attachment    :form :top-offset 30
+			    :left-attachment   :form
+			    :bottom-attachment :form)
+    (define-form-constraint scroller
+			    :top-attachment  :widget :top-widget  h-scale 
+			    :left-attachment :widget :left-widget v-scale 
+			    :right-attachment  :form 
+			    :bottom-attachment :form)
+
+    ;; add a radio group within the main menu to set the desired shape
+    (insert-menu-entry (main-menu main-shell) "Shape" "Group"
+		       (make-radio-group-entry "Group"
+						'("Circle" "Rectangle")
+						(make-callback #'toggle-shape doc)
+						:is-submenu nil))
+    
+    ))
+
+(defmethod new-micky-width ((doc micky-document) new-width)
+  "user has changed width of Micky-Mouse"
+  (with-slots (main-view micky-width) doc
+    (setq micky-width new-width)
+    (force-redraw main-view)
+    (setf (modified doc) t)))
+
+(defmethod new-micky-height ((doc micky-document) new-height)
+  "user has changed height of Micky-Mouse"
+  (with-slots (main-view micky-height) doc
+    (setq micky-height new-height)
+    (force-redraw main-view)
+    (setf (modified doc) t)))
+
+(defmethod toggle-shape ((doc micky-document) new-shape old-shape)
+  "toggle between circle and rectangle presentation"
+  (declare (ignore old-shape))
+  (with-slots (circles main-view v-scale h-scale) doc
+    (setq circles (equal new-shape "Circle"))
+    (force-redraw main-view)))
+
+(defmethod write-to-stream ((doc micky-document) stream)
+  "write the document to the specified stream"
+  (format stream "~d ~d~%" (micky-width  doc) (micky-height doc)))
+
+(defmethod read-from-stream ((doc micky-document) stream) 
+  "read the document from the specified stream"
+  (with-slots (h-scale v-scale micky-width micky-height) doc
+    (setq micky-width  (read stream))
+    (setq micky-height (read stream))
+    (setf (value h-scale) micky-width)
+    (setf (value v-scale) micky-height)))
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class micky-view
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass micky-view (view)
+  ()
+  (:documentation "a view with special draw method and reaction to clicks"))
+
+(defmethod draw ((view micky-view) count x y width height)
+  "draw window contents"
+  (declare (ignore x y width height))
+  (with-slots (x-window gcontext document) view
+    (with-slots (micky-width micky-height circles) document 
+      (when (zerop count) ;; Ignore all but the last exposure event
+	(when circles 
+	  ;; outline of the head
+	  (draw-arc view
+		    (round (* 0.35 micky-width)) (round (* 0.43 micky-height))
+		    (round (* 0.5 micky-width)) (round (* 0.5 micky-height))
+		    0 (* 2 pi) nil)
+	  ;; ears
+	  (draw-arc view 
+		    (round (* 0.3 micky-width)) (round (* 0.3 micky-height))
+		    (round (* 0.2 micky-width)) (round (* 0.2 micky-height))
+		    0 (* 2 pi) t)
+	  (draw-arc view
+		    (round (* 0.7 micky-width)) (round (* 0.3 micky-height))
+		    (round (* 0.2 micky-width)) (round (* 0.2 micky-height))
+		    0 (* 2 pi) t)
+	  ;; nose
+	  (draw-arc view
+		    (round (* 0.58 micky-width)) (round (* 0.64 micky-height))
+		    (round (* 0.05 micky-width)) (round (* 0.05 micky-height))
+		    0 (* 2 pi) t)
+	  ;; eyes
+	  (draw-arc view
+		    (round (* 0.5 micky-width)) (round (* 0.55 micky-height))
+		    (round (* 0.05 micky-width)) (round (* 0.05 micky-height))
+		    0 (* 2 pi) nil)
+	  (draw-arc view
+		    (round (* 0.65 micky-width)) (round (* 0.55 micky-height))
+		    (round (* 0.05 micky-width)) (round (* 0.05 micky-height))
+		    0 (* 2 pi) nil)
+	  ;; mouth
+	  (draw-arc view
+		    (round (* 0.45 micky-width)) (round (* 0.5 micky-height))
+		    (round (* 0.3 micky-width)) (round (* 0.3 micky-height))
+		    (* 1.3 pi) (* 0.4 pi) nil))
+
+	(when (not circles) 
+	  ;; outline of the head
+	  (draw-rectangle view
+			  (round (* 0.35 micky-width)) (round (* 0.43 micky-height))
+			  (round (* 0.5 micky-width)) (round (* 0.5 micky-height)) nil)
+	  ;; ears
+	  (draw-rectangle view
+			  (round (* 0.3 micky-width)) (round (* 0.3 micky-height))
+			  (round (* 0.2 micky-width)) (round (* 0.2 micky-height))  t)
+	  (draw-rectangle view
+			  (round (* 0.7 micky-width)) (round (* 0.3 micky-height))
+			  (round (* 0.2 micky-width)) (round (* 0.2 micky-height))  t)
+	  ;; nose
+	  (draw-rectangle view
+			  (round (* 0.58 micky-width)) (round (* 0.64 micky-height))
+			  (round (* 0.05 micky-width)) (round (* 0.05 micky-height)) t)
+	  ;; eyes
+	  (draw-rectangle view
+			  (round (* 0.5 micky-width)) (round (* 0.55 micky-height))
+			  (round (* 0.05 micky-width)) (round (* 0.05 micky-height)) nil)
+	  (draw-rectangle view
+			  (round (* 0.65 micky-width)) (round (* 0.55 micky-height))
+			  (round (* 0.05 micky-width)) (round (* 0.05 micky-height)) nil)
+	  ;; mouth
+	  (draw-line view
+		     (round (* 0.5 micky-width)) (round (* 0.8 micky-height))
+		     (round (* 0.7 micky-width)) (round (* 0.8 micky-height))))
+	))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "micky" 'micky-application "micky")
+'(make-micky-application)
+3. Text-Editor
+3.1 Functionality
+This demo shows how the Motif text widget can be turned into a 
+complete and useful application with just a few lines of code. Multiple 
+documents can be openend, edited, and saved.
+                                                              
+3.2 Implementation
+The implementation is completely straightforward. The value-
+changed-callback of the text widget is only used to recognize when 
+the document is modified. It is therefore immediately turned off again 
+when the first character is typed. The value of the text widget is 
+written to and read from file in open and save operations.
+3.3 Limitations and Extensions
+Of course, a lot of extensions is still necessary to implement a full text 
+editor.
+3.4 Source Code
+;;;-*-Mode:LISP;Syntax: Common-Lisp;Package: txedit ;Base:10-*-
+
+(in-package :GINA)
+(defginapackage :txedit)
+(in-package :txedit)
+(setq *sccs-id* "@(#)text-editor.lisp	1.4  1/15/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class text-editor-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defclass text-editor-application (application)
+  (;; overrides
+   (name          :initform "Text-Edit"           :allocation :class)
+   (document-type :initform 'text-editor-document :allocation :class)
+   (signature     :initform "txedit"              :allocation :class)
+   (file-type     :initform "txedit"              :allocation :class))
+  (:documentation "a simple text-editor demo application"))
+
+(defun make-text-editor-application ()
+  "start the text-editor-application"
+  (make-application :class 'text-editor-application))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class text-editor-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defclass text-editor-document (document)
+  (;; overrides
+   (shell-width  :initform 400)
+   (shell-height :initform 300)))
+
+(defmethod create-windows ((doc text-editor-document))
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+    ;; create document-shell containing a scroller and the text
+    (setq main-shell (make-document-shell doc))
+    ;; create the text-view
+    (setq main-view (make-scrolled-text main-shell))
+    ;; typing a character modifies the document
+    (setf (value-changed-callback main-view)
+	  (make-callback #'mark-modified doc))
+    ))
+
+(defmethod mark-modified ((doc text-editor-document) new-value)
+  "mark document as modified"
+  (declare (ignore new-value))
+  (setf (modified doc) t)
+  ;; no further value-changed-callbacks necessary
+  (setf (value-changed-callback (main-view doc)) nil))
+
+(defmethod write-to-stream ((doc text-editor-document) stream)
+  "write the document to the specified stream"
+  ;; write the current value of the text widget
+  (format stream "~s~%" (value (main-view doc))))
+
+(defmethod read-from-stream ((doc text-editor-document) stream)
+  "read the document from the specified stream"
+  ;; read and set the current value of the text widget
+  (setf (value-changed-callback (main-view doc)) nil) ;;necessary in Motif 1.1 ???
+  (setf (value (main-view doc)) (read stream))
+  (setf (value-changed-callback (main-view doc))
+	(make-callback #'mark-modified doc)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "txedit" 'text-editor-application "txedit")
+'(make-text-editor-application)
+
+4. Clock
+4.1 Functionality
+This is a simple digital clock which is updated every full second.
+                
+4.2 Implementation
+In the class clock-application the slot idle-timeout is initialized 
+to one second. As a consequence the method idle-action of the 
+application is called periodically by GINA. The default version of this 
+method does not do anything. We override the default version, so that a 
+tick message is sent to each document whenever the timeout occurs. 
+The document-shell used for the clock is somewhat unusual: It does 
+not have a menu bar and the title does not show the name of the 
+document ("Untitled 1"). The user cannot create multiple clock 
+documents and clocks cannot be saved into a file, because the 
+corresponding menu entries are missing. The shell contains just one 
+label widget. In the method tick, the label-string is updated to 
+the current time.
+4.3 Source Code
+;;;-*-Mode:LISP;Syntax: Common-Lisp; Package:clock; Base:10-*-
+
+(in-package :GINA)
+(defginapackage :clock)
+(in-package :clock)
+(setq *sccs-id* "@(#)clock.lisp	1.4  1/15/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class clock-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defclass clock-application (application)
+  ((name          :initform "Clock"          :allocation :class)
+   (document-type :initform 'clock-document  :allocation :class)
+   (signature     :initform "clock"          :allocation :class)
+   (file-type     :initform nil              :allocation :class)
+   (idle-timeout  :initform 1.0              :allocation :class))
+  (:documentation "a simple digital clock application"))
+
+(defun make-clock-application ()
+  "start the clock-application"
+  (make-application :class 'clock-application))
+
+(defmethod idle-action ((clock clock-application))
+  "periodically refresh the displayed time"
+  (loop for document in (document-list clock)
+	do (tick document)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class clock-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defclass clock-document (document)
+  ())
+
+(defmethod create-windows ((doc clock-document))
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+    (setq main-shell (make-document-shell doc :with-menu nil))
+    (setf (title main-shell) "Clock")
+    (set-motif-resources main-shell :icon-name "Clock")
+    (setq main-view (make-label main-shell " 00:00:00 "))))
+
+(defmethod tick ((doc clock-document) &aux now)
+  "one second is over => refresh the clock"
+  (with-slots (main-view) doc
+    (setq now (multiple-value-list (decode-universal-time (get-universal-time))))
+    (setf (label-string main-view)
+	  (format nil " ~2,'0d:~2,'0d:~2,'0d " (third now) (second now) (first now)))))
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "clock" 'clock-application nil)
+'(make-clock-application)
+5. Finder
+5.1 Functionality
+We also have implemented a simple Finder to start applications and 
+documents in a hierarchical file system. Its function is similar to the 
+Macintosh Finder. The contents of a directory a shown in a scrollable 
+selection-list. Several directories can be shown in different windows 
+(folders) at the same time. Double-clicking a file name opens a 
+document or starts an application. Double-clicking a subdirectory 
+creates a new finder window. Instead of double clicking the user can 
+first select a file and then press the start button.
+Using a push-button the user can go back to the parent directory. 
+When the refresh button is pressed, the contents of the directory are 
+read and displayed again. When the Finder is started it first shows the 
+current directory on UNIX machines. On a Symbolics the Finder begins 
+with the root directory.
+The size of a folder-window can be modified and stored on disk just like 
+any other document.
+                                       
+
+5.2 Implementation
+A subclass of application is defined as usual. The function AC 
+(Assisting-Computer) is introduced as a synonym for make-finder for 
+GMD purposes.
+The class finder-document contains slots for pathnames deduced 
+from the slot file-pathname of the superclass. There is an after-
+demon for the method initialize-instance, because the name of a 
+finder-document shown as the window title shall be the directory 
+portion of the pathname.
+The shell for the Finder was constructed using the Interface Builder. 
+The code generated by the Interface Builder is contained in the file 
+finder-shell.lisp. The file contains the definition of class finder-
+shell, a subclass of document-shell, and the corresponding 
+constructor function. The class has slots for the widgets which are 
+generated in the constructor function. In the method create-windows 
+we call the constructor function make-finder-shell which creates a 
+form widget containing a scrollable selection-list and some buttons. 
+The callbacks for the buttons have to be explicitly set afterwards. 
+Finally, some superfluous menu entries are removed. The Save entry is 
+replaced by Save Window Size because only the size is stored on disk.
+The Finder is somewhat unusual in that the documents correspond to 
+directories rather than normal files. Therefore, the method read-
+from-file is overridden whereas in other applications the method 
+read-from-stream is overridden. The default version of read-from-
+file opens the file, reads the header, calls create-windows and then 
+read-from-stream. The Finder version of read-from-file, however, 
+reads the header from the file finderinfo.text placed in the 
+directory, calls create-windows and then determines the list of files of 
+the directory. This list is shown in the scrollable selection-list. 
+Analogously, the method write-to-file is overridden to write the 
+header to the finderinfo file.
+To start the selected file we simply have to call the GINA function 
+start-file. If the selected file is a subdirectory, the value stored in 
+the selection-list and passed to start-file is a wildcard. It is always 
+the application with the signature "finder" which is responsible for 
+handling wildcard pathnames. So if you want to implement another 
+Finder it must replace this Finder and use the same signature.
+To refresh the file list we simply list the files contained in the directory 
+and call set-item-list for the scrollable selection-list. Subdirectories 
+are placed at the beginning of the list.
+5.3 Limitations and Extensions
+As a simple extension, it is possible to periodically check if the 
+directory was modified and refresh the file list if necessary. Facilities 
+for moving and copying files could also be added.
+
+
+
+
+
+5.4 Source Code
+;;; -*- Mode:LISP;Syntax: Common-Lisp;Package: GINA ;Base:10-*-
+
+(in-package :GINA)
+(setq *sccs-id* "@(#)finder.lisp	1.4  1/15/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class finder
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defclass finder (application)
+  (;; overrides
+   (name          :initform "Finder"          :allocation :class)
+   (document-type :initform 'finder-document  :allocation :class)
+   (signature     :initform "finder"          :allocation :class)
+   (file-type     :initform "directory"       :allocation :class)
+   ;;(idle-timeout  :initform 10                :allocation :class)
+   )
+  (:documentation "a simple menu oriented finder"))
+
+(eval-when (eval load)
+  (export 'make-finder))
+
+(defun make-finder (&key (display-host *default-display-host*)
+		         (toolkit-host *default-toolkit-host*)
+			 (document-pathname (current-directory-wildcard)))
+  "start the finder application"
+  (make-application :display-host display-host
+		    :toolkit-host toolkit-host
+		    :document-pathname document-pathname
+		    :class 'finder))
+
+(eval-when (eval load)
+  (export 'ac))
+
+(defun AC (&optional (display-host *default-display-host*)
+	             (toolkit-host *default-toolkit-host*))
+  "just a synonym for the finder"
+  (make-finder :display-host display-host
+	       :toolkit-host toolkit-host))
+
+;; impossible to find out if a directory has changed on Symbolics!!!
+;(defmethod idle-action ((finder finder))
+;  "periodically refresh the folders"
+;  (loop for folder in (document-list finder)
+;	do (refresh-file-list folder)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class finder-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass finder-document (document)
+  (;; related pathnames
+   ;; the slot file-pathname holds a wildcard like e.g. "w1:>gina>documents>*.*.newest
+   (finderinfo       :accessor finderinfo) ;; e.g."w1:>gina>documents>finderinfo.text"
+   (parent-directory :accessor parent-dir :initform nil) ;; e.g. "w1:>gina.directory"
+   ;; overrides
+   (shell-width  :initform 250)
+   (shell-height :initform 300))
+  (:documentation "the internal representaion of a folder"))
+
+(defmethod initialize-instance :after ((doc finder-document) &rest initargs)
+  "some special inits"
+  (declare (ignore initargs))
+  ;;the name of a finder document is constructed in a different way
+  (setf (name doc) (directory-namestring (file-pathname doc))))
+
+(defmethod create-windows ((doc finder-document))
+  "create a window containig a scrollable list of files and some buttons"
+  (with-slots (main-shell parent-directory) doc
+    ;; create finder-shell containing the various widgets as slots
+    (setq main-shell (make-finder-shell doc))
+
+    ;; set callback of parent button
+    (setf (activate-callback (parent-button main-shell))
+	  (make-callback #'start-file parent-directory))
+    (set-motif-resources (parent-button main-shell)
+			 :sensitive (when parent-directory t))
+
+    ;; set the callback of the start-button
+    (setf (default-action-button (file-list main-shell)) (start-button main-shell))
+    (setf (activate-callback (start-button main-shell))
+	  (make-callback #'start-selected-file doc))
+
+    ;; set the callback of the refresh-button
+    (setf (activate-callback (refresh-button main-shell))
+	  (make-callback #'refresh-file-list doc))
+
+    ;; remove or modify some main menu entries
+    (remove-menu-entry (main-menu main-shell) "File" "New")
+    (remove-menu-entry (main-menu main-shell) "File" "Open..")
+    (remove-menu-entry (main-menu main-shell) "File" "Minifinder")
+
+    ;; saving a documnet means storing its size
+    (setf (label-string (save-menu-entry doc)) "Save Window Size")
+    (setf (sensitive    (save-menu-entry doc)) t)
+    
+    (remove-menu-entry (main-menu main-shell) "File" "Save as..")
+    (remove-menu-entry (main-menu main-shell) "File" "Revert")
+
+    (remove-menu-entry (main-menu main-shell) "Edit" "Undo")
+    (remove-menu-entry (main-menu main-shell) "Edit" "Redo")
+    (remove-menu-entry (main-menu main-shell) "Edit" "Replay History")
+    (remove-menu-entry (main-menu main-shell) "Edit" "History Scroller")
+    
+    ))
+
+
+
+
+
+
+(defmethod read-from-file ((doc finder-document) wildcard-pathname &key (create-windows t))
+  "list the directory instead of normally reading the file"
+  (declare (ignore create-windows))
+  ;; the parameter is a wildcard rather than a specific file !!
+  ;; wildcard-pathname is of the form "w1:>gina>documents>*.*.newest"
+  (with-slots (finderinfo parent-directory main-shell) doc
+
+    ;; something like "w1:>gina>documents>finderinfo.text"
+    (setq finderinfo (make-pathname :name "finderinfo" :type "text"
+				    :defaults wildcard-pathname))
+
+    ;; something like "w1:>gina.directory"
+    (when (not (root-directory-p wildcard-pathname))
+      (setq parent-directory (parent-directory-wildcard wildcard-pathname)))
+
+    ;; read the finderinfo file placed in the directory if any
+    (when (probe-file finderinfo)
+      (with-open-file (stream finderinfo :direction :input)
+	(read-header-from-stream doc stream)))
+
+    ;; now that we know the size, we can create the windows
+    (create-windows doc)
+
+    ;; show the wildcard in the label
+    (setf (label-string (directory-label main-shell))
+	  (directory-namestring wildcard-pathname))
+
+    ;; make a view containing the filenames and put it into the scroller
+    (refresh-file-list doc)))
+
+(defmethod write-to-file ((doc finder-document) pathname)
+  "write the finderinfo to the directory"
+  (declare (ignore pathname))
+  (with-open-file (stream (finderinfo doc) :direction :output :if-exists :new-version)
+    (write-header-to-stream doc stream)))
+
+(defmethod start-selected-file ((doc finder-document))
+  "start the file which has been selected in the file-list"
+  (with-clock-cursor
+    (start-file (value (file-list (main-shell doc))) :from-document doc)))
+
+(defmethod refresh-file-list ((doc finder-document) &aux files items)
+  "read the directory again and build a new file-list"
+  (with-slots (file-pathname main-shell) doc
+    (with-clock-cursor
+      ;; make an item-list of the filenames and put it into the scroller
+      (setq files (sort (directory file-pathname) #'pathname-name<))
+      (setq items
+	    (append
+	      (loop for file in files
+		    when (directoryp file)
+		      collect (list (concatenate 'string "-> " (pathname-name file))
+				    (subdirectory-wildcard file)))
+	      (loop for file in files
+		    when (not (directoryp file))
+		      collect (list (name-and-type file) file))))
+
+      ;; change the item list
+      (set-item-list (file-list main-shell) items)
+      )))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "finder" 'finder "directory")
+'(make-finder)
+Code generated by Interface Builder:
+;;;-*-Mode:LISP; Syntax: Common-Lisp;Package:gina;-*-
+
+;; !!! Do not edit !!!
+;; This code was generated by the GINA Interface Builder.
+
+(in-package :gina)
+
+(defclass finder-shell
+          (document-shell)
+          ((form :accessor form) (parent-button :accessor parent-button)
+           (directory-label :accessor directory-label)
+           (file-list :accessor file-list) (button-row :accessor button-row)
+           (start-button :accessor start-button)
+           (refresh-button :accessor refresh-button))
+          (:documentation ""))
+(defun make-finder-shell (doc &key (initargs nil) (motif-resources nil)
+                          (class 'finder-shell) &aux box)
+  (setq box
+        (make-document-shell
+          doc
+          :class
+          class
+          :initargs
+          initargs
+          :motif-resources
+          motif-resources))
+  (setf (form box) (make-form box :name "form"))
+  (setf (parent-button box)
+        (make-push-button (form box) "Parent Directory" :name "parent-button"))
+  (setf (directory-label box)
+        (make-label (form box) "/home/spenke" :name "directory-label"))
+  (setf (file-list box)
+        (make-scrollable-selection-list
+          (form box)
+          '("file1" "file2" "file3")
+          :name
+          "file-list"))
+  (setf (button-row box)
+        (make-row-column
+          (form box)
+          :name
+          "button-row"
+          :orientation
+          :horizontal
+          :spacing
+          50))
+  (setf (start-button box)
+        (make-push-button
+          (button-row box)
+          " Open "
+          :name
+          "start-button"
+          :recompute-size
+          nil))
+  (setf (refresh-button box)
+        (make-push-button
+          (button-row box)
+          " Refresh "
+          :name
+          "refresh-button"
+          :recompute-size
+          nil))
+  (define-form-constraint
+    (parent-button box)
+    :top-attachment
+    :form
+    :top-offset
+    10
+    :left-attachment
+    :form
+    :left-offset
+    10
+    :right-attachment
+    :none
+    :bottom-attachment
+    :none)
+  (define-form-constraint
+    (directory-label box)
+    :top-attachment
+    :widget
+    :top-widget
+    (parent-button box)
+    :top-offset
+    10
+    :left-attachment
+    :form
+    :left-offset
+    10
+    :right-attachment
+    :none
+    :bottom-attachment
+    :none)
+  (define-form-constraint
+    (file-list box)
+    :top-attachment
+    :widget
+    :top-widget
+    (directory-label box)
+    :top-offset
+    10
+    :left-attachment
+    :form
+    :left-offset
+    10
+    :right-attachment
+    :form
+    :right-offset
+    10
+    :bottom-attachment
+    :widget
+    :bottom-widget
+    (button-row box)
+    :bottom-offset
+    10)
+  (define-form-constraint
+    (button-row box)
+    :top-attachment
+    :none
+    :left-attachment
+    :form
+    :left-offset
+    10
+    :right-attachment
+    :none
+    :bottom-attachment
+    :form
+    :bottom-offset
+    9)
+  box)
+6. Graphic-Editor
+                                                          
+6.1 Functionality
+Using this editor, circles and rectangles can be drawn, selected, moved, 
+and resized using the mouse. The view is automatically scrolled if the 
+mouse is moved outside while dragging or drawing an object. All 
+commands are undoable. The history scroller can be used to travel 
+through the command history. If necessary, the view is scrolled, to 
+show the effect of an undo or redo operation.
+The palette on the left is used to select the desired mode. In select 
+mode existing objects can be selected by either clicking the mouse into 
+them or dragging a dashed rectangle around them. Objects can be 
+moved around if the mouse is held down and moved. If one of the four 
+little resize handles is hit an object is resized. In rectangle and circle 
+mode new rectangles (circles) are drawn even if the mouse goes down 
+in an existing object. Squares and true circles with equal width and 
+height are drawn, when pressing the left mouse button with shift for 
+dragging. The three remaining modes are not implemented.
+There is a main menu entry Clear All which can be used to delete all 
+objects.
+6.2 Implementation
+The palette is implemented as a radio button group with a pixmap for 
+each button. Each item in the item list consists of a pathname and 
+keyword for the mode. When a radio button is pressed, the method 
+set-mode of class graphic-editor-view is called. Form constraints 
+define that the size of the palette is fixed and the size of the scroller 
+containing the drawing area is variable.
+When a document is saved, the representation of each object is written 
+in a loop. The representation of each object begins with a keyword for 
+the type of object (:circle or :rectangle). Before that, the number of 
+objects is written, so that it is easier to read in the description later. 
+When a document is read from a stream, we have to deinstall any 
+existing objects first, because we can be in a revert command. There 
+are read-from-stream methods specialized for the keywords :circle 
+and :rectangle which create new objects from the parameters found 
+in the input stream. 
+When a mouse button is pressed in the graphic editor view, a mouse 
+command is created depending on the currently selected mode. When 
+the drawing mode is changed, the slot propagate-button-press of 
+class view is also modified, because in circle and rectangle mode 
+button-press messages are handled directly by the view while in 
+select mode button-press is passed to the object hit (if any).
+The class rectangle is a straightforward subclass of direct-
+manipulation-object which overrides the method draw to define the 
+shape of a rectangle. Facilities for moving, selecting and resizing 
+objects are inherited by the superclass. The method constrain-size 
+is overridden to guarantee the a square remains a square.
+The class circle is implemented analogously to class rectangle, but 
+in addition the method draw-outline is overridden. This method is 
+responsible for drawing the feedback while an object is moved or 
+resized. The default feedback is a dashed rectangle but we prefer a 
+dashed circle.
+A rectangle-drawer is a special kind of mouse-down-command. The 
+feedback is a dashed rubberband rectangle. The mouse coordinates 
+used in the command are constrained so that the feedback rectangle 
+always has positive width and height. If shift is held down the 
+minimum of width and height is used for both so that a square is 
+drawn. In the method doit a new rectangle is created and installed in 
+the view. In case of a redo, doit is also called and just installs the 
+already existing rectangle. Alternatively, we could have overridden the 
+method redoit which by default calls doit. To undo the command the 
+rectangle is deinstalled. Note that view-objects can - other than 
+widgets - exist without having a parent. The class circle-drawer is 
+implemented analogously.
+A clear-all-command stores the list of objects being cleared, so that 
+they can be installed again in undoit.
+6.3 Limitations and Extensions
+The commands and graphical objects for the remaining modes shown in 
+the palette could be implemented as a simple and straightforward 
+extension of this demo. 
+Currently, circles are selected even if the the mouse is clicked outside 
+the circle itself, but the enclosing rectangle is hit. To fix this problem, 
+the method point-inside of class circle could be overridden to check 
+more precisely, whether a point lies inside the circle. The default 
+method just checks if the enclosing rectangle is hit.
+The next step towards a serious graphic editor would be to add 
+attributes like line width to the objects and to modify the graphic 
+contexts in the draw methods accordingly.
+6.4 Source Code
+;;;-*-Mode:LISP;Syntax: Common-Lisp;Package:gredit;Base:10-*-
+
+(in-package :GINA)
+(defginapackage :gredit) 
+(in-package :gredit)
+(setq *sccs-id* "@(#)graphic-editor.lisp	1.7  1/20/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class graphic-editor-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass graphic-editor-application (application)
+  (;; overrides
+   (name                 :initform "Graphic Editor"         :allocation :class)
+   (document-type        :initform 'graphic-editor-document :allocation :class)
+   (signature            :initform "gredit"                 :allocation :class)
+   (file-type            :initform "gredit"                 :allocation :class))
+  (:documentation "a simple graphic editor application"))
+
+(defun make-graphic-editor-application ()
+  "start the graphic-editor-application"
+  (make-application :class 'graphic-editor-application))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class graphic-editor-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass graphic-editor-document (document)
+  (;; overrides
+   (shell-width  :initform 400)
+   (shell-height :initform 500))
+  (:documentation "application dependent document type"))
+
+(defmethod create-windows ((doc graphic-editor-document)
+			   &aux scroller form radio-group)
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+    (setq main-shell (make-document-shell doc))
+    ;; create a form containing the different parts
+    (setq form      (make-form main-shell))
+    (setq scroller  (make-scroller form))    
+    (setq main-view (make-graphic-editor-view scroller doc))
+    (setq radio-group
+	  (make-radio-button-group form
+			   '(("arrow"     :select-mode)
+                             ("rectangle" :rect-mode)
+			     ("circle"    :circle-mode)
+			     ("line"      :line-mode)
+			     ("triangle"  :poly-mode)
+                             ("glyph"     :text-mode))
+                           :value-changed-callback
+                              (make-callback #'set-mode main-view)
+			   :button-label-type :pixmap
+			   :button-resources '(:shadow-thickness 3)))
+    
+    ;; layout definition:
+    (define-form-constraint radio-group
+			    :top-attachment :form
+			    :left-attachment :form)
+    (define-form-constraint scroller
+			    :left-attachment :widget :left-widget radio-group
+			    :top-attachment :form 
+			    :right-attachment :form
+			    :bottom-attachment :form)
+    
+    ;; add some menu commands
+    (add-menu-command (main-menu main-shell)
+		      "Draw" "Clear All"
+		      (make-callback #'make-clear-all-command doc))
+    ))
+
+
+
+
+(defmethod write-to-stream ((doc graphic-editor-document) stream)
+  "write the document to the specified stream"
+  ;; write number of objects
+  (format stream "~d~%" (length (view-objects (main-view doc))))
+  
+  ;; write all objects
+  (loop for object in (view-objects (main-view doc))
+	do (write-to-stream object stream)))
+
+(defmethod read-from-stream ((doc graphic-editor-document) stream
+			     &aux nr-of-objects) 
+  "read the document from the specified stream"
+  ;; deinstall existing objects
+  (loop for object in (view-objects (main-view doc))
+	do (deinstall object))
+  
+  ;; read number of objects
+  (setq nr-of-objects (read stream))
+
+  ;; read positions of objects
+  (loop repeat nr-of-objects
+	as class = (read stream)
+	do (install (read-from-stream class stream)
+		    (main-view doc) (read stream) (read stream)) ;; x-pos y-pos
+	   ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class graphic-editor-view
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass graphic-editor-view (view)
+  ((drawing-mode :accessor drawing-mode :initform :select-mode))
+  (:documentation "a view with special reaction to clicks"))
+
+(defun make-graphic-editor-view (parent doc)
+  (make-view parent
+	     :width 1000 :height 1000 :document doc
+	     :class 'graphic-editor-view))
+
+(defmethod button-press ((view graphic-editor-view) code repetition x y)
+  "react to button-press event in the window"
+  (declare (ignore repetition))
+  (case (drawing-mode view)
+    (:select-mode  (make-object-selector  view x y code))
+    (:rect-mode    (make-rectangle-drawer view x y code))
+    (:circle-mode  (make-circle-drawer    view x y code))))
+
+(defmethod set-mode ((view graphic-editor-view) new-mode old-mode)
+  "depending on the palette, button-press is propagated to the objects or not"
+  (declare (ignore old-mode))
+  (with-slots (drawing-mode propagate-button-press) view
+    (setq drawing-mode new-mode)
+    (setq propagate-button-press (eql drawing-mode :select-mode))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class rectangle
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass rectangle (direct-manipulation-object)
+  (;;overrides
+   (facilities :initform :resizable :allocation :class
+	       :documentation "rectangles can be moved, selected and resized")
+   (outlines   :initform t          :allocation :class
+	       :documentation
+	       "just move an outline of the object, not the object itself")
+   (ensure-square :accessor ensure-square :initarg :ensure-square))
+  (:documentation "a rectangular object in the view"))
+
+(defun make-rectangle (width height &key (ensure-square nil))
+  (make-direct-manipulation-object 
+   width height :class 'rectangle
+   :initargs (list :ensure-square ensure-square)))
+
+(defmethod draw ((rect rectangle) count x y width height)
+  "draw rect into the view"
+  (declare (ignore x y width height))
+  (when (zerop count) ;; Ignore all but the last exposure event
+    (draw-rectangle rect 0 0 (width rect) (height rect))))
+
+
+(defmethod constrain-size ((rect rectangle) width height)
+  "make sure that width and height remain equal"
+  (if (not (ensure-square rect))
+      ;; just return width and height unmodified
+      (values width height)
+    ;; else: compute minimum
+    (values (min width height) (min width height))))
+
+
+(defmethod write-to-stream ((rect rectangle) stream)
+  "write textual representation of a rectangle to stream"
+  (with-slots (x-pos y-pos width height) rect
+    (format stream ":rectangle ~d ~d ~d ~d~%" width height x-pos y-pos)))
+
+(defmethod read-from-stream ((class (eql :rectangle)) stream)
+  "create a rectangle from its textual representation"
+  (make-rectangle (read stream) (read stream)))  ;; width height
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class circle
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass circle (direct-manipulation-object)
+  (;;overrides
+   (facilities :initform :resizable  :allocation :class)
+   (outlines   :initform t           :allocation :class)
+   (ensure-true-circle :accessor ensure-true-circle 
+		       :initarg :ensure-true-circle))
+  (:documentation "a circle in the view"))
+
+(defun make-circle (width height &key (ensure-true-circle nil))
+  (make-direct-manipulation-object 
+   width height :class 'circle
+   :initargs (list :ensure-true-circle ensure-true-circle)))
+
+(defmethod draw ((cc circle) count x y width height)
+  "draw circle into the view"
+  (declare (ignore x y width height))
+  (when (zerop count) ;; Ignore all but the last exposure event
+    (draw-arc cc 0 0 (width cc) (height cc) 0 (* 2 pi))))
+
+(defmethod draw-outline ((cc circle) new-x new-y width height &key clear)
+  "draw circular outline"
+  (declare (ignore clear))
+  (with-slots (parent-view) cc
+    (xlib:with-gcontext ((gcontext parent-view) :line-style :dash)
+      (draw-arc parent-view new-x new-y width height 0 (* 2 pi)))))
+
+(defmethod constrain-size ((cc circle) width height)
+  "make sure that width and height remain equal"
+  (if (not (ensure-true-circle cc))
+      ;; just return width and height unmodified
+      (values width height)
+    ;; else: compute minimum
+    (values (min width height) (min width height))))
+
+(defmethod write-to-stream ((obj circle) stream)
+  "write textual representation of object to stream"
+  (with-slots (x-pos y-pos width height) obj
+    (format stream ":circle ~d ~d ~d ~d~%" 
+                   width height x-pos y-pos)))
+
+(defmethod read-from-stream ((class (eql :circle)) stream)
+  "create a circle from its textual representation"
+  (make-circle (read stream) (read stream)))  ;; width height
+       
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class rectangle-drawer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass rectangle-drawer (mouse-down-command)
+  (;; overrides
+   (name :initform "Draw Rectangle" :allocation :class)
+   (hysteresis :initform 5          :allocation :class)
+   ;; instance-variables
+   (shift-pressed :accessor  shift-pressed :initarg :shift-pressed)
+   (new-rectangle :accessor new-rectangle :initform nil))
+  (:documentation "a mouse-down-command to draw a rectangle"))
+
+(defun make-rectangle-drawer (view x y code)
+  (make-mouse-down-command (document view) view x y
+			   :cursor :crosshair
+			   :class 'rectangle-drawer
+			   :initargs (list :shift-pressed (eq code :extend))))
+
+(defmethod constrain-mouse ((cmd rectangle-drawer) x y &aux edge-length)
+  "make sure width and height of outline is > 0; ensure square"
+  (with-slots (start-x start-y shift-pressed) cmd
+    (setq x (max x (1+ start-x)))
+    (setq y (max y (1+ start-y)))
+    (when shift-pressed
+      ;; we draw a square
+      (setq edge-length (min (- x start-x) (- y start-y)))
+      (setq x (+ start-x edge-length))
+      (setq y (+ start-y edge-length))))
+  (values x y))
+
+(defmethod draw-feedback ((cmd rectangle-drawer) x y &key clear)
+  "draw rectangular feedback"
+  (declare (ignore clear))
+  (with-slots (start-x start-y view) cmd
+    (xlib:with-gcontext ((gcontext view) :line-style :dash)
+      (draw-rectangle view start-x start-y (- x start-x)  (- y start-y)))))
+
+(defmethod doit ((cmd rectangle-drawer))
+  "install the specified rectangle"
+  (with-slots (start-x start-y last-x last-y view 
+		       new-rectangle shift-pressed) cmd
+    (when (not new-rectangle)
+      (setq new-rectangle (make-rectangle (- last-x start-x) (- last-y start-y)
+					  :ensure-square shift-pressed)))
+    (install new-rectangle view start-x start-y)
+    ))
+
+(defmethod undoit ((cmd rectangle-drawer))
+  "deinstall the specified rectangle again"
+  (with-slots (new-rectangle) cmd
+    (deinstall new-rectangle)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class circle-drawer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass circle-drawer (mouse-down-command)
+  (;; overrides
+   (name :initform "Draw Circle"    :allocation :class)
+   (hysteresis :initform 5          :allocation :class)
+   ;; instance-variables
+   (shift-pressed :accessor  shift-pressed :initarg :shift-pressed)
+   (new-circle :accessor new-circle :initform nil))
+  (:documentation "a mouse-down-command to draw a circle"))
+
+(defun make-circle-drawer (view x y code)
+  (make-mouse-down-command (document view) view x y
+			   :cursor :crosshair
+			   :class 'circle-drawer
+			   :initargs (list :shift-pressed (eq code :extend))))
+
+(defmethod constrain-mouse ((cmd circle-drawer) x y &aux diameter)
+  "make sure width and height of outline is > 0"
+  (with-slots (start-x start-y shift-pressed) cmd
+    (setq x (max x (1+ start-x)))
+    (setq y (max y (1+ start-y)))
+    (when shift-pressed
+      ;; we draw a true circle
+      (setq diameter (min (- x start-x) (- y start-y)))
+      (setq x (+ start-x diameter))
+      (setq y (+ start-y diameter))))
+  (values x y))
+
+(defmethod draw-feedback ((cmd circle-drawer) x y &key clear)
+  "draw circular feedback"
+  (declare (ignore clear))
+  (with-slots (start-x start-y view) cmd
+    (xlib:with-gcontext ((gcontext view) :line-style :dash)
+      (draw-arc view start-x start-y (- x start-x) (- y start-y) 0 (* 2 pi)))))
+
+(defmethod doit ((cmd circle-drawer))
+  "install the specified circle"
+  (with-slots (start-x start-y last-x last-y view new-circle shift-pressed) cmd
+    (when (not new-circle)
+      (setq new-circle (make-circle (- last-x start-x) (- last-y start-y)
+				    :ensure-true-circle shift-pressed)))
+    (install new-circle view start-x start-y)))
+
+(defmethod undoit ((cmd circle-drawer))
+  "deinstall the specified circle again"
+  (with-slots (new-circle) cmd
+    (deinstall new-circle)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class clear-all-command
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass clear-all-command (command)
+  (;; overrides
+   (name :initform "Clear All Command" :allocation :class)
+   ;; instance-parameters
+   (objects :accessor objects :initarg :objects
+	    :documentation "objects being cleared"))
+  (:documentation "a command to delete all objects"))
+
+(defun make-clear-all-command (document)
+  "create a new command object with appropriate parameters"
+  (make-command document
+		:class 'clear-all-command
+		:initargs `(:objects ,(view-objects (main-view document)))))
+
+(defmethod doit ((cmd clear-all-command))
+  "delete all objects from the view"
+  (loop for object in (objects cmd)
+	do (deinstall object)))
+
+(defmethod undoit ((cmd clear-all-command))
+  "reinstall all objects in the view"
+  (loop for object in (objects cmd)
+	do (install object (main-view (document cmd))
+		    (x-pos object) (y-pos object))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(register-application "gredit" 'graphic-editor-application "gredit")
+'(make-graphic-editor-application) 
+7. Graphic-Output
+7.1 Functionality
+This demo just shows the use of the graphics primitives of the X 
+Window System. In the main view several rectangles, circles, lines etc. 
+are shown. There are three modeless dialog boxes to change attributes 
+of the graphics context like line width, arc mode etc. The changes are 
+immediately reflected in the view.
+                                                                   
+
+7.2 Implementation
+The main view of this application has a draw method which calls 
+methods like draw-rectangle, draw-arc, etc. These methods directly 
+correspond to the CLX functions with the same name (which they call). 
+However, they do not have a gcontext parameter. Instead, the slot 
+gcontext of class view is passed to each CLX function. Therefore, 
+changes to the gcontext of the view caused by the dialog boxes affect 
+the result of the calls to draw-rectangle etc. In some cases, attributes 
+of the graphics contexts are explicitly set with the macro with-
+gcontext. For example, the first text line is always in font 6x10.
+Each dialog box is created when it is used for the first time. Later, we 
+just call pop-up for the existing box. In each callback an attribute of 
+the gcontext is modified.
+7.3 Source Code
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: output;Base: 10 -*-
+
+(in-package :GINA)
+(defginapackage :output)
+(in-package :output)
+(setq *sccs-id* "@(#)graphic-output.lisp	1.4  1/15/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class graphic-output-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass graphic-output-application (application)
+  (;; overrides
+   (name          :initform "Graphic Output"          :allocation :class)
+   (document-type :initform 'graphic-output-document  :allocation :class)
+   (signature     :initform "output"                  :allocation :class)
+   (file-type     :initform "output"                  :allocation :class)))
+
+(defun make-graphic-output-application ()
+  "start the graphic-output-application"
+  (make-application :class 'graphic-output-application))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class graphic-output-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass graphic-output-document (document)
+  (;; instance-variables
+   (line-dialog :accessor line-dialog :initform nil)
+   (fill-dialog :accessor fill-dialog :initform nil)
+   (font-dialog :accessor font-dialog :initform nil)
+   ;; overrides
+   (shell-width  :initform 500)
+   (shell-height :initform 500)))
+
+(defmethod create-windows ((doc graphic-output-document))
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+    ;; create a simple document-shell
+    (setq main-shell (make-document-shell-with-scroller doc))
+    ;; create the view
+    (setq main-view (make-graphic-output-view  main-shell doc))
+    
+    ;; add some menu commands
+    (add-menu-command (main-menu main-shell)
+		      "GContext" "Line ..."
+		      (make-callback #'display-line-dialog doc))
+    (add-menu-command (main-menu main-shell)
+		      "GContext" "Fill ..."
+		      (make-callback #'display-fill-dialog doc))
+    (add-menu-command (main-menu main-shell)
+		      "GContext" "Font ..."
+		      (make-callback #'display-font-dialog doc))
+
+    ;; remove unnecessary menu entries
+    (remove-menu-entry (main-menu main-shell) "File" "Open..")
+    (remove-menu-entry (main-menu main-shell) "File" "Save")
+    (remove-menu-entry (main-menu main-shell) "File" "Save as..")
+    (remove-menu-entry (main-menu main-shell) "File" "Revert")
+
+    (remove-menu-entry (main-menu main-shell) "Edit" "Undo")
+    (remove-menu-entry (main-menu main-shell) "Edit" "Redo")
+    (remove-menu-entry (main-menu main-shell) "Edit" "Replay History")
+    (remove-menu-entry (main-menu main-shell) "Edit" "History Scroller")
+
+    ))
+
+(defmethod display-line-dialog ((doc graphic-output-document) &aux column)
+  "pop-up gcontext dialog, create if necessary"
+  (with-slots (line-dialog main-view) doc
+    (when (not line-dialog)
+      (setq line-dialog (make-modeless-dialog-box "Line Attributes" :document doc))
+      (setq column (make-row-column line-dialog))
+      ;; a scale to adjust the line width
+      (make-scale column
+		  :orientation :horizontal
+		  :title-string "line-width"
+		  :minimum 0 :maximum 10 :value 0
+		  :value-changed-callback
+		  `(lambda (new)
+		     (setf (xlib:gcontext-line-width ',(gcontext main-view)) new)
+		     (force-redraw ',main-view)))
+
+      ;; radio button group for line style
+      (make-radio-button-group
+	column '((":solid" :solid)
+		 (":dash" :dash)
+		 (":double-dash" :double-dash))
+	:label-string "line-style"
+	:value-changed-callback
+	`(lambda (new old)
+	   (setf (xlib:gcontext-line-style ',(gcontext main-view)) new)
+	   (force-redraw ',main-view)))
+
+      
+      ;; radio button group for join-style
+      (make-radio-button-group
+	column '((":miter" :miter)
+		 (":round" :round)
+		 (":bevel" :bevel))
+	:label-string "join-style"
+	:value-changed-callback
+	`(lambda (new old)
+	   (setf (xlib:gcontext-join-style ',(gcontext main-view)) new)
+	   (force-redraw ',main-view)))
+
+      ;; radio button group for cap-style
+      (make-radio-button-group
+	column '((":not-last" :not-last)
+		 (":butt" :butt)
+		 (":round" :round)
+		 (":projecting" :projecting))
+	:label-string "cap-style"
+	:value-changed-callback
+	`(lambda (new old)
+	   (setf (xlib:gcontext-cap-style ',(gcontext main-view)) new)
+	   (force-redraw ',main-view)))
+      )
+    (pop-up line-dialog)))
+
+(defmethod display-fill-dialog ((doc graphic-output-document) &aux column)
+  "create modeless dialog box"
+  (with-slots (fill-dialog main-view) doc
+    (when (not fill-dialog)
+      (setq fill-dialog (make-modeless-dialog-box "Fill Attributes" :document doc))
+      (setq column (make-row-column fill-dialog))
+ 
+      ;; radio button group for fill style
+      (make-radio-button-group
+	column '((":solid" :solid)
+		 (":tiled" :tiled)
+		 (":opaque-stippled" :opaque-stippled)
+		 (":stippled" :stippled))
+	:label-string "fill-style"
+	:value-changed-callback
+	`(lambda (new old)
+	   (setf (xlib:gcontext-fill-style (gcontext (main-view ',doc))) new)
+	   (force-redraw (main-view ',doc))))
+
+      ;; radio button group for fill rule
+      (make-radio-button-group 
+	column '((":even-odd" :even-odd)
+		 (":even-odd" :winding))
+	:label-string "fill-rule"
+	:value-changed-callback
+	`(lambda (new old)
+	   (setf (xlib:gcontext-fill-rule (gcontext (main-view ',doc))) new)
+	   (force-redraw (main-view ',doc))))
+
+
+      ;; radio button group for arc-mode
+      (make-radio-button-group
+	column '((":chord" :chord)
+		 (":pie-slice" :pie-slice))
+	:label-string "arc-mode"
+	:value-changed-callback
+	`(lambda (new old)
+	   (setf (xlib:gcontext-arc-mode (gcontext (main-view ',doc))) new)
+	   (force-redraw (main-view ',doc))))
+
+      ;; option-menu for drawing-function
+      (make-option-menu
+	column `(("boole-clr" ,boole-clr)
+		 ("boole-set" ,boole-set)
+		 ("boole-1" ,boole-1)
+		 ("boole-2" ,boole-2)
+		 ("boole-c1" ,boole-c1)
+		 ("boole-c2" ,boole-c2)
+		 ("boole-and" ,boole-and)
+		 ("boole-ior" ,boole-ior)
+		 ("boole-xor" ,boole-xor)
+		 ("boole-eqv" ,boole-eqv)
+		 ("boole-nand" ,boole-nand)
+		 ("boole-nor" ,boole-nor)
+		 ("boole-andc1" ,boole-andc1)
+		 ("boole-andc2" ,boole-andc2)
+		 ("boole-orc1" ,boole-orc1)
+		 ("boole-orc2" ,boole-orc2))
+	:label-string "drawing-function"
+	:initial-value boole-1
+	:value-changed-callback
+	`(lambda (new old)
+	   (setf (xlib:gcontext-function (gcontext (main-view ',doc))) new)
+	   (force-redraw (main-view ',doc))))
+    
+      )
+    (pop-up fill-dialog)))
+
+(defmethod display-font-dialog ((doc graphic-output-document) &aux column font-list)
+  "create modeless dialog box"
+  (with-slots (font-dialog main-view) doc
+    (when (not font-dialog)
+      (setq font-dialog (make-modeless-dialog-box "Fonts" :document doc))
+      (setq column (make-row-column font-dialog))
+ 
+      ;; font menu
+      (setq font-list
+	    (make-scrollable-selection-list column (xlib:list-font-names *display* "*")))
+      (setf (default-action-button font-list)
+	    (make-push-button column "Change Font"
+			      :activate-callback
+			      `(lambda ()
+				 (setf (xlib:gcontext-font (gcontext (main-view ',doc)))
+				       (value ',font-list))
+				 (force-redraw (main-view ',doc)))))
+      )
+    (pop-up font-dialog)))
+
+'(with-application-stopped
+   (print (xlib:list-font-names *display* "*x*")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class graphic-output-view
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass graphic-output-view (view)
+  ()
+  (:documentation "a view with special draw method"))
+
+(defun make-graphic-output-view (parent document)
+  (make-view parent
+	     :width 600 :height 800 :document document
+	     :backing-store t
+	     :class 'graphic-output-view))
+
+(defmethod draw ((view graphic-output-view) count x y width height)
+  "draw window contents"
+  (declare (ignore x y width height))
+  (with-slots (gcontext document) view
+    (when (zerop count) ;; Ignore all but the last exposure event
+	
+      ;; draw some rectangles
+      ;;(draw-rectangle view x y width height &optional fill-p)
+      (draw-rectangle view 5  5 40 40 t)
+      (xlib:with-gcontext (gcontext :line-width 4)
+	(draw-rectangle view 50 5 40 40 nil))
+
+      ;; draw some arcs
+      ;;(draw-arc view x y width height angle1 angle2 &optional fill-p)
+      (draw-arc view 5  100 40 40 0 (* 2 pi) t)
+      (draw-arc view 50 100 40 40 0 (* 2 pi) nil)
+
+      (draw-arc view 100 100 40 40 0 (* 0.5 pi) t)
+      (draw-arc view 150 100 40 40 0 (* 0.5 pi) nil)
+
+      ;; draw some lines and points
+      (draw-line view 5 150 100 150)
+      (draw-lines view '(220 150 260 170 240 120 220 170) :fill-p t)
+      (draw-points view '(1 160 4 160 9 160 16 160 25 160 36 160 49 160 64 160 81 160 100 160))
+
+      ;; draw some text in different fonts
+      (xlib:with-gcontext (gcontext :font "6x10")
+	(draw-glyphs view 5 200 "This is a text in font 6x10"))
+      (draw-glyphs view 5 230 "This is a text in a variable font")
+      )))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "output" 'graphic-output-application "output")
+'(make-graphic-output-application)
+8. Bitmap-Editor
+                                                           
+8.1 Functionality
+Bitmaps can be edited by holding down and moving one of the three 
+mouse buttons. Using the left mouse button, the user can set pixels. 
+The middle button is used to clear pixels and the right button is used to 
+toggle pixels. On a one-button mouse, the shift and control-shift keys 
+are used instead of the middle and right button. Full undo/redo is 
+possible for edit operations.
+There are two views showing the bitmap. In the small view the bitmap 
+is shown in original size and in the big view each pixel is shown as a 
+large square. The size of these squares can be modified with the scale 
+right below the main menu. The mouse can be pressed in any of the 
+views and changes are immediately reflected in both views. 
+The number of rows and columns of the bitmap can be modified using 
+two scales in a modeless dialog box. To display the dialog box the menu 
+entry Set Size is selected. The size of a bitmap can be temporarily 
+modified without losing the contents of the bitmap. The menu entry 
+Adapt Shell Size resizes the shell, so that the full bitmap is shown 
+and no scrolling is necessary.
+Using the menu entries Clear All and Set All all pixels can be 
+cleared or set.
+8.2 Implementation
+The class bitmap-document contains the internal representation of a 
+bitmap. The bitmap is stored as a list of the coordinates of the black 
+pixels. There are methods to set, clear, and toggle single pixels which 
+change the internal representation and also reflect the changes in the 
+two views. 
+When a bitmap is written to a file, only the the coordinates which lie 
+within the current size of the bitmap are written. The external 
+representation is a list of pairs. When a document is read from a file, 
+the new size of the bitmap is indicated in the scale widgets and the 
+views are resized. 
+The method change-params is called when any of the three scales is 
+operated. It resizes (and thus redraws) the two views.
+The dialog box is created when it is used for the first time. Later, we 
+just call pop-up for the existing box. The method adapt-shell-size 
+corresponds to the main menu entry. It resizes the main shell, so that 
+the full bitmap is shown. It might not work precisely if different fonts 
+are used.
+The class bitmap-view is used for both views of the application. The 
+mini view does not have a gap between the individual pixels. In method 
+button-press a command object is created, depending on which 
+button is pressed. GINA passes a virtual button code to button-press. 
+Therefore, the application does not have to care about one, two, and 
+three button mice.
+There are methods to set or clear individual pixels. The method draw 
+just sets all black pixels in a loop.
+The three mouse commands for pixel editing are quite similar. They 
+are created when one of the mouse buttons goes down in any of the 
+views. There is no feedback drawn, instead pixels are directly modified 
+in method track-mouse, which is called each time the mouse moves. In 
+this method x and y of the mouse position are translated into 
+coordinates for the bitmap. Next, it is checked if a new square is under 
+the mouse, or if the mouse has been moved inside a square 
+representing a pixel. Only if at least one pixel is changed in a 
+command, the slot call-doit is set, so that it is really submitted. The 
+method doit remains empty because everything is already done in 
+track-mouse. In undoit and redoit the pixels collected by track-
+mouse are changed again.
+Finally, there is the class clear-all-command. Note that this class is 
+used for both the Set All and Clear All menu entries. Therefore, the 
+name slot has instance allocation, i.e. it may have a different value in 
+two instances. To make the command undoable, the current bitmap is 
+stored in each command object and can later be redisplayed. 
+8.3 Limitations and Extensions
+For a more efficient implementation an array should be used to hold 
+the bitmap. Furthermore, it should be possible to write out a bitmap in 
+the C language format used for Motif icons, buttons, etc.
+8.4 Source Code
+;;;-*-Mode:LISP;Syntax: Common-Lisp;Package: bitedit;Base:10-*-
+
+(in-package :GINA)
+(defginapackage :bitedit)
+(in-package :bitedit)
+(setq *sccs-id* "@(#)bitmap-editor.lisp	1.5  1/17/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; class bitmap-editor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass bitmap-editor (application)
+  (;; overrides
+   (name                 :initform "Bitmap Editor"  :allocation :class)
+   (document-type        :initform 'bitmap-document :allocation :class)
+   (signature            :initform "bitedit"        :allocation :class)
+   (file-type            :initform "bitmap"         :allocation :class))
+  (:documentation "a simple bitmap editor application"))
+
+(defun make-bitmap-editor ()
+  "start the bitmap-application"
+  (make-application :class 'bitmap-editor))
+
+'(make-bitmap-editor)
+		    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; class bitmap-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass bitmap-document (document)
+  ((bitmap     :accessor bitmap     :initform nil)
+   (no-rows    :accessor no-rows    :initform 32)
+   (no-columns :accessor no-columns :initform 32)
+   
+   (mini-view     :accessor mini-view)
+   (factor-scale  :accessor factor-scale)
+   (params-box    :accessor params-box    :initform nil)
+   (rows-scale    :accessor rows-scale    :initform nil)
+   (columns-scale :accessor columns-scale :initform nil)
+   
+   (shell-width  :initform 370)
+   (shell-height :initform 420)))
+
+;; forward declaration 
+(defclass bitmap-view (view)
+  ((factor  :accessor factor  :initarg :factor
+	    :documentation "size of a single pixel on the screen")
+   (gap     :accessor gap     :initarg :gap
+	    :documentation "white space between pixels")))
+
+(defmethod create-windows ((doc bitmap-document)
+			   &aux form scroller frame mini-frame)
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view mini-view factor-scale no-columns no-rows) doc
+    (setq main-shell (make-document-shell doc))
+    (setq form       (make-form main-shell))
+    (setq scroller   (make-scroller form))
+    (setq frame      (make-frame scroller :shadow-type :etched-out))
+    (setq main-view (make-bitmap-view frame doc
+				      :factor 10
+				      :gap 1
+				      :columns no-columns
+				      :rows no-rows))
+    (setq mini-frame (make-frame form :shadow-type :etched-out))
+    (setq mini-view (make-bitmap-view mini-frame doc
+				      :factor 1
+				      :gap 0
+				      :columns no-columns
+				      :rows no-rows))
+       
+    (setq factor-scale
+	  (make-scale form
+		      :orientation :horizontal
+		      :title-string "Pixel Size"
+		      :value (factor (main-view doc))
+		      :minimum 2
+		      :maximum 30
+		      :value-changed-callback
+		      (make-callback #'change-params doc :factor)))
+
+    (define-form-constraint factor-scale
+			    :top-attachment :form
+			    :left-attachment :form
+			    :right-attachment :form)
+    (define-form-constraint mini-frame
+			    :top-attachment :widget :top-widget factor-scale
+			    :left-attachment :form)
+    (define-form-constraint scroller
+			    :left-attachment :widget :left-widget mini-frame
+			    :top-attachment :widget :top-widget factor-scale
+			    :right-attachment :form
+			    :bottom-attachment :form)
+    
+    ;; add some menu commands
+    (add-menu-command (main-menu main-shell)
+		      "Edit" "Clear All" (make-callback #'make-clear-all-command doc))
+    (add-menu-command (main-menu main-shell)
+		      "Edit" "Set All"
+		      (make-callback #'make-clear-all-command doc :color :black))
+    (add-menu-command (main-menu main-shell)
+		      "Bitmap" "Set Size ..."
+		      (make-callback #'display-parms-box doc))
+    (add-menu-command (main-menu main-shell)
+		      "Bitmap" "Adapt Shell Size"
+		      (make-callback #'adapt-shell-size doc))
+    ))
+
+(defmethod pixel-on ((doc bitmap-document) x y)
+  "look up pixel value in data structure"
+  (when (member (list x y) (bitmap doc) :test #'equal)
+    t))
+
+(defmethod set-pixel ((doc bitmap-document) x y &key (redisplay t)
+		      &allow-other-keys
+		      &aux coordinates)
+  "set a single pixel in the data structure and display in the view"
+  (with-slots (main-view mini-view bitmap) doc
+    (setq coordinates (list x y))
+    (setq bitmap (remove coordinates bitmap :test #'equal))
+    (push coordinates bitmap)
+
+    (when redisplay
+      (set-pixel main-view x y)
+      (set-pixel mini-view x y))))
+
+(defmethod clear-pixel ((doc bitmap-document) x y &key (redisplay t)
+			&allow-other-keys
+			&aux coordinates)
+  "clear a single pixel in the data structure and display in the view"
+  (with-slots (main-view mini-view bitmap) doc
+    (setq coordinates (list x y))
+    (setq bitmap (remove coordinates bitmap :test #'equal))
+    (when redisplay
+      (clear-pixel main-view x y)
+      (clear-pixel mini-view x y))))
+	 
+(defmethod toggle-pixel ((doc bitmap-document) x y &key (redisplay t)
+			 &aux coordinates)
+  "toggle a single pixel in the data structure and display in the view"
+  (setq coordinates (list x y))
+  (if (member coordinates (bitmap doc) :test #'equal)
+      (clear-pixel doc x y :redisplay redisplay)
+      (set-pixel doc x y :redisplay redisplay)))
+
+(defmethod write-to-stream ((doc bitmap-document) stream)
+  "write the document to the specified stream"
+  (format stream "~d ~d ~d~%"
+	  (no-rows doc) (no-columns doc) (factor (main-view doc)))
+  (format stream "(")
+  (loop for pair in (bitmap doc)
+	when (and (<= (first  pair) (no-columns doc))
+		  (<= (second pair) (no-rows doc)))
+	  do (prin1 pair stream))
+  (format stream ")~%"))
+
+(defmethod read-from-stream ((doc bitmap-document) stream) 
+  "read the document from the specified stream"
+  (with-slots (no-rows no-columns main-view mini-view
+		       factor-scale rows-scale columns-scale bitmap) doc
+    (setq no-rows (read stream))
+    (setq no-columns (read stream))
+    (setf (factor main-view) (read stream))
+    (setq bitmap (read stream))
+    
+    (when rows-scale
+      (setf (value rows-scale) no-rows))
+    (when columns-scale
+      (setf (value columns-scale) no-columns))
+    (setf (value factor-scale) (factor main-view))
+    (resize main-view
+	    (* (factor main-view) no-columns)
+	    (* (factor main-view) no-rows))
+    (resize (mini-view doc) no-columns no-rows)
+    ))
+
+(defmethod change-params ((doc bitmap-document)
+			  &key (no-rows (no-rows doc))
+			       (no-columns (no-columns doc))
+			       (factor (factor (main-view doc))))
+  "adapt to new layout params"
+  (setf (no-rows doc) no-rows)
+  (setf (no-columns doc) no-columns)
+  (when (not (= factor (factor (main-view doc))))
+    (setf (factor (main-view doc)) factor)
+    ;; even the parts of the view that remain visible have to be redrawn
+    (force-redraw (main-view doc))
+    (force-redraw (mini-view doc)))
+
+  ;; resize => expose-events for new areas
+  (resize (main-view doc) (* factor no-columns) (* factor no-rows))
+  (resize (mini-view doc) no-columns no-rows)
+    (resize (main-shell doc) (+ (width (main-shell doc)) 1)
+                             (height (main-shell doc)))
+    (resize (main-shell doc) (- (width (main-shell doc)) 1)
+                             (height (main-shell doc)))
+  (setf (modified doc) t))
+
+(defmethod display-parms-box ((doc bitmap-document))
+  "bring up modeless dialog to set parms"
+  (when (not (params-box doc))
+    (setf (params-box doc)
+	  (make-modeless-dialog-box "Bitmap Size" :document doc
+				    :resize t
+				    :motif-resources '(:width 250)))
+    (setf (rows-scale doc)
+	  (make-scale (params-box doc)
+		      :orientation :horizontal 
+		      :title-string "Rows"
+		      :value (no-rows doc)
+		      :minimum 1
+		      :maximum 200
+		      :value-changed-callback
+		      (make-callback #'change-params doc :no-rows)))
+    (setf (columns-scale doc)
+	  (make-scale (params-box doc)
+		      :orientation :horizontal 
+		      :title-string "Columns"
+		      :value (no-columns doc)
+		      :minimum 1
+		      :maximum 200
+		      :value-changed-callback
+		      (make-callback #'change-params doc :no-columns)))
+    (define-form-constraint (rows-scale doc)
+			    :top-attachment :form
+			    :left-attachment :form
+			    :right-attachment :form)
+    (define-form-constraint (columns-scale doc)
+			    :top-attachment :widget :top-widget (rows-scale doc)
+			    :left-attachment :form
+			    :right-attachment :form))
+  (pop-up (params-box doc)))
+
+(defmethod adapt-shell-size ((doc bitmap-document))
+  "resize shell so that complete bitmap is shown"
+  (with-slots (no-columns no-rows main-shell main-view) doc
+    (resize main-shell
+	    (max 270 (+ 20 no-columns (* no-columns (factor main-view))))
+	    (+ 100 (* no-rows (factor main-view))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; class bitmap-view
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+'(defclass bitmap-view (view)
+  ((factor  :accessor factor  :initarg :factor
+	    :documentation "size of a single pixel on the screen")
+   (gap     :accessor gap     :initarg :gap
+	    :documentation "white space between pixels")))
+
+(defun make-bitmap-view (parent doc &key (factor 1) (rows 10) (columns 10) (gap 0))
+  (make-view parent
+	     :width  (* factor columns)
+	     :height (* factor rows)
+	     :document doc
+	     :backing-store t
+	     :class 'bitmap-view
+	     :initargs (list :factor factor :gap gap)))
+
+(defmethod button-press ((view bitmap-view) code repetition x y)
+  "react to button-press event in the window"
+  (declare (ignore repetition))
+  (case code ;; which button      
+    (:select (make-set-pixel-command    (document view) view x y))
+    (:extend (make-clear-pixel-command  (document view) view x y))
+    (:menu (make-toggle-pixel-command (document view) view x y)))
+  )
+
+(defmethod set-pixel ((view bitmap-view) x y &key &allow-other-keys)
+  "set a single pixel"
+  (with-slots (factor gap) view
+    (draw-rectangle view (* (1- x) factor) (* (1- y) factor)
+		    (- factor gap) (- factor gap) t)))
+
+(defmethod clear-pixel ((view bitmap-view) x y &key &allow-other-keys)
+  "clear a single pixel"
+  (with-slots (factor) view 
+    (clear-area view (* (1- x) factor) (* (1- y) factor)
+		factor factor)))
+
+(defmethod draw ((view bitmap-view) count x y width height)
+  "draw bits into view"
+  (declare (ignore x y width height))
+  (when (zerop count)
+    (loop for (x y) in (bitmap (document view))
+	  do (set-pixel view x y))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; mouse-commands
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; class set-pixel-command ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass set-pixel-command (mouse-down-command)
+  (;; overrides
+   (name       :initform "Set Pixel" :allocation :class)
+   (call-doit  :initform nil)
+   ;; new slots
+   (last-coordinates :accessor last-coordinates :initform nil)
+   (coordinate-list  :accessor coordinate-list  :initform nil)))
+
+(defun make-set-pixel-command (document view x y)
+  "create command object storing all touched x/y coordinates"
+  (make-mouse-down-command document view x y
+			   :class 'set-pixel-command
+			   :cursor :hand))
+
+(defmethod draw-feedback ((cmd set-pixel-command) x y &key clear)
+  "no feedback"
+  (declare (ignore x y clear)))
+
+(defmethod track-mouse ((cmd set-pixel-command) x y
+			&key (started nil) (finished nil)
+			&aux pixel-x pixel-y coordinates)
+  "process each touched pixel"
+  (declare (ignore started finished))
+  (with-slots (last-coordinates coordinate-list document call-doit view) cmd
+    (setq pixel-x (ceiling (/ x (factor view))))
+    (setq pixel-y (ceiling (/ y (factor view))))
+    (setq coordinates (list pixel-x pixel-y))
+    (when (and (not (equal coordinates last-coordinates))
+	       (not (pixel-on document pixel-x pixel-y)))
+      (setq call-doit t)
+      (setq last-coordinates coordinates)
+      (push coordinates coordinate-list)
+      (set-pixel document pixel-x pixel-y))
+    ))
+
+(defmethod undoit ((cmd set-pixel-command))
+  "clear all pixels again"
+  (with-slots (coordinate-list document) cmd
+    (loop for coordinates in coordinate-list
+	  do (clear-pixel document (first coordinates) (second coordinates)))
+    ))
+
+
+
+
+
+(defmethod redoit ((cmd set-pixel-command))
+  "set all pixels again"
+  (with-slots (coordinate-list document) cmd
+    (loop for coordinates in coordinate-list
+	  do (set-pixel document (first coordinates) (second coordinates)))
+    ))
+
+;; class clear-pixel-command ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass clear-pixel-command (mouse-down-command)
+  (;; overrides
+   (name       :initform "Clear Pixel" :allocation :class)
+   (call-doit  :initform nil)
+   ;; new slots
+   (last-coordinates :accessor last-coordinates :initform nil)
+   (coordinate-list  :accessor coordinate-list  :initform nil)))
+
+(defun make-clear-pixel-command (document view x y)
+  "create command object storing all touched x/y coordinates"
+  (make-mouse-down-command document view x y
+			   :class 'clear-pixel-command
+			   :cursor :hand))
+
+(defmethod draw-feedback ((cmd clear-pixel-command) x y &key clear)
+  "no feedback"
+  (declare (ignore x y clear)))
+
+(defmethod track-mouse ((cmd clear-pixel-command) x y
+			&key (started nil) (finished nil)
+			&aux pixel-x pixel-y coordinates)
+  "process each touched pixel"
+  (declare (ignore started finished))
+  (with-slots (last-coordinates coordinate-list document call-doit view) cmd
+    (setq pixel-x (ceiling (/ x (factor view))))
+    (setq pixel-y (ceiling (/ y (factor view))))
+    (setq coordinates (list pixel-x pixel-y))
+    (when (and (not (equal coordinates last-coordinates))
+	       (pixel-on document pixel-x pixel-y))
+      (setq call-doit t)
+      (setq last-coordinates coordinates)
+      (push coordinates coordinate-list)
+      (clear-pixel document pixel-x pixel-y))
+    ))
+
+(defmethod undoit ((cmd clear-pixel-command))
+  "set all pixels again"
+  (with-slots (coordinate-list document) cmd
+    (loop for coordinates in coordinate-list
+	  do (set-pixel document (first coordinates) (second coordinates)))
+    ))
+
+(defmethod redoit ((cmd clear-pixel-command))
+  "add new pixel to bitmap"
+  "clear all pixels again"
+  (with-slots (coordinate-list document) cmd
+    (loop for coordinates in coordinate-list
+	  do (clear-pixel document (first coordinates) (second coordinates)))
+    ))
+
+;; class toggle-pixel-command ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass toggle-pixel-command (mouse-down-command)
+  (;; overrides
+   (name        :initform "Toggle Pixel" :allocation :class)
+   ;; new slots
+   (last-coordinates :accessor last-coordinates :initform nil)
+   (coordinate-list  :accessor coordinate-list  :initform nil)))
+
+(defun make-toggle-pixel-command (document view x y)
+  "create command object storing the x/y coordinates of the mouse-click"
+  (make-mouse-down-command document view x y
+			   :class 'toggle-pixel-command
+			   :cursor :hand))
+
+(defmethod draw-feedback ((cmd toggle-pixel-command) x y &key clear)
+  "no feedback"
+  (declare (ignore x y clear)))
+
+(defmethod track-mouse ((cmd toggle-pixel-command) x y
+			&key (started nil) (finished nil)
+			&aux pixel-x pixel-y coordinates)
+  "process each touched pixel"
+  (declare (ignore started finished))
+  (with-slots (last-coordinates coordinate-list document call-doit view) cmd
+    (setq pixel-x (ceiling (/ x (factor view))))
+    (setq pixel-y (ceiling (/ y (factor view))))
+    (setq coordinates (list pixel-x pixel-y))
+    (when (not (equal coordinates last-coordinates))
+      (setq last-coordinates coordinates)
+      (push coordinates coordinate-list)
+      (toggle-pixel document pixel-x pixel-y))
+    ))
+
+(defmethod undoit ((cmd toggle-pixel-command))
+  "toggle all pixels again"
+  (with-slots (coordinate-list document) cmd
+    (loop for coordinates in coordinate-list
+	  do (toggle-pixel document (first coordinates) (second coordinates)))
+    ))
+
+(defmethod redoit ((cmd toggle-pixel-command))
+  "toggle all pixels again"
+  (undoit cmd))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class clear-all-command
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass clear-all-command (command)
+  (;; instance-parameters
+   (name :initarg :name) ;; turn class slot into an instance slot
+   (color  :accessor color  :initarg :color)
+   (bitmap :accessor bitmap :initarg :bitmap))
+  (:documentation "a command to delete all pixels"))
+
+(defun make-clear-all-command (document &key (color :white))
+  "create a new command object with appropriate parameters"
+  (make-command document
+		:class 'clear-all-command
+		:initargs `(:bitmap ,(bitmap document)
+			    :color ,color
+			    :name ,(if (eq color :white) "Clear All" "Set All"))))
+
+(defmethod doit ((cmd clear-all-command))
+  "construct coordinate list and redraw"
+  (with-slots (bitmap main-view mini-view no-rows no-columns) (document cmd) 
+    (setq bitmap
+	  (if (eq (color cmd) :white)
+	      nil
+	      ;; else set all to black
+	      (loop for x from 0 to no-columns
+		    append
+		      (loop for y from 0 to no-rows
+			    collect (list x y)))))
+    (force-redraw main-view)
+    (force-redraw mini-view)))
+
+(defmethod undoit ((cmd clear-all-command))
+  "reinstall old coordinate list and redraw"
+  (with-slots (bitmap main-view mini-view) (document cmd)
+    (setq bitmap (bitmap cmd))
+    (force-redraw main-view)
+    (force-redraw mini-view)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "bitedit" 'bitmap-editor "bitmap")
+'(make-bitmap-editor) 
+9. Lisp-Widgets
+9.1 Functionality
+This demo shows how new types of widgets can be implemented in 
+Lisp. This is much easier than implementing new widgets in the C 
+language. The only drawback is that the performance is worse. In our 
+example we show how a new type of scrollbar is implemented. The 
+slider jumps to the place where the mouse is clicked and can be 
+dragged. While dragging, the current value is shown in the slider. 
+When the shell is resized, the scrollbar is also resized.
+	                     
+9.2 Implementation
+The class selfmade-scrollbar is a subclass of the GINA class view. 
+It consists of a view with a frame around it. Therefore, the slot group-
+widget-id of the superclass widget is set to the frame object, so that 
+move and resize operations as well as form constraints apply to the 
+frame, which is the parent of the view. The draw method has to be 
+prepared to display the scrollbar in any size. If the user resizes the 
+scrollbar, draw is called by GINA and the slots width and height hold 
+the current size of the view. When the application program modifies 
+the current-value of the scrollbar the view is also redrawn. This is 
+done by an after demon for (setf current-value).
+If the mouse button is pressed in the scrollbar, an object of class 
+scroll-command is instantiated which controls the interaction. In 
+track-mouse the current-value is computed from the mouse position 
+and the scrollbar is redrawn. In addition the value-changed-
+callback is executed. The method execute can handle callback 
+objects, lambda-expressions and compiled functions. For undo and redo 
+the current-value before a scroll operation is stored in the command 
+object.
+9.4 Source Code
+;;;-*-Mode:LISP;Syntax: Common-Lisp;Package:lisp-widgets;Base:10-*-
+
+(in-package :GINA)
+(defginapackage :lisp-widgets)
+(in-package :lisp-widgets)
+(setq *sccs-id* "@(#)lisp-widgets.lisp	1.4  1/15/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class lisp-widget-demo
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass lisp-widget-demo (application)
+  (;; overrides
+   (name          :initform "Lisp Widgets"          :allocation :class)
+   (document-type :initform 'lisp-widget-document   :allocation :class)
+   (signature     :initform "lisp-widgets"          :allocation :class)
+   (file-type     :initform nil                     :allocation :class))
+  (:documentation "demo how new widgets can be implemented in Lisp"))
+
+(defun make-lisp-widget-demo ()
+  "start the lisp-widget-demo"
+  (make-application :class 'lisp-widget-demo))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class lisp-widget-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass lisp-widget-document (document)
+  ()
+  (:documentation "application dependent document type"))
+
+(defmethod create-windows ((doc lisp-widget-document) &aux form scrollbar)
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+    ;; create and install the view in a tool-window
+    (setq main-shell (make-document-shell doc))
+    (setq form (make-form main-shell :motif-resources '(:height 200)))
+    (setq scrollbar (make-selfmade-scrollbar form
+					     :document doc
+					     :value-changed-callback
+					     '(lambda (new-val) nil)))
+    (define-form-constraint scrollbar
+			    :top-attachment  :form 
+			    :left-attachment :form
+			    :bottom-attachment :form)
+    (setq main-view scrollbar)
+
+    ;; remove unnecessary menu entries
+    (remove-menu-entry (main-menu main-shell) "File" "Open..")
+    (remove-menu-entry (main-menu main-shell) "File" "Save")
+    (remove-menu-entry (main-menu main-shell) "File" "Save as..")
+    (remove-menu-entry (main-menu main-shell) "File" "Revert")
+    ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class selfmade-scrollbar
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass selfmade-scrollbar (view)
+  (;; instance-parameters
+   (max-value     :accessor max-value     :initarg :max-value
+	          :documentation "current value is between 0 and max-value")
+   (value-changed-callback
+     :accessor value-changed-callback
+     :initarg :value-changed-callback
+     :documentation "Function called with new value when user has scrolled")
+   
+   ;; instance-variables
+   (current-value :accessor current-value :initform 0)))
+
+(defun make-selfmade-scrollbar (parent &key (width 20)
+				            (height 200)
+					    (max-value 100)
+					    (value-changed-callback nil)
+					    (document nil)
+				       &aux frame new-sb)
+  "make a new selfmade-scrollbar widget"
+  (setq frame (make-frame parent))
+  (setq new-sb
+	(make-view frame :width width :height height
+		   :document document
+		   :resize-policy :any
+		   :initargs (list :max-value max-value
+				   :value-changed-callback value-changed-callback)
+		   :class 'selfmade-scrollbar))
+  (setf (group-widget-id new-sb) (widget-id frame))
+  new-sb)
+
+(defmethod (setf current-value) :after (new-value (sb selfmade-scrollbar))
+  "when the text is changed a redisplay is necessary"
+  (declare (ignore new-value))
+  (force-redraw sb))
+
+(defmethod resized :after ((view selfmade-scrollbar) ignore)
+   "the whole scrollbar must be redrawn when resized"
+   (declare (ignore ignore))
+   (force-redraw view))
+
+(defmethod draw ((view selfmade-scrollbar) count x y width height &aux current-y)
+  "draw window contents"
+  (declare (ignore x y width height))
+  (with-slots (gcontext width height current-value max-value) view
+    (when (zerop count) ;; Ignore all but the last exposure event
+      (setq current-y (round (* (- height 10) (/ (float current-value) max-value))))
+      (draw-rectangle view 0 current-y width 10 t)   ;; filled
+      (xlib:with-gcontext (gcontext :function boole-xor :font "6x10")
+	(draw-glyphs view 2 (+ 8 current-y) (format nil "~d" current-value)))
+
+      )))
+
+(defmethod button-press ((sb selfmade-scrollbar) code repetition x y)
+  "react to button-press event in the window"
+  (declare (ignore code repetition))
+  (make-scroll-command sb x y))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class scroll-command
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass scroll-command (mouse-down-command)
+  (;; overrides
+   (name          :initform "Scrolling" :allocation :class)
+   (undoable      :initform t           :allocation :class)
+   (causes-change :initform nil         :allocation :class)
+
+   ;; instance-parameters
+   (old-value :accessor old-value :initarg :old-value)
+   ;; instance-variables
+   (new-value :accessor new-value))
+  (:documentation "a mouse-down-command for scrolling"))
+
+(defun make-scroll-command (sb mouse-x mouse-y &key (class 'scroll-command))
+  (make-mouse-down-command (document sb) sb mouse-x mouse-y
+			   :class class
+			   :initargs `(:old-value ,(current-value sb))))
+
+(defmethod draw-feedback ((cmd scroll-command) x y &key clear)
+  "no feedback"
+  (declare (ignore clear x y)))
+
+(defmethod doit ((cmd scroll-command))
+  "nothing to do"
+  )
+
+(defmethod track-mouse ((cmd scroll-command) x y &key (started nil) (finished nil))
+  "move the slider"
+  (declare (ignore x started))
+  (with-slots ((scrollbar view) new-value) cmd
+    (with-slots (current-value max-value height value-changed-callback) scrollbar
+      (setq current-value (round (* max-value (/ y (float height)))))
+      (force-redraw scrollbar)
+      (execute value-changed-callback (list current-value))
+      (when finished
+	(setq new-value current-value)))))
+
+(defmethod undoit ((cmd scroll-command))
+  "move the elevator and call callback"
+  (with-slots ((scrollbar view) old-value) cmd
+    (with-slots (current-value value-changed-callback) scrollbar
+      (setq current-value old-value)
+      (force-redraw scrollbar)
+      (execute value-changed-callback (list current-value)))))
+
+(defmethod redoit ((cmd scroll-command))
+  "move the elevator and call callback"
+  (with-slots ((scrollbar view) new-value) cmd
+    (with-slots (current-value value-changed-callback) scrollbar
+      (setq current-value new-value)
+      (force-redraw scrollbar)
+      (execute value-changed-callback (list current-value)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "lisp-widgets" 'lisp-widget-demo nil)
+'(make-lisp-widget-demo)
+10. Tetris
+                                                             
+10.1 Functionality
+This is a simple version of the well known arcade game. You press the 
+New Game button to start. Rectangles of different size and color begin to 
+fall down. Their speed depends on the level selected using the radio 
+button group on the left. You can move the rectangles to the left and 
+right using the "j" and "l" keys. Pessing "k" rotates the rectangle. Your 
+task is to place the rectangles in such a way that no gaps remain. Each 
+completed line immediately disappears. The space bar can be used to 
+drop a rectangle to the ground. Please notice that you have to move the 
+mouse cursor into the view where the rectangles are shown, because 
+otherwise your key presses go unnoticed. You can interrupt a game at 
+any time using the Pause button or by pressing "p".
+10.2 Implementation
+The basic idea is that each Tertris piece is a view-object. When a 
+game is started, the slot idle-timeout of the application is set 
+depending on the game level, so that the method idle-timeout is 
+called several times per second. At each timeout, the falling piece is 
+moved and some checks are performed, whether the ground is reached 
+and so on. The method key-press of the Tetris view is called only 
+when the mouse is inside the view.
+
+11. Pacmen 
+11.1 Functionality
+This demo is much less than a real Pacman game. It only demonstrates 
+the use of multiple processes within a single application. You can 
+create a pacman by the menu entry NEW PACMAN. It will run down 
+the window line by line at a random speed and disappear when the 
+bottom is reached. On SUNs, the death of a pacmen is indicated by a 
+"drip" sound. Because each pacman runs in his own process the user 
+interface remains fully operable. The pacmen continue to run even 
+during modal dialogs.
+You can start multiple pacmen (as many as your Lisp can stand). Try 
+to kill a pacman by clicking the mouse at him. A pacman overtaking a 
+slower one will eat it up. A pacman can also be started with a progress 
+bar indicating how many lines are already done. The progress bar can 
+also be used to kill the pacman. You can explicitly kill all pacmen. This 
+is implicitly done by GINA when a document is closed.
+                                                           
+
+11.2 Implementation
+*	Pacmen are view objects together with a background process. This 
+differs from the Tetris demo where a timer is used instead.
+*	Each pacmen loops through its possible positions in the window. In 
+each repetition the view-object is moved, other men are eaten, the 
+progress bar is updated if necessary and a sleep is done.
+*	Access to the data structures of the document which are shared by 
+all pacmen is synchronized using the macro WITH-DOCUMENT.
+11.3 Source Code
+;;; -*- Mode:LISP;Syntax: Common-Lisp;Package:pac;Base:10-*-
+
+(in-package :GINA)
+(defginapackage :pac)
+(in-package :pac)
+(setq *sccs-id* "@(#)pacmen.lisp	1.4  1/20/92")
+
+
+;; This demo is much less than a real Pacman game. It only demonstrates
+;; the use of multiple processes within a single application.
+;; 
+;; - You can create a pacman by the menu entry NEW PACMAN. It will run
+;;   down the window line by line at a random speed and disappear when
+;;   the bottom is reached.
+;; - On SUNs, the death of a pacmen is indicated by a "drip" sound.
+;; - Because each pacman runs in his own process the user interface remains
+;;   fully operable. The pacmen continue to run even during modal dialogs.
+;; - You can start multiple pacmen (as many as your Lisp can stand).
+;; - Try to kill a pacman by clicking the mouse at him.
+;; - A pacman overtaking a slower one will eat it up.
+;; - A pacman can also be started with a progress bar indicating how
+;;   many lines are already done. The progress bar can also be used to kill
+;;   the pacman.
+;; - You can explicitly kill all pacmen. This is implicitly done by GINA
+;;   when a document is closed.
+;; 
+;; Implementation:
+;; - Pacmen are view objects together with a background process.
+;;   This differs from the Tetris demo where a timer is used instead.
+;; - Each pacmen loops through ist possible positions in the window. 
+;;   In each repetition the view-object is moved, other men are eaten,
+;;   the progress bar is updated if necessary and a sleep is done.
+;; - Access to the data structures of the document which are shared by all
+;;   pacmen is synchronized using the macro WITH-DOCUMENT.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class pacmen-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass pacmen-application (application)
+  ((name          :initform "Pacmen")
+   (signature     :initform "Pac")
+   (file-type     :initform "pac")
+   (document-type :initform 'pacmen-document :allocation :class)))
+
+(defun make-pacmen-application ()
+  (make-application :class 'pacmen-application))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class pacmen-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass pacmen-document (document)
+  ((nr-of-pacmen :accessor nr-of-pacmen :initform 0)
+   (shell-width  :initform 550)
+   (shell-height :initform 550)))
+
+(defmethod create-windows((doc pacmen-document) &aux scroller)
+  (with-slots (main-shell main-view) doc
+    (setq main-shell (make-document-shell doc))
+    (setq scroller   (make-scroller main-shell))
+    (setq main-view  (make-view scroller
+				:document doc 
+				:width 500 :height 500))
+
+    (add-menu-command (main-menu main-shell)
+		      "Play" "New Pacman" 
+		      (make-callback 'create-pacman doc)
+                      :accelerator "P")
+    (add-menu-command (main-menu main-shell)
+		      "Play" "New Pacman with Progress Bar" 
+		      (make-callback 'create-pacman doc :progress-bar t))
+    (add-menu-command (main-menu main-shell)
+                      "Play" "Kill All Pacmen"
+                      (make-callback 'kill-all-background-processes doc))
+  ))
+
+(defmethod create-pacman ((doc pacmen-document) &key (progress-bar nil))
+  (when (not progress-bar)
+    (in-background-process (doc)
+      (run-pacman doc)))
+
+  (when progress-bar
+    (with-progress-bar
+        (doc :kill-on-abort t :centered nil :modal nil
+         :title (format nil "Pacman ~d" (1+ (nr-of-pacmen doc)))
+	 :message "Running ...             ")
+      (run-pacman doc :indicate-progess t))))
+
+(defmethod run-pacman ((doc pacmen-document) 
+		       &key (indicate-progess nil)
+		       &aux pacman percent)
+  "code executed by each background process"
+   (setq pacman (make-pacman 40 (mod (incf (nr-of-pacmen doc)) 100)))
+   (with-document (doc)
+      (install pacman (main-view doc) 30 30))
+   (unwind-protect
+       (loop for y from 1 to 10 do
+	 (loop for x from 1 to 20 do
+	   (when indicate-progess
+	     ;; update progress bar
+             (setq percent (+ (* 10 (1- y)) (round (1- x) 2)))
+	     (if (= x 1)
+		 (indicate-progress percent 
+		  :new-message (format nil "Running in line ~d ..." y))
+	         (indicate-progress percent)))
+
+	   (setf (mouth-open pacman) (not (mouth-open pacman)))
+	   (setf (right pacman) (oddp y))
+	   (move pacman (if (right pacman) (* 20 x) (- 400 (* 20 x))) (* 40 y))
+	   (xlib:display-force-output *display*)
+
+	   ;; eat other men if at same position
+	   (loop for p in (view-objects (main-view doc))
+	    when (and (not (eq p pacman))
+		      (= (x-pos pacman) (x-pos p))
+		      (= (y-pos pacman) (y-pos p)))
+	    do (kill-pacman p))
+	   
+	   (sleep (speed pacman))
+	   ))
+     ;; cleanup
+     (with-document (doc)
+	(deinstall pacman)
+        (xlib:display-force-output *display*))
+     #-genera
+     (shell-command 
+      "/usr/demo/SOUND/play -v100 /usr/demo/SOUND/sounds/drip.au &")))
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class pacman
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass pacman (view-object)
+ ((mouth-open :accessor mouth-open :initform t)
+  (number     :accessor number     :initarg :number)
+  (right      :accessor right      :initform t)
+  (speed      :accessor speed      :initform (+ 0.1 (* (random 3) 0.1)))
+  (process    :accessor process    :initarg :process)))
+
+(defun make-pacman (size number)
+  (make-view-object size size :class 'pacman 
+		    :initargs (list :process (xtk::current-process)
+				    :number (format nil "~d" number))))
+
+(defmethod kill-pacman ((p pacman))
+  "kill pacmen, but wait until he is out of critical sections"
+  (kill-background-process (document (parent-view p)) (process p)))
+
+(defmethod draw ((p pacman) count x y width height)
+  (declare (ignore x y height))
+  (when (zerop count)
+    (if (not (mouth-open p))
+	(draw-arc p 0 0 width width 0 (* 2 pi) t)
+      (if (right p)
+	  (draw-arc p 0 0 width width 0.4 (- (* 2 pi) 0.8) t)
+	  (draw-arc p 0 0 width width (- 0.4 pi) (- (* 2 pi) 0.8) t)))
+    (xlib:with-gcontext ((gcontext (parent-view p)) :function boole-xor)
+      (draw-glyphs p 10 25 (number p)))))
+
+(defmethod button-press ((p pacman) code repetition x y)
+  "react to button-press event in the window"
+  (declare (ignore code repetition x y))
+  (kill-pacman p))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main-program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "pac" 'pacmen-application "pac")
+'(make-pacmen-application)
+12. Spreadsheet 
+12.1 Functionality
+This demo shows how a typical Spreadsheet can be implemented with 
+GINA. Arbitrary Lisp expressions containing cell references can be 
+used as formulas. New functions can be programmed by example.
+                                                       
+
+12.2 User Interface
+*	Strings can be entered into cells via the input field at top
+(ENTER-button or RETURN-Key).
+*	Input editing can be cancelled using the CANCEL-button.
+*	Columns can be resized by dragging the vertical lines with the 
+mouse.
+*	If the user subsequently resizes two columns to the same width, the 
+program suggests to resize all columns. The question need not be 
+answered.
+*	The global font of a sheet can be changed.
+*	Grid lines can be shown or hidden.
+*	Cells can be selected using the mouse.
+*	A cell name can be inserted into the input edited by any special click.
+This is important for formula specification.
+*	Borders can be drawn around selected cells.
+*	All selected cells can be cleared.
+*	The selected cells can be copied to the clipboard.
+*	The clipboard can be pasted into selected cells.
+*	Pasting is repeated if target area is at least twice as large as 
+clipboard.
+*	Unlimited undo/redo is possible for all editing operations.
+12.3 Computation:
+*	The Lisp evaluator is used for formula evaluation.
+*	Cell contents entered are regarded as numbers, lists or strings.
+*	Formulas start with an equal sign (=).
+*	A formula is any Lisp expresssion containing cell references like A1.
+*	Examples: =(* A1 (+ A2 A3)) or =(list A1 A2 A3 A4)
+*	Syntax errors in formulas lead to a beep.
+*	SHOW ERROR MESSAGE displays the last error diagnostic.
+*	On errors during formula evaluation <error> is displayed in the cell.
+*	Normally the values of formulas are shown.
+*	With SHOW FORMULAS, formulas can be displayed in the sheet 
+instead.
+*	Formulas are evaluated after every modification of a cell.
+*	Formulas can be replicated by COPY/PASTE.
+*	While pasting, cell references in formulas are automatically 
+transformed.
+*	References into the copied selection are regarded as relative.
+*	All other references are regarded as absolute.
+*	New functions can be defined "by example":
+Entering (define foo (A1 A2 A3) A4) into any cell defines a new 
+function foo with three parameters. The formulas connecting A1,A2 
+and A3 to A4 are used as the body of the function (which is printed 
+on standard-output).
+12.4 Implementation
+*	There is a complex draw method for the main-view with many 
+parameters which draw the gridlines and the cell contents in diffrent 
+fonts, with and without borders etc.
+*	Column and row headers are also views in a scroller but without 
+scrollbars. The views are scrolled synchronously with the main view.
+*	Feedback during selection of cells is not implemented by overriding 
+the method draw-feedback. Instead track-mouse is overridden. 
+The internal data structure is immediatly entered and a part of the 
+main-view is redrawn. This is because the selection is permanently 
+displayed and is not only a temporary feedback.
+*	The Lisp reader is used to parse constants and formulas entered into 
+cells. In formulas, cell references (like e.g. A1) are internally replaced 
+by an accessor expression for that cell.
+*	The Lisp evaluator is used to compute the result of formulas
+*	Cell references replaced by accessor expressions.
+12.5 Limitations and Extensions
+*	Currently a formula also recomputes all formulas it depends on. This 
+leads to  superfluos recalculations in some cases.
+
+13. Hyper-GINA
+13.1 Functionality
+This demo combines concepts from the GINA Interface Builder and 
+from Hypercard. Simple Interfaces can be build and immediately be 
+run. Widgets can be placed into a drawing area. Lisp code is directly 
+attached to the callbacks of widgets and interpreted. Several Hyper-
+GINA documents are included in the distribution.
+                                        
+13.2 Facilities of Hyper-GINA:
+*	A mode can be selected on the left similar as in the graphic editor.
+*	In most modes, "elements" can be drawn into the main view.
+*	Elements are widgets like in the Interface Builder.
+*	Elements can be moved around and resized.
+*	Elements can be operated, but initially have no callbacks.
+*	Lisp code can be entered into code elements.
+*	Pressing the little black button in the upper right corner of the code 
+element executes the code.
+*	The border of each element contains the name of the element and 
+one or more outlets (at least "value").
+*	Name and outlets can be dragged onto other elements using the 
+mouse. The semantics of such a dragging operation depends on the 
+class of elements involved. This is implemented by multimethods. As 
+feedback, the operation which will take place if the mouse button is 
+released is displayed in the message area.
+*	Dragging the name of a code into an element will set the callback of 
+the element.
+*	Callbacks have no parameters.
+*	Within code, other elements can be referenced by their name. 
+Internally element names are replaced by (value <denoted-element>) 
+before the code is executed. An exception is the view-element: its 
+name is replaced by (widget <view-element>). Most elements have an 
+accessor VALUE. The type of the VALUE depends on the element-
+type. For example, (setf number3 "25") will convert the string before 
+storing it in the number-element. If the default-translation of an 
+element-name is not appropriate you can explicitly specify (widget 
+<element>) to access the motif-widget contained in the element (to 
+set its colour for example). For list-elements you can write (items 
+list5) to read and write the item-list. See method parse for details of 
+the translation process.
+*	Dragging the name of an element into a code inserts the element 
+name.
+*	By dragging the name of a code into a button, the activate-callback is 
+set.
+*	For string, text, number, scale and list, the value-changed-callback is 
+set by dragging the name of a code into it.
+*	Dragging a button name into a list means that the callback of the 
+button is executed when a list item is double-clicked.
+*	Using the value-changed-callback of a number-element the typical 
+spreadsheet effect can be obtained: editing a value immediately may 
+update a derived value.
+*	For views, setting the callback means defining its draw method. The 
+name of the view can be used as the first parameter of methods like 
+draw-rectangle or force-redraw.
+*	The callback of a clock element is executed every second.
+*	Dragging the value outlet to another element means assigning the 
+value (including necessary conversions).
+*	Dragging the items outlet of a list copies the item list.
+*	Dragging something onto the items outlet sets the item list.
+*	Setting the value of a button means setting its label-string.
+*	Code elements are executed when a stack is openend if the init flag 
+at the upper right corner is set.
+*	You can have several cards: see new card, next card, previous 
+card. Within code you can write (goto 2) to select the second card.
+*	Try the adjust commands to find out their meaning!! 
+*	In user mode, elements cannot be moved or selected.
+*	The function PLAY (e.g (PLAY "gong" :volume 30)) plays sounds in 
+/usr/demo/SOUND/sounds/* on SUN workstations.
+*all-sounds* is a list of all available sounds.
+*	*all-colors* is a list of colors for Motif widgets.
+13.3 Implementation
+*	Elements are implemented as direct-manipulation-objects with a  
+widget on top of it. There are after daemons which move and resize 
+the widgets when a DMO is moved/resized. 
+*	Typical mouse-down-commands are used to connect widgets, etc. As 
+a feedback the label string of the message label is updated while 
+dragging.
+*	Widgets have a callback which executes the code-element stored in 
+an element.
+*	Explicit accessor functions for the value slot perform the necessary 
+type conversions.
+
+13.3 Limitations and Extensions
+*	Drag-and-drop commands should be used in many cases so that the 
+feedback is not covered by the Motif widgets.
+*	Undo is not completely implemented and runs into problems if cards 
+are changed.
+*	The only way to find out afterwards which code has been assigned to 
+an element is to perform an "inspect click" on an direct-
+manipulation-object and inspect the slot code.
+*	A code-element should allow several expressions without a progn.
+14. Lisp Listener 
+                                                           
+ 14.1 Functionality
+*	You can type Lisp expressions into a text widget.
+*	Input is entered by pressing the ENTER (not RETURN) key
+(or whatever is necessary to cause an ACTIVATE callback).
+*	The line containing the insertion-cursor is sent off.
+If there is a text selection, it is sent off instead. 
+*	Note that prompts are also regarded as input!
+Normally however, the cursor is at the beginning of a line after each 
+output. Functions like y-or-n-p might cause problems.
+*	The class text-widget-stream is designed to be reusable
+i.e. you can attach a stream to any text widget.
+14.2 Implementation
+*	The demo shows how a stream subclass can be defined which is 
+connected to a text widget.
+*	This demo only runs under Allegro4.0, where streams are CLOS 
+classes.
+*	Output to the stream is appended at the end of the text widget.
+*	Reading from the stream blocks until some input is in the buffer.
+*	The buffer is filled, when the user initiates an ACTIVATE callback 
+(by pressing the ENTER key).
+*	A read-print-eval-loop is started in a lightweight process. This 
+process waits for input most of the time.
+14.3 Limitations and Extensions
+*	Any prompt is regarded as input!!
+(Newline after prompt solves only half of the problem because there 
+are other prompts e.g. from the y-or-n-p function)
+*	Output to a stream cannot come from a foreign application, because 
+eventually CLM-Functions are called, which are then sent off over 
+the wrong connection. To allow output from foreign applications, 
+write-char must place output into a buffer which is read by another 
+lightweight process (similar to input).
+14.4 Source Code
+;;;-*-Mode:LISP;Syntax: Common-Lisp;Package:listen ;Base:10-*-
+;;;
+;;; Thanks to Dieter Bolz who gave some important hints concerning streams!
+
+(in-package :GINA)
+(defginapackage :listen)
+(in-package :listen)
+(setq *sccs-id* "@(#)lisp-listener.lisp	1.2  1/15/92")
+
+;; Lisp Listener Demo:
+;; - you can enter Lisp expressions into a text widget.
+;; - input is entered by pressing the ENTER (not RETURN) key
+;;   (or whatever is necessary to cause an ACTIVATE callback).
+;; - the line containing the insertion-cursor is sent off.
+;;   if there is a text selection, it is sent off instead. 
+;; - note that prompts are also regarded as input!
+;;   normally however, the cursor is at the beginning of a line after
+;;   each output. Functions like y-or-n-p might cause problems.
+;; - the class text-widget-stream is designed to be reusable
+;;   i.e. you can attach a stream to any text widget
+
+;; Implementation:
+;; - this demo shows how a stream subclass can be defined which
+;;   is connected to a text widget
+;; - this demo only runs under Allegro4.0, where streams are CLOS classes
+;; - output to the stream is appended at the end of the text widget
+;; - reading from the stream blocks until some input is in the buffer
+;; - the buffer is filled, when the user initiates an ACTIVATE callback
+;;   (by pressing the ENTER key)
+;; - a read-print-eval-loop is started in a lightweight process
+;;   this process waits for input most of the time
+
+;; Restrictions: 
+;; - a prompt is regarded as input!!
+;;   (newline after prompt solves only half of the problem)
+;; - output to stream cannot come from a foreign application,
+;;   because eventually CLM-Functions are called, which are then
+;;   sent off over the wrong connection.
+;;   To allow output from foreign applications, write-char must
+;;   place output into a buffer which is read by another lightweight
+;;   process (similar to input)
+
+;; open questions:
+;; - how to tell text widget to start a new line if more than 80 columns
+;;   resource :resize-width does not work
+;;   something like *print-width* ??
+;; - delete part of the text in the text widget without rolling in 
+;;   the complete text ??
+;; - search for newline without rolling in the complete text??
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class lisp-listener
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defclass lisp-listener (application)
+  (;; overrides
+   (name          :initform "Lisp Listener"    :allocation :class)
+   (document-type :initform 'listener-document :allocation :class)
+   (signature     :initform "listener"         :allocation :class)
+   (file-type     :initform "listener"         :allocation :class))
+  (:documentation "a simple lisp listener demo application"))
+
+(defun make-lisp-listener ()
+  (make-application :class 'lisp-listener))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class listener-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defclass listener-document (document)
+  ((stream :accessor stream)))
+
+(defmethod create-windows ((doc listener-document))
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+    ;; create document-shell containing a scroller and the text
+    (setq main-shell (make-document-shell doc))
+    ;; create the text-view
+    (setq main-view (make-scrolled-text main-shell :columns 80 :rows 25))
+
+    ;; create a stream connected to the text-widget
+    (setf (stream doc) (make-text-widget-stream main-view))
+
+    ;; start a read-eval-print-loop
+    (in-background-process (doc :terminate-on-error nil)
+       (setq tpl:*prompt* "~%Lisp>~%")
+       (tpl:start-interactive-top-level 
+	(stream doc) #'tpl:top-level-read-eval-print-loop nil))
+
+    ;; document is always modified by Lisp Listener prompt
+    (setf (modified doc) t)
+   ))
+
+(defmethod write-to-stream ((doc listener-document) stream)
+  "write the document to the specified stream"
+  ;; write the current value of the text widget
+  (format stream "~s~%" (value (main-view doc))))
+
+(defmethod read-from-stream ((doc listener-document) stream)
+  "read the document from the specified stream"
+  (setf (value (main-view doc)) (read stream)))
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class text-widget-stream
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass text-widget-stream (stream:fundamental-character-output-stream
+			      stream:fundamental-character-input-stream)
+  ((text-widget :accessor text-widget :initarg :text-widget)
+   (input-buffer :accessor input-buffer :initform "")
+   (input-pos    :accessor input-pos    :initform 0)
+   (max-output-length :accessor max-output-length :initform 1000)
+   (output-length :accessor output-length :initform 0)))
+
+(defun make-text-widget-stream (text-widget 
+				&key (class 'text-widget-stream)
+				     (initargs nil)
+				&aux new)
+  (setq new (make-object class initargs :text-widget text-widget))
+  (setf (activate-callback text-widget) (make-callback 'activated new))
+  new)
+
+(defmethod stream:stream-write-char ((tws text-widget-stream) character)
+  "append character at the end of the text-widget"
+  (incf (output-length tws))
+  (clear-old-output-when-necessary tws)  
+  (xtk:append-text (widget-id (text-widget tws)) 
+		   (string character)
+		   :scroll-window t))
+
+(defmethod stream:stream-write-string 
+              ((tws text-widget-stream) string &optional (start 0) (end nil)
+	       &aux output-string)
+  "append string at the end of the text-widget"
+  (setq output-string (subseq string start end))
+  (incf (output-length tws) (length output-string))
+  (clear-old-output-when-necessary tws)
+  (xtk:append-text (widget-id (text-widget tws))
+		   output-string
+		   :scroll-window t))
+
+(defmethod clear-old-output-when-necessary ((tws text-widget-stream))
+  "cut off prefix of the text, when limit exceeded by 100%"
+  (when (and (max-output-length tws)
+             (> (output-length tws) (* 2 (max-output-length tws))))
+    (setf (value (text-widget tws)) 
+      (subseq (value (text-widget tws)) (max-output-length tws)))
+    (decf (output-length tws) (max-output-length tws))))
+
+(defmethod activated ((tws text-widget-stream) &rest parms 
+		      &aux text-selection cursor-position string 
+		      prev-newline next-newline
+		      first-half second-half input-line)
+  "enter text selection or line containing the cursor"
+  (declare (ignore parms))
+  ;; if some text is selected, this is the input
+  (setq text-selection (xtk:text-get-selection (widget-id (text-widget tws))))
+  (if (not (equal text-selection ""))
+    ;; then: something selected
+    (setq input-line text-selection)
+    ;; else: determine line containing the cursor
+    (progn
+      (setq cursor-position 
+	(first (get-motif-resources (text-widget tws) :cursor-position)))
+      ;; get complete text from CLM 
+      (setq string (value (text-widget tws)))
+      ;; search for next and previous newline
+      (setq first-half (subseq string 0 cursor-position))
+      (setq second-half (subseq string cursor-position))
+      (setq prev-newline (position #\newline first-half :from-end t))
+      (when (not prev-newline) (setq prev-newline -1))
+      (setq next-newline (position #\newline second-half))
+      (when next-newline
+	(incf next-newline cursor-position))
+      (setq input-line (subseq string (1+ prev-newline) next-newline))))
+  ;;(print input-line)
+  ;; append input line to stream buffer
+  (mp:without-scheduling ;; modify buffer in an atomic operation
+   (setf (input-buffer tws)
+     (concatenate 'string (input-buffer tws) input-line (string #\newline)))))
+
+(defmethod stream:stream-read-char ((tws text-widget-stream))
+  (xtk::process-wait "input wait" #'listen tws)
+  (prog1
+      (elt (input-buffer tws) (input-pos tws))
+    (incf (input-pos tws))
+    (when (> (input-pos tws) 110)
+      ;; throw away old input from time to time
+      ;; but keep some (?) characters for unread
+      (mp:without-scheduling
+       (setf (input-buffer tws) (subseq (input-buffer tws) 100))
+       (decf (input-pos tws) 100)))
+    ))
+
+(defmethod stream:stream-unread-char ((tws text-widget-stream) char)
+  (declare (ignore char))
+  (decf (input-pos tws))
+  nil)
+
+(defmethod stream:stream-read-char-no-hang ((tws text-widget-stream))
+  (when (stream:stream-listen tws)
+    (stream:stream-read-char tws)))
+
+(defmethod stream:stream-peek-char ((tws text-widget-stream))
+  (xtk::process-wait "input wait" #'listen tws)
+  (elt (input-buffer tws) (input-pos tws)))
+
+(defmethod stream:stream-listen ((tws text-widget-stream))
+  (> (length (input-buffer tws)) (input-pos tws)))
+
+(defmethod stream:stream-clear-input ((tws text-widget-stream))
+  (setf (input-pos tws) (length (input-buffer tws)))
+  nil)  
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "listener" 'lisp-listener "listener")
+'(make-lisp-listener)
+15. Chess Interface
+                                                        
+15.1 Functionality
+An interface for the game of chess. You can play a game by dragging 
+the white and black pieces. All special moves of chess like castling, 
+capture en passant and promotion are implemented. For castling you 
+only move the king and the rook follows automatically. At promotion a 
+pop-up dialog asks for the new piece. Upon capture en passant the 
+correct pawn is removed. All moves are undoable. A game can be saved 
+into a file and is written in readable chess notation. If you open a saved 
+document the full history will be restored as well. The full game can be 
+replayed and the point within the history from where the game was 
+saved is remembered as well. On any time you can change sides 
+(playing white from top to down or reverse). There is no check for 
+correct moves. It will only be registered who is on the turn and shown 
+with a white or black circle on the upper left corner. 
+If GNU chess is available on your site, this GINA interface can be used 
+for playing against the computer. To activate gnuchess press the 
+button "Play Against Computer". The computer always uses the color 
+shown on the upper part of the screen (black if lines 8 and 7 are on top 
+(the default as shown in the figure), white otherwise). It immediately 
+makes a move if it is its turn. Otherwise it indicates "Your Move" 
+within the State text field. At any time the level (thinking time given to 
+GNU from 0.1 seconds up to 10 hours) can be set by the level entry of 
+menu chess. If you undo (or redo) any moves the connection to 
+gnuchess is cut off, but can be reactivated at any desired point by 
+pressing the button "Play Against Computer" again. The current 
+positions of all pieces are then transmitted to GNU. 
+15.2 Implementation
+A chess piece is an object of the GINA class movable-icon. When 
+creating a movable icon a pathname or the image can be given. To 
+minimize the startup time in this chess application the icon- and mask-
+images are read from file while loading the chess program into the lisp 
+world and the images are given to movable-icon. For black pieces the 
+fact is used, that selected pieces are shown in reverse. When the user 
+drags a piece it rises and settles down upon releasing it. This is easily 
+implemented with the shadow-offset slot of movable-icon. The 
+main view uses the double buffering feature of GINA for flicker free 
+overlapping of chess pieces while they are dragged around. 
+For playing against the computer you have to provide the chesstool 
+(gnuchessr) of GNU, which has a general public license. It uses a line-
+by-line ascii-interface and is called from lisp. Set the the global 
+variable *gnuchess-pathname* to the pathname of the gnuchess 
+program of your installation within the file chess.lisp.
+GINAs automatic hashing of bitmap pathnames to their images, 
+images in any format to images in z-format and images to pixmaps is 
+used in this program to optimize time for displaying bitmaps. Images 
+are bitmap data on lisp side (an array of pixels). There are several 
+formats and the z-format is necessary for accessing the array within 
+point-inside. To display images they can be sent to the X-server and 
+on this side they are called pixmaps. The Lisp program holds pointers 
+to pixmaps. This topic is hidden from the application programmer and 
+hashing is automatically done by GINA when using the class movable-
+icon.
+15.3 Limitations and Extensions
+We are experimenting with a general framework for storing command 
+histories. You can test the experimental feedback animation (Debug 
+menu) of GINA, which shows the movement of pieces upon redo. 
+Bitmaps are borrowed from GNU Chess. 
+Remember there is no checking of correct moves while gnuchess is 
+deactivated. If you fool gnu you are on your own with its responses. 
+Gnuchess can play against itself by changing sides after every move.
+16. Drag and Drop Demo
+                                                  
+
+                        
+16.1 Functionality
+This demonstration program implements a number of different drag-
+commands. There are two different applications: a drag application 
+where triangles can be dragged into a view, and a drop application that 
+can receive triangles for different purposes. However, the triangles in 
+the drag application can also be copied between drag documents. The 
+drag application consists of a main view where triangles can be 
+installed, a drag-label looking like a magnet to delete triangles, a 
+feedback label, and a triangle template that can be used to create new 
+triangles. The triangle template uses a triangle bitmap that can be 
+dragged into the view. It is an intra-document command, because it 
+cannot create triangles in other documents. It demonstrates tracking, 
+because the current position relative to the target view is displayed in 
+the feedback label. The magnet demonstrates subtargets (highlighting 
+the triangle it is over), but is also bound to the same document. The 
+triangles in the view create a drag-command that may be received in 
+other documents and applications. It uses a copy semantics and the 
+transfer value is used to transfer the number of the triangle. Dragged 
+triangle copies may be received by the drop application. The number of 
+the triangle and the operation (depending on the target) are reported in 
+a label. All the commands in the program are undoable. 
+16.2 Implementation
+Drag and Drop is a topic within the User Manual. See there for details.
+16.3 Source Code
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: dd;Base: 10 -*-
+(in-package :GINA)
+(defginapackage :dd)
+(in-package :dd)
+(setq *sccs-id* "@(#)drag-and-drop.lisp	1.3  1/16/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class drag-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass drag-application (application)
+  (;; overrides
+   (name          :initform "Drag"         :allocation :class)
+   (document-type :initform 'drag-document :allocation :class)
+   (signature     :initform "drag"               :allocation :class)
+   (file-type     :initform "drag"               :allocation :class))
+  (:documentation "a simple drag demo application"))
+
+(defun make-drag-application ()
+  "start the drag-application"
+  (make-application :class 'drag-application))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class drag-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass drag-document (document)
+  (;; instance-variables
+   (track-label    :accessor track-label
+         :documentation "a label where tracking information is displayed")
+   (drag-template  :accessor drag-template
+         :documentation "a drag label as triangle template")
+   (drag-protocols :initform '(:copy_triangle) :allocation :class))
+  (:documentation "application dependent document type"))
+
+(defmethod write-to-stream ((doc drag-document) stream)
+  "write the document to the specified stream"
+  (format stream "~d~%" (length (view-objects (main-view doc))))
+  (loop for obj in (view-objects (main-view doc))
+        do (format stream "~d ~d ~d~%" (x-pos obj) (y-pos obj) 
+		   (id-number obj))))
+
+(defmethod read-from-stream ((doc drag-document) stream &aux objects) 
+  "read the document from the specified stream"
+  ;; delete all present objects in case of revert
+  (loop for obj in (view-objects (main-view doc))
+        do (deinstall obj))
+
+  (setq objects (read stream))
+  (loop repeat objects
+   do (let* ((x-pos (read stream))
+	     (y-pos (read stream))
+	     (view (main-view doc))
+	     (new-tri (make-triangle (obj-width view) (obj-height view) 
+				     (read stream))))
+	(install new-tri view x-pos y-pos))))
+
+(defmethod create-windows ((doc drag-document) 
+			   &aux scroller form label)
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+    (setq main-shell (make-document-shell doc))
+    (setq scroller   (make-scroller main-shell))
+    (setq main-view  (make-drag-view scroller doc))
+    (setq form (make-form main-shell))
+    (set-motif-resources (main-window main-shell) 
+			 :command-window (widget-id form))
+
+    (setq label (make-drag-label form doc "magnet"
+                                 :cursor-mask "magnet-mask"))
+    (setf (activate-callback label)
+          (make-callback 'make-magnet-dragger doc label))
+    (define-form-constraint label :left-attachment :form :top-attachment :form
+                            :bottom-attachment :form)
+
+    (setf (drag-template doc) 
+          (make-drag-label form doc "triangle"))
+    (setf (activate-callback (drag-template doc))
+          (make-callback 'make-triangle-dragger doc (drag-template doc)))
+    (define-form-constraint (drag-template doc) :left-attachment :none 
+			    :top-attachment :form :right-attachment :form)
+
+    (setf (track-label doc)
+          (make-label form ""))
+    (define-form-constraint (track-label doc) :left-attachment :widget
+			    :left-widget label :top-attachment :form
+			    :bottom-attachment :form
+			    :right-attachment :widget
+			    :right-widget (drag-template doc))
+    ))
+
+(defmethod create-drop-command ((doc drag-document) shell x y protocol-id
+				transfer-value received-from)
+  "create a duplicate command when dropping from another document"
+  (case protocol-id
+    ((:copy_triangle)
+        (make-triangle-copier doc shell x y 
+                              :transfer-value transfer-value
+                              :received-from received-from))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class drag-view
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass drag-view (view)
+  ((bitmap-name   :accessor bitmap-name  :initform "triangle")
+   (image         :accessor image)
+   (pixmap        :accessor pixmap)
+   (obj-width     :accessor obj-width)
+   (obj-height    :accessor obj-height))
+  (:documentation "a view with special draw method and reaction to clicks"))
+
+(defun make-drag-view (parent doc &aux new-view)
+  "create a new drag-view"
+  (setq new-view (make-view parent :document doc :class 'drag-view))
+  (setf (image new-view)
+        (xlib:read-bitmap-file (find-bitmap (bitmap-name new-view))))
+  (setf (obj-width new-view) (xlib:image-width (image new-view)))
+  (setf (obj-height new-view) (xlib:image-height (image new-view)))
+  new-view)
+
+(defmethod determine-window-id :after ((view drag-view) &aux gc)
+  "create a pixmap for triangle drawing"
+  (setf (pixmap view)
+        (xlib:create-pixmap :width (obj-width view) :height (obj-height view) 
+                            :depth 1 :drawable (x-window view)))
+  ;; must have a separate GC for the pixmap because of different depth
+  (setq gc (xlib:create-gcontext :drawable (pixmap view)))
+  (xlib:put-image (pixmap view) gc (image view) :x 0 :y 0))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class triangle
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass triangle (view-object)
+  ((id-number :accessor id-number :initarg :id-number))
+  (:documentation "a triangle in a view"))
+
+(defun make-triangle (width height id-number)
+  (make-view-object width height :class 'triangle 
+		    :initargs (list :id-number id-number)))
+
+(defmethod draw ((obj triangle) count x y width height)
+  (declare (ignore count x y width height))
+  (xlib:copy-plane (pixmap (parent-view obj)) (gcontext (parent-view obj)) 1
+                   0 0 
+		   (obj-width (parent-view obj)) (obj-height (parent-view obj))
+                   (x-window (parent-view obj)) (x-pos obj) (y-pos obj))
+  (draw-glyphs obj (- (round (/ (width obj) 2)) 5) (- (height obj) 6) 
+	       (write-to-string (id-number obj))))
+
+(defmethod button-press ((obj triangle) code repetition x y)
+  "create a copy-drag command for this triangle"
+  (when (= repetition 1)
+    (case code
+      ((:select)
+            (make-triangle-copier (document (parent-view obj))
+				  (parent-view obj) x y
+				  :transfer-value (id-number obj)
+				  :x-off (x-pos obj) :y-off (y-pos obj))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class magnet-dragger
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass magnet-dragger (drag-command)
+  ((name      :initform "Delete Triangle"   :allocation :class)
+   (deleted-object :accessor deleted-object)))
+
+(defun make-magnet-dragger (doc source x y)
+  (make-drag-command doc source x y (list (list (main-view doc) :view))
+		     :cursor (cursor source)
+		     :class 'magnet-dragger))
+
+(defmethod draw-target-feedback ((cmd magnet-dragger) view x y value
+				 &key (clear nil))
+  "find view object under cursor and highlight it"
+  (declare (ignore clear))
+  (when (eql value :view)
+    (loop for obj in (view-objects view)
+        when (point-inside obj x y)
+        do (xlib:with-gcontext ((gcontext view) :function boole-xor
+				:foreground (xor-foreground view))
+             (draw-rectangle obj 0 0 (1- (width obj)) (1- (height obj))))
+           (return nil))))
+
+(defmethod executable ((cmd magnet-dragger))
+  "check whether successful in final position"
+  (setf (deleted-object cmd)
+        (loop for obj in (view-objects (current-target cmd))
+              when (point-inside obj (target-x cmd) (target-y cmd))
+              return obj))
+  (deleted-object cmd))
+
+(defmethod doit ((cmd magnet-dragger))
+  "delete the object"
+  (deinstall (deleted-object cmd)))
+
+(defmethod undoit ((cmd magnet-dragger))
+  "reinstall the deleted object"
+  (install (deleted-object cmd) (current-target cmd)
+           (x-pos (deleted-object cmd)) (y-pos (deleted-object cmd))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class triangle-dragger
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass triangle-dragger (drag-command)
+  ((name         :initform "Make Triangle"   :allocation :class)
+   (new-triangle :accessor new-triangle   :initform nil)))
+
+(defun make-triangle-dragger (doc source x y)
+  (make-drag-command doc source x y (list (list (main-view doc) nil))
+		     :cursor :left-ptr
+		     :shell-to-move (drag-shell source)
+		     :class 'triangle-dragger))
+
+(defmethod track-target ((cmd triangle-dragger) widget x y value)
+  "display current position as feedback"
+  (declare (ignore value))
+  (setf (label-string (track-label (document cmd)))
+        (if widget
+            (format nil "(~d, ~d)" x y)
+	    "")))
+
+(defmethod doit ((cmd triangle-dragger))
+  "create a new triangle at target position"
+  (unless (new-triangle cmd)
+    (let ((view (main-view (document cmd))))
+      (setf (label-string (track-label (document cmd))) "")
+      (setf (new-triangle cmd) 
+	    (make-triangle (obj-width view) (obj-height view) 
+			   (length (view-objects view))))))
+  (install (new-triangle cmd) (main-view (document cmd))
+           (target-x cmd) (target-y cmd)))
+
+(defmethod undoit ((cmd triangle-dragger))
+  "remove the installed triangle"
+  (deinstall (new-triangle cmd)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class triangle-copier
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass triangle-copier (drag-command)
+  ((name    :initform "Copy Triangle"    :allocation :class)
+   ;; triangle must be dragged away
+   (hysteresis    :initform 5            :allocation :class)
+   ;; protocol-id needed to identify for foreign apps
+   (protocol-id   :initform :copy_triangle  :allocation :class)
+   ;; new slot
+   (new-triangle  :accessor new-triangle :initform nil)))
+
+(defun make-triangle-copier (doc source x y
+			     &key (x-off 0) (y-off 0)
+			          (transfer-value nil)
+			          (received-from nil))
+  (make-drag-command doc source 
+		     (+ x x-off) (+ y y-off)
+		     (list (list (main-view doc) nil))
+		     :shell-to-move (drag-shell (drag-template doc))  ;; abused
+		     :cursor :left-ptr
+		     :x-off x-off
+		     :y-off y-off
+		     :transfer-value transfer-value  ;; triangle number will
+		                                     ;; be transferred
+		     :received-from received-from
+		     :class 'triangle-copier))
+
+(defmethod track-target ((cmd triangle-copier) widget x y value)
+  "display current position as feedback, only in own document"
+  (declare (ignore value))
+  (setf (label-string (track-label (document cmd)))
+        (if widget
+            (format nil "(~d, ~d)" x y)
+	    "")))
+
+(defmethod doit ((cmd triangle-copier))
+  "install a new triangle copy"
+  (unless (new-triangle cmd)
+    (setf (label-string (track-label (document cmd))) "")
+    (setf (new-triangle cmd)
+          (make-triangle (obj-width (main-view (document cmd)))
+                         (obj-height (main-view (document cmd)))
+                         (transfer-value cmd))))
+  (install (new-triangle cmd) (main-view (document cmd))
+           (target-x cmd) (target-y cmd)))
+
+(defmethod undoit ((cmd triangle-copier))
+  "remove the triangle"
+  (deinstall (new-triangle cmd)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; start drag application
+
+(register-application "drag" 'drag-application "drag")
+'(make-drag-application)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class drop-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass drop-application (application)
+  (;; overrides
+   (name          :initform "Drop"         :allocation :class)
+   (document-type :initform 'drop-document :allocation :class)
+   (signature     :initform "drop"               :allocation :class)
+   (file-type     :initform "drop"               :allocation :class))
+  (:documentation "a simple drop demo application"))
+
+(defun make-drop-application ()
+  "start the drop-application"
+  (make-application :class 'drop-application))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class drop-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass drop-document (document)
+  (;; instance-variables
+   (fax            :accessor fax)
+   (phone          :accessor phone)
+   (panel          :accessor panel)
+   ;; signal the acceptance of a triangle-copier
+   (drag-protocols :initform '(:copy_triangle) :allocation :class))
+  (:documentation "application dependent document type"))
+
+(defmethod create-windows ((doc drop-document) 
+			   &aux rc)
+  "create the windows belonging to this document"
+  (with-slots (main-shell) doc
+    (setq main-shell (make-document-shell doc))
+    (setq rc (make-row-column main-shell :orientation :vertical
+             :entry-alignment :center))
+    (setf (panel doc)
+          (make-label rc " "))
+    (setf (phone doc)
+          (make-push-button rc "PHONE" 
+		      :motif-resources '(:margin-height 20 :margin-width 15)))
+    (setf (fax doc)
+          (make-push-button rc "FAX"
+                      :motif-resources '(:margin-height 20 :margin-width 15)))
+    ))
+
+(defmethod create-drop-command ((doc drop-document) shell x y protocol-id
+				transfer-value received-from)
+  "when accepting a triangle copier, a command of a different class is created"
+  (case protocol-id
+    ((:copy_triangle)
+        (make-triangle-receiver doc shell x y 
+                                :transfer-value transfer-value
+                                :received-from received-from))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class triangle-receiver
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass triangle-receiver (drag-command)
+  ((causes-change :initform nil             :allocation :class)
+   (protocol-id   :initform :copy_triangle  :allocation :class)
+   (do-tracking   :initform nil             :allocation :class)
+   ;; new slot
+   (old-label     :accessor old-label       :initform nil)))
+
+(defun make-triangle-receiver (doc source x y
+			       &key (transfer-value nil)
+			            (received-from nil))
+  (make-drag-command doc source x y
+		     (list (list (phone doc) :phone)
+			   (list (fax doc)   :fax))
+		     :transfer-value transfer-value
+		     :received-from received-from
+		     :class 'triangle-receiver))
+
+(defmethod doit ((cmd triangle-receiver))
+  "display action that would have been taken, name depends on target"
+  (unless (old-label cmd)
+    (setf (old-label cmd) (label-string (panel (document cmd))))
+    (setf (name cmd) 
+          (format nil "~a #~d" (current-value cmd) (transfer-value cmd))))
+  (setf (label-string (panel (document cmd))) (name cmd)))
+
+(defmethod undoit ((cmd triangle-receiver))
+  "restore old panel contents"
+  (setf (label-string (panel (document cmd))) (old-label cmd)))
+
+;;; start drop application
+(register-application "drop" 'drop-application "drop")
+'(make-drop-application)
+17. Mandelbrot Demo
+                                                                     
+
+17.1 Functionality
+This demo displays the Mandelbrot set with user-specified parameters. 
+The computation which may take quite a long time is performed in a 
+background process, so that the interface remains fully operational. 
+The progress of the computation is shown in a progress bar, which also 
+allows to abort the computation. Scales can be use to try different 
+parameter settings. When a document is stored, the parameter 
+combination is saved in a file (not the bitmap itself). Selecting a 
+rectangular area of a picture with the mouse means to zoom into that 
+area. Zooming is undoable.
+17.2 Implementation
+*	Double buffering is used to store computed Mandelbrot sets
+17.3 Limitations and Extensions
+*	Color would be nice.
+17.4 Source Code
+;;; -*- Mode:LISP;Syntax:Common-Lisp;Package:mandel;Base: 10 -*-
+
+(in-package :GINA)
+(defginapackage :mandel)
+(in-package :mandel)
+(setq *sccs-id* "@(#)mandelbrot.lisp	1.2  1/15/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class mandelbrot-application
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass mandelbrot-application (application)
+  (;; overrides
+   (name          :initform "Mandelbrot"         :allocation :class)
+   (document-type :initform 'mandelbrot-document :allocation :class)
+   (signature     :initform "mandel"             :allocation :class)
+   (file-type     :initform "mandel"             :allocation :class)))
+
+(defun make-mandelbrot-application ()
+  (make-application :class 'mandelbrot-application))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class mandelbrot-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass mandelbrot-document (document)
+  ((shell-width :initform 600)
+   (shell-height :initform 400)
+   (label :accessor label)
+   (scale1 :accessor scale1)
+   (scale2 :accessor scale2)
+   (scale3 :accessor scale3)
+   (button :accessor button)
+   (min-x  :accessor min-x :initform -2.0) 
+   (max-x  :accessor max-x :initform  1.0)
+   (min-y  :accessor min-y :initform -1.0)
+   (max-y  :accessor max-y :initform  1.0)))
+
+(defmethod create-windows ((doc mandelbrot-document) &aux form scroller)
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view label scale1 scale2 scale3 button) doc
+    (setq main-shell (make-document-shell doc))
+    (setq form       (make-form main-shell))
+    (setq label      (make-label form "-2.0 < X < 1.0      -1.0 < Y < 1.0"))
+    (setq scale1     (make-scale form :orientation :horizontal
+				 :title-string "Width"
+				 :minimum 1 :maximum 1200 :value 60
+                                 :value-changed-callback
+                                 `(lambda (&rest ignore) 
+				   (setf (modified ,doc) t))))
+    (setq scale2     (make-scale form :orientation :horizontal
+				 :title-string "Height"
+				 :minimum 1 :maximum 800 :value 40
+				 :value-changed-callback
+                                 `(lambda (&rest ignore) 
+				   (setf (modified ,doc) t))))
+    (setq scale3     (make-scale form :orientation :horizontal
+				 :title-string "Limit"
+				 :minimum 1 :maximum 128 :value 8
+				 :value-changed-callback
+                                 `(lambda (&rest ignore) 
+				   (setf (modified ,doc) t))))
+    (setq button     (make-push-button form "Recompute"
+                         :activate-callback
+                         (make-callback 'draw-mandelbrot-set doc)))
+    (setq scroller   (make-scroller form))
+    (setq main-view  (make-mandelbrot-view scroller :document doc)) 
+    
+    (define-form-constraint label 
+                            :top-attachment :form
+                            :left-attachment :form
+                            :right-attachment :form)
+    (define-form-constraint scale1 
+			    :left-attachment :form
+			    :left-offset 10
+			    :top-attachment :widget :top-widget label
+			    :right-attachment :position :right-position 25)
+    (define-form-constraint scale2 
+                            :top-attachment :widget :top-widget label
+                            :left-attachment :widget :left-widget scale1
+			    :left-offset 10
+                            :right-attachment :position :right-position 50)
+    (define-form-constraint scale3
+                            :top-attachment :widget :top-widget label
+                            :left-attachment :widget :left-widget scale2
+			    :left-offset 10
+                            :right-attachment :position :right-position 75)
+    (define-form-constraint button 
+                            :top-attachment :widget :top-widget label
+			    :top-offset 5
+                            :left-attachment :widget :left-widget scale3
+			    :left-offset 10
+                            :right-attachment :form :right-offset 10
+                            :bottom-attachment :widget :bottom-widget scroller
+                            :bottom-offset 5)
+    (define-form-constraint scroller
+                            :top-attachment :widget :top-widget scale1
+                            :left-attachment :form
+                            :right-attachment :form
+                            :bottom-attachment :form)
+    ))
+
+(defmethod write-to-stream ((doc mandelbrot-document) stream)
+  "write the current parameter setting to the specified stream"
+  (format stream "~d ~d ~d ~d ~d ~d ~d ~%"
+          (value (scale1 doc)) (value (scale2 doc)) (value (scale3 doc))
+          (min-x doc) (max-y doc) (min-y doc) (max-y doc)))
+
+(defmethod read-from-stream ((doc mandelbrot-document) stream) 
+  "read the stored parameter settings from the specified stream"
+  (with-slots (scale1 scale2 scale3) doc
+    (setf (value scale1) (read stream))
+    (setf (value scale2) (read stream))
+    (setf (value scale3) (read stream))
+    (setf (min-x doc) (read stream))
+    (setf (max-y doc) (read stream))
+    (setf (min-y doc) (read stream))
+    (setf (max-y doc) (read stream))))
+
+(defun draw-mandelbrot-set (document 
+			    &aux view width height limit 
+				 min-x max-x min-y max-y
+				 step-x step-y)
+  "loop through user-specified range of points"
+
+  ;; kill all other computations in progress
+  (kill-all-background-processes document)
+  
+  (setq view   (main-view document))
+  (setq width  (value (scale1 document)))
+  (setq height (value (scale2 document)))
+  (setq limit  (value (scale3 document)))
+  (setq min-x (min-x document) 
+	max-x (max-x document)
+	step-x (/ (- max-x min-x) width))
+  (setq min-y (min-y document) 
+	max-y (max-y document)
+	step-y (/ (- max-y min-y) height))
+
+  ;; adapt view size to parameters
+  (resize view width height)
+
+  ;; clear both window and pixmap buffer:
+  (clear-area view 0 0 width height)
+  (progn (setf (drawable view) (pixmap-buffer view))
+	 (clear-area view 0 0 width height)
+	 (setf (drawable view) (x-window view)))
+
+  (with-progress-bar (document :modal nil 
+			       :centered nil
+			       :message "Recomputing Mandelbrot Set ...")
+    (loop for x from min-x to max-x by step-x 
+          for i from 0 
+          while (not (progress-bar-aborted)) do
+      ;; move slider of progress bar
+      (indicate-progress (round (* (/ i (float width)) 100)))
+      (loop for y from min-y to max-y by step-y
+            for j from 0 do
+	(when (in-mandelbrot-set x y limit)
+	  ;; draw into both window and pixmap buffer:
+	  (draw-point view i j)
+	  (progn  (setf (drawable view) (pixmap-buffer view))
+		  (draw-point view i j)
+		  (setf (drawable view) (x-window view)))))
+      (xlib:display-force-output *display*))))
+
+(defun in-mandelbrot-set (x y limit 
+			  &aux (new-x x) (new-y y) z (k 0))
+  "test whether point (x,y) is member of Mandelbrot set"
+  (setq z (complex x y))
+  (loop 
+    while (and (<= (+ (* new-x new-x) (* new-y new-y)) 4) (< k limit)) 
+    do (setq z (+ (complex x y) (* z z)))
+       (setq new-x (realpart z))
+       (setq new-y (imagpart z))
+       (incf k))
+   ;; return whether number of iterations reached the limit
+   (= k limit))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class mandelbrot-view
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass mandelbrot-view (view)
+  ())
+
+(defun make-mandelbrot-view (parent &key document)
+  (make-view parent :document document
+	            :class 'mandelbrot-view
+	            :double-buffering t))
+
+(defmethod determine-window-id :after ((view mandelbrot-view))
+  "immediately start computation of mandelbrot-set when view is ready"
+  (draw-mandelbrot-set (document view)))
+
+
+(defmethod button-press ((view mandelbrot-view) code repetition x y)
+  (declare (ignore repetition code))
+  (make-zoom-command view x y))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class zoom-command
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass zoom-command (mouse-down-command)
+  ((name :initform "Zoom" :allocation :class)
+   (new-min-x  :accessor new-min-x) 
+   (new-max-x  :accessor new-max-x)
+   (new-min-y  :accessor new-min-y)
+   (new-max-y  :accessor new-max-y)
+   (old-min-x  :accessor old-min-x :initarg :old-min-x) 
+   (old-max-x  :accessor old-max-x :initarg :old-max-x)
+   (old-min-y  :accessor old-min-y :initarg :old-min-y)
+   (old-max-y  :accessor old-max-y :initarg :old-max-y)))
+
+
+(defun make-zoom-command (view x y)
+  (make-mouse-down-command (document view) view x y
+			   :cursor :crosshair
+			   :class 'zoom-command
+			   :initargs
+			   (list :old-min-x (min-x (document view))
+				 :old-max-x (max-x (document view)) 
+				 :old-min-y (min-y (document view))
+				 :old-max-y (max-y (document view)))))
+
+(defmethod constrain-mouse ((cmd zoom-command) x y)
+  "make sure width and height of area is > 0"
+  (with-slots (start-x start-y) cmd
+    (setq x (max x (1+ start-x)))
+    (setq y (max y (1+ start-y))))
+  (values x y))
+
+(defmethod draw-feedback ((cmd zoom-command) x y &key clear)
+  "draw rectangular feedback"
+  (declare (ignore clear))
+  (with-slots (start-x start-y view) cmd
+    (xlib:with-gcontext ((gcontext view) :line-style :dash)
+      (draw-rectangle view start-x start-y (- x start-x)  (- y start-y)))))
+
+(defmethod track-mouse ((cmd zoom-command) x y &key &allow-other-keys)
+  (with-slots (start-x start-y new-min-x new-max-x new-min-y new-max-y 
+		       view document) cmd
+     (setq new-min-x (+ (min-x document) 
+			(* (- (max-x document) (min-x document)) ;; range
+			   (/ start-x (float (width view))))))
+     (setq new-min-y (+ (min-y document) 
+			(* (- (max-y document) (min-y document)) ;; range
+			   (/ start-y (float (height view))))))
+     (setq new-max-x (+ (min-x document) 
+			(* (- (max-x document) (min-x document)) ;; range
+			   (/ x (float (width view))))))
+     (setq new-max-y (+ (min-y document) 
+		        (* (- (max-y document) (min-y document)) ;; range
+			   (/ y (float (height view))))))
+     (setf (label-string (label document))
+       (format nil "~8d < X < ~8d    ~8d < Y < ~8d" 
+		new-min-x new-max-x new-min-y new-max-y))
+     ))
+
+(defmethod doit ((cmd zoom-command))
+  "change range parameters in document"
+  (setf (min-x (document cmd)) (new-min-x cmd))
+  (setf (max-x (document cmd)) (new-max-x cmd))
+  (setf (min-y (document cmd)) (new-min-y cmd))
+  (setf (max-y (document cmd)) (new-max-y cmd))
+  (setf (label-string (label (document cmd)))
+       (format nil "~8d < X < ~8d    ~8d < Y < ~8d" 
+	       (new-min-x cmd) (new-max-x cmd) 
+	       (new-min-y cmd) (new-max-y cmd)))
+  (draw-mandelbrot-set (document cmd)))
+
+(defmethod undoit ((cmd zoom-command))
+  "restore range parameters in document"
+  (setf (min-x (document cmd)) (old-min-x cmd))
+  (setf (max-x (document cmd)) (old-max-x cmd))
+  (setf (min-y (document cmd)) (old-min-y cmd))
+  (setf (max-y (document cmd)) (old-max-y cmd))
+  (setf (label-string (label (document cmd)))
+       (format nil "~8d < X < ~8d    ~8d < Y < ~8d" 
+	       (old-min-x cmd) (old-max-x cmd) 
+	       (old-min-y cmd) (old-max-y cmd)))
+  (draw-mandelbrot-set (document cmd)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(register-application "mandel" 'mandelbrot-application "mandel")
+'(make-mandelbrot-application)
+18. Desk Calculator 
+18.1 Functionality
+Just like a typical desk calculator. Rubout removes the last typed digit 
+or the decimal point. Clear clears all internal registers and the 
+display. This calculator demonstrates the use of the GINA interface-
+builder. 
+                              
+18.2 Implementation
+*	All visible items are drawn with the interface builder.
+*	All callbacks of buttons are also set within the interface builder.
+*	The code for this demo application is very small and is mostly 
+restricted to the functions of the calculator.
+18.3 Limitations and Extensions
+*	Pressing any key from the keyboard is not recognized.
+18.4 Source Code
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: calc; Base: 10-*-
+
+(in-package :GINA)
+(defginapackage :calc)
+(in-package :calc)
+(setq *sccs-id* "@(#)calculator.lisp	1.2  1/21/92")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class calculator
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass calculator (application)
+  (;; overrides
+   (name          :initform "Calculator"   :allocation :class)
+   (document-type :initform 'calc-document :allocation :class)
+   (signature     :initform "calc"         :allocation :class)
+   (file-type     :initform "calc"         :allocation :class)))
+
+(defun make-calculator ()
+  "start the desk-calculator"
+  (make-application :class 'calculator))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; class calc-document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass calc-document (document)
+  (;; instance-variables
+   (input-value   :accessor input-value   :initform 0)
+   (input-string  :accessor input-string  :initform "")
+   (decimal-point :accessor decimal-point :initform nil)
+   (memory        :accessor memory        :initform 0)
+   (operator      :accessor operator      :initform nil)))
+
+(defmethod clear ((doc calc-document))
+  "reset everything"
+  (setf (input-string doc) "")
+  (setf (input-value doc) 0)
+  (setf (decimal-point doc) nil)
+  (setf (label-string (display (main-shell doc))) "0")
+  (setf (memory doc) 0)
+  (setf (operator doc) nil))
+
+(defmethod create-windows ((doc calc-document))
+  "create the windows belonging to this document"
+  (with-slots (main-shell main-view) doc
+    ;; create instance of class generated by Interface Builder
+    (setq main-shell (make-calculator-shell doc))
+
+    ;; bypass GINAs automatic naming conventions
+    (setf (title main-shell) "Calc")
+    (set-motif-resources main-shell :icon-name "Calc")))
+
+(defmethod type-digit ((doc calc-document) digit
+		       &aux (display (display (main-shell doc))))
+  "a digit has been typed"
+  (setf (input-string doc)
+	(concatenate 'string (input-string doc) (format nil "~d" digit)))
+  (when (not (operator doc)) (setf (memory doc) 0))
+  (setf (label-string display) (input-string doc)))
+
+(defmethod type-point ((doc calc-document)
+		       &aux (display (display (main-shell doc))))
+  "a point has been typed"
+  (when (not (decimal-point doc))
+    (setf (decimal-point doc) t)
+    (setf (input-string doc)
+	(concatenate 'string (input-string doc) "."))
+    (setf (label-string display) (input-string doc))))
+
+(defmethod type-rubout ((doc calc-document)
+			  &aux string-length
+			       (display (display (main-shell doc))))
+  "backspace for input"
+  (setq string-length (length (input-string doc)))
+  (when (> string-length 0)
+    (when (equal (position #\. (input-string doc)) (1- string-length))
+      (setf (decimal-point doc) nil))
+    (setf (input-string doc) (subseq (input-string doc) 0 (1- string-length)))
+    (setf (label-string display) (input-string doc))))
+
+(defmethod type-operator ((doc calc-document) operator
+			  &aux (display (display (main-shell doc))))
+  "an operator has been typed"
+  (setf (input-value doc)
+	(if (equal (input-string doc) "")
+	    (memory doc)
+	    (read-from-string (input-string doc))))
+  (setf (input-string doc) "")
+  (setf (decimal-point doc) nil)
+  (if (operator doc)
+    (setf (memory doc)
+	  (ignore-errors
+	    (funcall (operator doc) (memory doc) (input-value doc))))
+    (setf (memory doc) (input-value doc)))
+  (when (not (memory doc)) (setf (memory doc) "Error"))
+  (setf (operator doc) operator)
+  (setf (label-string display) (format nil "~f" (memory doc))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; main program
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(register-application "calc" 'calculator "calc")
+'(make-calculator)

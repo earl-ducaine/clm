@@ -1,0 +1,11 @@
+"hyper"
+613 374
+1
+6
+6
+:scale-element 80 173 "Scale6" NIL 42 408 14
+:code-element 332 67 "Code5" "(play List2 :volume Scale6)" NIL 18 385
+:code-element 332 67 "Code4" "(setf Button1 List2)" NIL 18 306
+:code-element 332 67 "Code3" "(setf (items List2) *all-sounds*)" T 18 227
+:list-element 177 173 "List2" "Code4" "Button1" 210 14
+:button-element 178 173 "Button1" "Code5" "bong" 11 14

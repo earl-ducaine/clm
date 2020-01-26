@@ -1,0 +1,40 @@
+;;; -*- Mode:lisp; Syntax:Common-Lisp; Package:user; Base:10 -*-
+
+(in-package :user)
+
+(setq *sccs-id* "@(#)load.lisp	1.11	9/15/92")
+
+(#-(or cmu lucid) progn
+ #+cmu with-compilation-unit #+cmu ()
+ #+lucid with-deferred-warnings
+    (xtk::ld "pkg") 
+    (xtk::ld "classes")
+    (xtk::ld "documents")
+    (xtk::ld "counter")
+    (xtk::ld "resources")
+    (xtk::ld "infos")
+    (xtk::ld "constraints")
+    (xtk::ld "class-tree")
+    (xtk::ld "main-view")
+    (xtk::ld "proto-view")
+    (xtk::ld "plates")
+    (xtk::ld "info-cmds")
+    (xtk::ld "mouse-cmds")
+    (xtk::ld "tree-cmds")
+    (xtk::ld "lisp-code")
+    (xtk::ld "cplus-code")
+    (xtk::ld "test-code")
+    (xtk::ld "main-window")
+    (xtk::ld "coder-window")
+    (xtk::ld "tree-window")
+    (xtk::ld "dialogs")
+    (xtk::ld "color")
+    (xtk::ld "widget-drag")
+    (xtk::ld "grabber")
+    (xtk::ld "interface")
+    (xtk::ld "form-view")
+    (xtk::ld "form-cmds")
+    (xtk::ld "prefs"))
+
+(xtk::ld "ib-demo")
+(xtk::ld "demo-view")

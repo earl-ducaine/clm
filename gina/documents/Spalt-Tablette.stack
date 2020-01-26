@@ -1,0 +1,13 @@
+"hyper"
+883 547
+1
+9
+6
+:view-element 367 251 "View1" "Code2" 15 15
+:code-element 370 115 "Code2" "(draw-arc View1 
+   10 10 (* 3 Scale6) (* 2 Scale7) 0 
+   (* 0.02 pi Scale5 ) t)" NIL 15 290
+:code-element 308 57 "Code4" "(force-redraw View1)" NIL 403 290
+:scale-element 87 248 "Scale5" "Code4" 75 403 15
+:scale-element 87 248 "Scale6" "Code4" 100 511 15
+:scale-element 87 248 "Scale7" "Code4" 100 619 15

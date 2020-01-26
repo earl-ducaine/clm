@@ -1,0 +1,30 @@
+# @(#)INSTALL	1.3 9/11/92
+
+Installation of GINA requires the following steps (on Genera, see the file
+"../clm/lisp/sysdcl.lisp" for the steps how to establish a system definition):
+
+1.  Make sure that your Lisp image includes or has access to CLX and CLOS.
+    If they are not supported by your vendor, get CLX from the MIT X release
+    (at least X11R4) and PCL from arisia.xerox.com (at least "Victoria Day"
+    5/22/89)
+
+2.  Edit the definition of *bitmap-directories* in "globals.lisp" to set the
+    location where the GINA bitmap directory is accessible at run-time.
+
+3.  Install CLM as described in clm/INSTALL.
+
+4.  Go to this (./gina) directory and start Lisp.
+
+5.  Load the CLM library. Go to the directory where it is
+    installed (e.g. ../clm/lib) and type (load "clm"). 
+
+6.  Return to the ./gina directory and type (load "load").
+
+7.  If you want to include the demos, go to the ./gina-demos directory
+    and type (load "load").
+
+8.  If you want to include the Interface Builder, go to the ./ib
+    directory and type (load "load").
+
+9.  Optionally save the resulting image by typing 
+       (xtk::save-lisp "<your-image-pathname>")

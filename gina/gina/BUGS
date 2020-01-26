@@ -1,0 +1,19 @@
+Bugs
+====
+
+- Printing of documents is not yet fully implemented even though the
+corresponding menu entries exist.
+
+- Sometimes, the automounter on SUNs makes it impossible to reach a directory
+with the finder. 
+
+- In the bitmap-editor demo, when setting a new size for the bitmap, the
+mini-view does not enlarge correctly. The correct size appears if you
+resize the window through the window manager decoration. A similar hack
+could be included in the code.
+
+- If you want to disable the Motif 1.1 keyboard traversal feature, but
+want to retain the ability to dismiss dialogs with the Return key, you
+must disable traversal only for certain widget classes. For this
+purpose, you can include the contents of "X-initfiles/traversal-defaults"
+in your .Xdefaults.
