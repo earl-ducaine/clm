@@ -1,7 +1,7 @@
 /* "@(#)opcodes.h	1.8 9/21/93" */
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -59,7 +59,7 @@
 #define ClmTerminate            29    /* Terminate ClmLoop() */
 #define ClmMainLoop             30    /* Enter XtMainLoop() */
 #define ClmReturnValues         31    /* Send values to prolab */
-#define ClmAddEventHandler      32 
+#define ClmAddEventHandler      32
 #define ClmRemoveEventHandler   33
 #define ClmGetScreenSize        34
 #define ClmManagePopupChild     35
@@ -110,7 +110,7 @@
 #define ClmAddGraphRelations 78
 #define ClmRemoveGraphRelations 79
 #define ClmDoLayout 80
-#endif GRAPHWIDGET
+#endif // GRAPHWIDGET
 
 #define ClmCreateTimer 81
 #define ClmDestroyTimer 82

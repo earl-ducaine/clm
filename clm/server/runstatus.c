@@ -35,48 +35,42 @@ static char sccsid[] = "@(#)runstatus.c	1.2 1/28/92";
 #include <sys/types.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <unistd.h>
 
 /* Code to implement the runstatus stuff */
 
-/* 
+/*
 Lets hope that nothing is in the buffer when we want to do this.  Looking at the code which does not allocate
-and has a mp::without-scheduling we should be OK 
+and has a mp::without-scheduling we should be OK
 This code does assume that the buffer used for IO never overflows which does seem a little risky.
 Lets malloc the buffer and realloc if it ever looks like overflowing.
 */
 
 static int clmlockvalue = 0;
 
-exclclmlock(x)
-int x;
-{
+void exclclmlock(int x) {
     clmlockvalue += x;
 }
 
-int set_run_status (socket, widget, status)
-int socket, widget, status;
-{
-    int packet[7];
-    if (!clmlockvalue) {
-	packet[0] = ClmRunStatus;
-	packet[1] = 0;		/* serial */
-	packet[2] = 2;		/* number of arguments */
-	packet[3] = ClmArgInteger;
-	packet[4] = widget;
-	packet[5] = ClmArgInteger;
-	packet[6] = status;
-	return (write(socket,packet, sizeof(packet)));
-	}
-    else
-	return (0);
+int set_run_status (int socket, int widget, int status) {
+  int packet[7];
+  if (!clmlockvalue) {
+    packet[0] = ClmRunStatus;
+    packet[1] = 0;		/* serial */
+    packet[2] = 2;		/* number of arguments */
+    packet[3] = ClmArgInteger;
+    packet[4] = widget;
+    packet[5] = ClmArgInteger;
+    packet[6] = status;
+    return (write(socket,packet, sizeof(packet)));
+  }
+  else {
+    return (0);
+  }
 }
 
 
-
-/*
-GC status
-*/
-
+// GC status
 
 
 static int gc_widget = 0;
@@ -84,25 +78,24 @@ static int gc_fd = 0;
 
 extern int (*gc_before)(),(*gc_after)();
 
-starting_gc()
-{
-    if (gc_widget)
-	set_run_status(gc_fd, gc_widget, 2);
+int starting_gc() {
+  if (gc_widget) {
+    set_run_status(gc_fd, gc_widget, 2);
+  }
+  return 0;
 }
 
-stopping_gc()
-{
-    if (gc_widget)
-	set_run_status(gc_fd, gc_widget, 1);
+int stopping_gc() {
+  if (gc_widget) {
+    set_run_status(gc_fd, gc_widget, 1);
+  }
+  return 0;
 }
 
-init_gc_stuff(fd, x)
-int x;
-{
+void init_gc_stuff(int fd, int x) {
     gc_widget = x;
     gc_fd = fd;
     gc_before = starting_gc;
     gc_after = stopping_gc;
     signal(SIGPIPE, SIG_IGN);
 }
-

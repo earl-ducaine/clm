@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)unixio.c	1.7 9/15/92";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)unixio.c	1.7 9/15/92";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -34,6 +34,8 @@ static char sccsid[] = "@(#)unixio.c	1.7 9/15/92";
 
 #include "interface.h"
 #include "functions.h"
+#include <stdlib.h>
+#include "io.h"
 
 static int ClmSerialNumber; /* Current serial number */
 static int write_lisp_records = 0;
@@ -75,7 +77,7 @@ ClmCommand *command;
 	            return(-1);
 		break;
             default:
-		fprintf(stderr, "ARG %d: illegal arg_type %d\n", 
+		fprintf(stderr, "ARG %d: illegal arg_type %d\n",
 				 i, command->args[i].arg_type );
                 abort();
 	}
@@ -85,18 +87,16 @@ ClmCommand *command;
 
 /* Receive an argument */
 
-int ReceiveArgument(sock, arg)
-int      sock;
-ClmArg  *arg;
-{
+int ReceiveArgument(int sock, ClmArg* arg) {
     int   n;
     int   rc;
     char *in_rec_buf;
     char *ReceiveString();
-
-    if( do_read(sock, &(arg->arg_type), sizeof(arg->arg_type)) == -1 )
+    unsigned char buff[sizeof(arg->arg_type)];
+    if(do_read(sock, buff, sizeof(arg->arg_type)) == -1 ) {
 	return(-1);
-
+    }
+    memcpy(&(arg->arg_type), buff, sizeof(arg->arg_type));
     switch(arg->arg_type) {
 	case ClmArgInteger:
 	    arg->v.int_value = ReceiveInteger(sock,&rc);
@@ -104,14 +104,14 @@ ClmArg  *arg;
 	case ClmArgFloat:
 	    arg->v.float_value = ReceiveFloat(sock,&rc);
 	    return(rc);
-	case ClmArgString: 
-	case ClmArgSymbol: 
+	case ClmArgString:
+	case ClmArgSymbol:
             in_rec_buf = ReceiveString(sock,&rc);
 	    arg->v.string_value = ClmMalloc (strlen (in_rec_buf) + 1);
             strcpy (arg->v.string_value, in_rec_buf);
 	    return(rc);
         default:
-	    fprintf(stderr, "ReceiveArgument: illegal arg_type %d\n", 
+	    fprintf(stderr, "ReceiveArgument: illegal arg_type %d\n",
 		    arg->arg_type);
 	    return(-1);
     }
@@ -119,32 +119,29 @@ ClmArg  *arg;
 
 /* Receive a command */
 
-ClmCommand *ReceiveCommand(sock)
-int sock;
-{
-    register ClmCommand *cmd;
-    register int i;
+ClmCommand *ReceiveCommand(int sock) {
+  ClmCommand* cmd = (ClmCommand*)ClmMalloc(sizeof(ClmCommand));
+  int i;
+  unsigned char buff[sizeof(ClmCommand)];
+  if (do_read(sock, buff, CommandSize) == -1) {
+    return NULL;
+  }
+  memcpy(cmd, buff, sizeof(ClmCommand));
+  /* Memory leak !!!!!! */
+  /* Shouldn't allocated anything if num_arg == 0 */
+  cmd->args =
+    (ClmArg *)ClmMalloc((cmd->num_arg == 0 ? 1 : cmd->num_arg)*sizeof(ClmArg));
 
-    cmd = (ClmCommand *)ClmMalloc(sizeof(ClmCommand));
+  for( i=0; i<cmd->num_arg; ++i )
+    if( ReceiveArgument(sock, &(cmd->args[i])) == -1 )
+      return(NULL);
 
-    if( do_read(sock, cmd, CommandSize) == -1 )
-	return(NULL);
+  if( write_lisp_records )
+    ClmPrintCommand(cmd);
 
-    /* Memory leak !!!!!! */
-    /* Shouldn't allocated anything if num_arg == 0 */
-    cmd->args = 
-     (ClmArg *)ClmMalloc((cmd->num_arg == 0 ? 1 : cmd->num_arg)*sizeof(ClmArg));
+  ClmSerialNumber = cmd->serial;
 
-    for( i=0; i<cmd->num_arg; ++i )
-	if( ReceiveArgument(sock, &(cmd->args[i])) == -1 )
-	    return(NULL);
-    
-    if( write_lisp_records )
-	ClmPrintCommand(cmd);
-
-    ClmSerialNumber = cmd->serial;
-
-    return(cmd);
+  return(cmd);
 }
 
 /* Confirm a command */
@@ -188,7 +185,7 @@ register ClmCommand *cmd;
 	    if( cmd->args[i].arg_type == ClmArgString ||
 		cmd->args[i].arg_type == ClmArgSymbol )
 		free(cmd->args[i].v.string_value);
-	
+
 	if(cmd->num_arg > 0)
 	    free(cmd->args);
 
@@ -196,32 +193,30 @@ register ClmCommand *cmd;
     }
 }
 
-void ClmPrintCommand(command)
-ClmCommand *command;
-{
+void ClmPrintCommand(ClmCommand* command) {
     int i;
 
     if( command == NULL )
 	return;
 
-    fprintf(stderr, "command = %d   serial = %d num_arg = %d    args=%x\n",
-	    command->command, command->serial, command->num_arg, command->args);
+    fprintf(stderr, "command = %d   serial = %d num_arg = %d\n",
+	    command->command, command->serial, command->num_arg);
 
     if( write_verbose ) {
 	fprintf(stderr,"======================================\n");
 	for(i=0; i<command->num_arg; i++) {
 	    if(command->args[i].arg_type == ClmArgFloat)
-		fprintf(stderr,"arg_type=ClmArgFloat  value=%f\n", 
-			command->args[i].v);  
+		fprintf(stderr,"arg_type=ClmArgFloat  value=%f\n",
+			command->args[i].v.float_value);
 	    if(command->args[i].arg_type == ClmArgSymbol)
-		fprintf(stderr,"arg_type=ClmArgSymbol  value=%s\n", 
-			command->args[i].v.symbol_value);  
+		fprintf(stderr,"arg_type=ClmArgSymbol  value=%s\n",
+			command->args[i].v.symbol_value);
 	    if(command->args[i].arg_type == ClmArgInteger)
-		fprintf(stderr,"arg_type=ClmArgInteger  value=%d\n", 
-			command->args[i].v.int_value);  
+		fprintf(stderr,"arg_type=ClmArgInteger  value=%d\n",
+			command->args[i].v.int_value);
 	    if(command->args[i].arg_type == ClmArgString)
-		fprintf(stderr,"arg_type=ClmArgString   value=%s\n", 
-			command->args[i].v.string_value);  
+		fprintf(stderr,"arg_type=ClmArgString   value=%s\n",
+			command->args[i].v.string_value);
 	}
 	fprintf(stderr,"\n");
     }

@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)io.c	1.7 7/20/92";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)io.c	1.7 7/20/92";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -31,8 +31,15 @@ static char sccsid[] = "@(#)io.c	1.7 7/20/92";
 #include <stdio.h>
 #include "io.h"
 #include <ctype.h>
+#include <strings.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
 
-extern char *malloc(), *realloc();
+void* realloc(void*, long unsigned int);
+void* malloc(long unsigned int);
+
+int FlushBuffer(int sock);
 
 #define SERVER_BUFSIZ BUFSIZ
 
@@ -45,11 +52,11 @@ struct {
  *  Flush output buffer if an overflow is detected.
  */
 
-int send_bytes(ptr, size, sock) 
+int send_bytes(ptr, size, sock)
 char *ptr;
 int size;
 int sock;
-{ 
+{
     int to_send = size;
     int n_bytes;
 
@@ -62,7 +69,7 @@ int sock;
         output_buffer.pos += n_bytes;
 	if(output_buffer.pos == SERVER_BUFSIZ) {
 	    if( FlushBuffer(sock) == -1)
-		return(-1);
+		return -1;
 	}
         to_send -= n_bytes;
     }
@@ -88,10 +95,7 @@ int value;
     return(0);
 }
 
-int SendFloat(sock, value )
-int   sock;
-float value;
-{
+int SendFloat(int sock, float value) {
     SEND_BYTES(&ArgIsFloat,sizeof(int));
     SEND_BYTES(&value,sizeof(float));
     return(0);
@@ -101,11 +105,9 @@ float value;
 
 /* maintain a temporary string buffer */
 
-char *get_temp_string_buffer(len)
-int len;
-{
+char *get_temp_string_buffer(int len) {
     static char *temp;
-    static length = 0;
+    static int length = 0;
 
     if (length == 0 || (length < len)) {
 	length = len > 4096 ? len : 4096;
@@ -113,7 +115,7 @@ int len;
 	    temp = malloc(length);
 	else
 	    temp = realloc(temp, length);
-    }	
+    }
     return(temp);
 }
 
@@ -153,49 +155,38 @@ int length;
 }
 
 
-int SendSymbolL(sock, symbol )
-int   sock;
-char *symbol;
-{
+int SendSymbolL(int sock, char* symbol) {
     int length = (symbol ? (*symbol ? strlen(symbol) : 0) : 0);
     char  *string = strupcase(symbol,length);
 
     SEND_BYTES(&ArgIsSymbol,sizeof(int));
     SEND_BYTES(&length,sizeof(int));
-    if( length > 0) 
+    if( length > 0)
 	SEND_BYTES(string ,length);
     return(0);
 }
 
-int SendSymbol(sock, symbol )
-int   sock;
-char *symbol;
-{
+int SendSymbol(int sock, char* symbol) {
     int length = (symbol ? (*symbol ? strlen(symbol) : 0) : 0);
 
     SEND_BYTES(&ArgIsSymbol,sizeof(int));
     SEND_BYTES(&length,sizeof(int));
-    if( length > 0) 
+    if( length > 0)
 	SEND_BYTES(symbol,length);
     return(0);
 }
 
-int SendString(sock, string )
-int   sock;
-char *string;
-{
+int SendString(int sock, char* string) {
     int length = (string ? (*string ? strlen(string) : 0) : 0);
 
     SEND_BYTES(&ArgIsString,sizeof(int));
     SEND_BYTES(&length,sizeof(int));
-    if( length > 0) 
+    if( length > 0)
 	SEND_BYTES(string,length);
     return(0);
 }
 
-int SendHeader(sock,code,serial,length)
-int sock, code, length;
-{
+int SendHeader(int sock, int code, int serial, int length) {
     /* Force reset of buffer (it may not be reset because of a previous crash)*/
     output_buffer.pos = 0;
     SEND_BYTES(&code,sizeof(int));
@@ -204,9 +195,7 @@ int sock, code, length;
     return(0);
 }
 
-int FlushBuffer(sock)
-int sock;
-{
+int FlushBuffer(int sock) {
     int n;
     int not_written;
 
@@ -233,16 +222,12 @@ int sock;
  *  Return -1 on failure
  */
 
-int do_read(sock, ptr, size)
-int sock;
-char *ptr;
-int size;
-{
+int do_read(int sock, char* ptr, int size) {
     int not_read, n, n_intr = 0;
 
     not_read = size;
-    errno    = 0;
-    while( (n = read(sock, ptr+size-not_read, not_read)) != not_read) {
+    errno  = 0;
+    while ( (n = read(sock, ptr + size-not_read, not_read)) != not_read) {
 	if( n > 0 ) {
 	    not_read -= n;
 	}
@@ -261,53 +246,91 @@ int size;
     return(0);
 }
 
-#define READ_BYTES(n_bytes, buf) if( do_read(sock, buf, n_bytes) == -1) \
-				     { *rc = -1; return(0); } else *rc = 0
+#define READ_BYTES(n_bytes, buf) \
+  if(do_read(sock, (buf), (n_bytes)) == -1) {	\
+    *rc = -1; \
+    return 0;					\
+  } else { \
+    *rc = 0; \
+  }
 
-int ReceiveInteger(sock, rc)
-int  sock;
-int *rc;
-{
-    int value, n;
 
-    READ_BYTES(sizeof(int), (&value));
-    return(value);
+/* int bytes_to_integer (unsigned char* bytes) { */
+/*   unsigned char bytes[4]; */
+/*   unsigned long n = 175; */
+
+/*   bytes[0] = (n >> 24) & 0xFF; */
+/*   bytes[1] = (n >> 16) & 0xFF; */
+/*   bytes[2] = (n >> 8) & 0xFF; */
+/*   bytes[3] = n & 0xFF; */
+/* } */
+
+// bytes should be array of bytes of size(int).
+void integer_to_bytes (int integer, unsigned char* bytes) {
+  int number_bytes = sizeof(int);
+  int bits_to_shift;
+  for (int i = 0; i < number_bytes; i++) {
+    bytes[i] = (integer >> (i * 8)) & 0xFF;
+  }
 }
 
-float ReceiveFloat(sock, rc)
-int  sock;
-int *rc;
-{
-    float value;
-    int n;
-
-    READ_BYTES(sizeof(float), (&value));
-    return(value);
+// bytes should be array of bytes of size(int).
+int bytes_to_integer (unsigned char* bytes) {
+  int number_bytes = sizeof(int);
+  int bits_to_shift;
+  int integer = 0;
+  for (int i = number_bytes - 1; i == 0; i--) {
+    integer = (integer << 8) | bytes[i];
+  }
+  return integer;
 }
 
-char *readstrb;
-int readblength = -1;
+// bytes should be array of bytes of size(int).
+float bytes_to_float (unsigned char* bytes) {
+  fprintf (stderr, "Error: bytes_to_float not implemented");
+  return 0;
+}
 
-char *ReceiveString(sock, rc)
-int  sock;
-int *rc;
-{
-    int   length;
-    int   n;
+int ReceiveInteger(int sock, int* rc) {
+  int buffer_size = sizeof(int);
+  char value[buffer_size];
+  int n;
+  READ_BYTES(sizeof(int), (value));
+  *rc = 0;
+  return bytes_to_integer(value);
+}
 
-    READ_BYTES(sizeof(int), (&length));
-    if (length >= readblength) {
-       if (readblength != -1) free (readstrb);
-       readblength = length + 50;
-       readstrb = malloc (readblength);
-       if( readstrb == NULL ) {
-	  perror("malloc");
-	  *rc = -1;
-	  return(NULL);
-       }
+// Clearly not right
+float ReceiveFloat(int sock, int* rc) {
+  int buffer_size = sizeof(float);
+  char value[buffer_size];
+  *rc = 0;
+  READ_BYTES(sizeof(float), (value));
+  return bytes_to_float(value);
+}
+
+char *readstrb = NULL;
+  int readblength = -1;
+
+char* ReceiveString(int sock, int* rc) {
+  int buffer_size = 256;
+  char value[buffer_size];
+  int n;
+  READ_BYTES(buffer_size, value);
+  if (buffer_size >= readblength) {
+    if (readblength != -1) {
+      free (readstrb);
     }
-    READ_BYTES(length, readstrb);
-    *(readstrb+length) = '\0';
-    return(readstrb);
+    readblength = buffer_size + 50;
+    readstrb = malloc(readblength);
+    if(readstrb == NULL) {
+      perror("malloc");
+      *rc = -1;
+      return NULL;
+    }
+  }
+  // Is this a retry?
+  READ_BYTES(buffer_size, readstrb);
+  *(readstrb + buffer_size) = '\0';
+  return readstrb;
 }
-

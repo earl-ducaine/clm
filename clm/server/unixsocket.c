@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)unixsocket.c	1.10 12/20/93";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)unixsocket.c	1.10 12/20/93";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -33,7 +33,7 @@ static char sccsid[] = "@(#)unixsocket.c	1.10 12/20/93";
  *
  * This code was cribbed from lib/X/XConnDis.c.
  * Compile using
- *                    % cc -c socket.c -DUNIXCONN
+ *                    % cc -c socket.c
  */
 
 /* Adapted by GINA */
@@ -46,27 +46,28 @@ static char sccsid[] = "@(#)unixsocket.c	1.10 12/20/93";
 #include <errno.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
-#include <netdb.h> 
+#include <netdb.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
+#include <arpa/inet.h>
+
 #ifndef hpux
 #include <netinet/tcp.h>
 #endif
+
 #include <fcntl.h>
 #include <signal.h>
 
-#ifdef UNIXCONN
 #include <sys/un.h>
 #ifndef SOCKET_PATH
 #define SOCKET_PATH "/tmp/clm_socket"
-#endif 
-#endif /* UNIXCONN */
+#endif
 
 void bcopy();
 
-/* 
- * Attempts to connect to server, given host and xt_tcp_port. Returns file 
+/*
+ * Attempts to connect to server, given host and xt_tcp_port. Returns file
  * descriptor (network socket) or 0 if connection fails.
  */
 
@@ -78,15 +79,12 @@ int connect_to_toolkit_server (host, xt_tcp_port)
   struct sockaddr *addr;		/* address to connect to */
   struct hostent *host_ptr;
   int addrlen;			/* length of address */
-#ifdef UNIXCONN
   struct sockaddr_un unaddr;	/* UNIX socket address. */
-#endif
   extern char *getenv();
   extern struct hostent *gethostbyname();
   int fd;				/* Network socket */
   {
-#ifdef UNIXCONN
-    if ((host[0] == '\0') || 
+    if ((host[0] == '\0') ||
 	(strcmp("unix", host) == 0)) {
 	/* Connect locally using Unix domain. */
 	unaddr.sun_family = AF_UNIX;
@@ -98,20 +96,18 @@ int connect_to_toolkit_server (host, xt_tcp_port)
 	 */
 	if ((fd = socket((int) addr->sa_family, SOCK_STREAM, 0)) < 0)
 	    return(-1);	    /* errno set by system call. */
-    } else
-#endif
-    {
+    } else {
       /* Get the statistics on the specified host. */
-      if ((inaddr.sin_addr.s_addr = inet_addr(host)) == -1) 
+      if ((inaddr.sin_addr.s_addr = inet_addr(host)) == -1)
 	{
-	  if ((host_ptr = gethostbyname(host)) == NULL) 
+	  if ((host_ptr = gethostbyname(host)) == NULL)
 	    {
 	      /* No such host! */
 	      errno = EINVAL;
 	      return(-1);
 	    }
 	  /* Check the address type for an internet host. */
-	  if (host_ptr->h_addrtype != AF_INET) 
+	  if (host_ptr->h_addrtype != AF_INET)
 	    {
 	      /* Not an Internet host! */
 	      errno = EPROTOTYPE;
@@ -124,12 +120,12 @@ int connect_to_toolkit_server (host, xt_tcp_port)
 #ifdef hpux
 	  bcopy((char *)&host_ptr->h_addr_list[0],
 #else
-	  bcopy((char *)host_ptr->h_addr, 
+	  bcopy((char *)host_ptr->h_addr,
 #endif
-		(char *)&inaddr.sin_addr, 
+		(char *)&inaddr.sin_addr,
 		sizeof(inaddr.sin_addr));
-	} 
-      else 
+	}
+      else
 	{
 	  inaddr.sin_family = AF_INET;
 	}
@@ -148,7 +144,7 @@ int connect_to_toolkit_server (host, xt_tcp_port)
 	    setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &mi, sizeof (int));
           }*/
     }
-    if (connect(fd, addr, addrlen) == -1) 
+    if (connect(fd, addr, addrlen) == -1)
       {
 	(void) close (fd);
 	return(-1); 	    /* errno set by system call. */
@@ -191,18 +187,17 @@ char *path;
     return(ans ? 1 : 0);
 }
 
-connect_directly_to_toolkits (toolkits)
-char *toolkits;
-{
+int connect_directly_to_toolkits (char* toolkits) {
     int sv[2];
     int exit_status;
     extern char **environ;
 
-    /* made this static because of the problem on SunOS 4.0 that seemed to trash the parent variable in the parent thread! */
+    /* made this static because of the problem on SunOS 4.0 that
+       seemed to trash the parent variable in the parent thread! */
 
     static int parent_fd, child_fd;
 
-    if (!socketpair(AF_UNIX,SOCK_STREAM,0,sv)) 
+    if (!socketpair(AF_UNIX,SOCK_STREAM,0,sv))
     {
 	int pid;
 #ifndef NOCHLD
@@ -247,8 +242,11 @@ char *toolkits;
 		  argv[0] = toolkits;
 		  argv[1] = x;
 		  argv[2] = (char*)NULL;
-		  { int i = getpid ();
-		    setpgrp (i,i); }
+		  {
+		    // int i = getpid();
+		    // set calling process PGID to its process ID
+		    setpgrp();
+		  }
 		  sprintf(x, "%d", child_fd);
 		  execve(toolkits, argv, environ);
 		  perror("exece:");
@@ -289,6 +287,3 @@ char *toolkits;
 	return (-1);
     }
 }
-
-
-
