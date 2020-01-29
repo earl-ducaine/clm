@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)td.c	1.8 9/9/93";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)td.c	1.8 9/9/93";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -36,12 +36,15 @@ static char sccsid[] = "@(#)td.c	1.8 9/9/93";
  * (cer@franz.com)
  */
 
+
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
 #ifdef UNIXCONN
 #include <sys/un.h>
+#include <unistd.h>
 #endif
 
 #include <netinet/in.h>
@@ -195,7 +198,7 @@ int sa_len;
     new->next = child_list.next;
     new->prev = &child_list;
     new->selected = 0;
-    sprintf(new->child_name, "  %s:%6d ", 
+    sprintf(new->child_name, "  %s:%6d ",
 	    sa->sa_family == AF_UNIX ? "UNIX" : "INET", pid );
     XtSetArg(arg[0], XmNlabelString,
 	     XmStringLtoRCreate(new->child_name,XmSTRING_DEFAULT_CHARSET));
@@ -224,7 +227,7 @@ int pid;
     fprintf(stderr,"Can't find child %d\n",pid);
     fflush(stderr);
 }
-	    
+
 reset_sig_child_handler()
 {
     int sigchld_handler();
@@ -253,8 +256,7 @@ char *addr;
     reset_sig_child_handler();
 }
 
-close_sockets() 
-{
+close_sockets() {
     extern int errno;
 
     if( ! dont_dump )
@@ -265,7 +267,7 @@ close_sockets()
 	unlink(socket_path);
     }
 #endif
-    if (socket_port) 
+    if (socket_port)
 	close(inet_socket);
     if( dont_dump )
 	exit(0);
@@ -301,7 +303,7 @@ caddr_t call_data;
 
 
 
-main(argc,argv) 
+main(argc,argv)
 int argc;
 char **argv;
 {
@@ -318,11 +320,11 @@ char **argv;
     int ns, retries;
     Arg arg[2];
     XtAppContext app_context;
-    
+
     server_path = SERVER_PATH;
 
     /* Look for:
-       -server pathname 
+       -server pathname
          where to find the executable?
        -tcp port_number
           which port number to use
@@ -330,10 +332,10 @@ char **argv;
        -unix filename
           pathname for the unix domain socket.
 	  by default there is none
-       -nostatus 
+       -nostatus
           Suppress status window.
 	  */
-    
+
 {
     int i = 1;
     for (i = 1 ; i < argc ; i++) {
@@ -363,9 +365,9 @@ char **argv;
             server_path = (char *)XtMalloc (strlen(argv[i]) + 1);
             strcpy (server_path, argv[i]);
 	}
-    }}	    
-		
-	
+    }}
+
+
     /* Change the process group */
 
      { int i = getpid ();
@@ -478,7 +480,7 @@ char **argv;
     if (display_status) {
 	XtToolkitInitialize();
 	app_context = XtCreateApplicationContext();
-    
+
 	if( (display = XtOpenDisplay(app_context,NULL,APPNAME, APPCLASS,
 				     NULL,0,&argc,argv)) == NULL) {
 	    perror("XtOpenDisplay");
@@ -489,7 +491,7 @@ char **argv;
 	shell = XtAppCreateShell(APPNAME, APPCLASS, applicationShellWidgetClass,
 				 display, arg, 1 );
 
-	outer_form = 
+	outer_form =
 	    XtCreateManagedWidget("row-column",xmRowColumnWidgetClass,shell,arg,1);
 
 	quit_button =
@@ -506,7 +508,7 @@ char **argv;
 	XtSetArg(arg[0],XmNborderWidth,0);
 	c_label =
 	    XtCreateManagedWidget("Clients",xmLabelWidgetClass,child_box,arg,1);
-    
+
 	XtRealizeWidget(shell);
 #ifdef UNIXCONN
 	if (socket_path)
@@ -531,8 +533,8 @@ char **argv;
                    perror("select");
 		   exit(0);}
 	    }
-/*	    printf("masks are %d %d %d\n", fdset, 
-		   inet_socket_mask, 
+/*	    printf("masks are %d %d %d\n", fdset,
+		   inet_socket_mask,
 		   unix_socket_mask); */
 	    if (socket_path &&  (unix_socket_mask & fdset)) {
 		/*printf("starting unix socket\n");*/
@@ -542,8 +544,7 @@ char **argv;
 		/*printf("starting inet socket\n");*/
 		fork_server(NULL,&inet_socket);
 	    }
-		
+
 	}
     }
 }
-

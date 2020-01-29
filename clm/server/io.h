@@ -1,7 +1,7 @@
 /* "@(#)io.h	1.6 1/28/92" */
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -28,6 +28,9 @@
 
 /* Values for the ClmArg.arg_type and ClmArgHeader.arg_type fields */
 
+#ifndef IO_H
+#define IO_H
+
 #define ClmArgInvalid (-1)
 #define ClmArgInteger 0
 #define ClmArgString  1
@@ -36,7 +39,7 @@
 /*#define ClmArgBinary  4*/
 
 union ClmValue {
-    int      int_value; 
+    int      int_value;
     char    *string_value;
     char    *symbol_value;
     float    float_value;
@@ -59,3 +62,15 @@ typedef int WidgetID;
 
 #define CommandSize (sizeof(ClmCommand)-sizeof(ClmArg *))
 
+int FlushBuffer(int sock);
+int SendFloat(int sock, float value);
+int SendHeader(int sock, int code, int serial, int length);
+int SendString(int sock, char* string);
+int SendSymbol(int sock, char* symbol);
+int SendSymbolL(int sock, char* symbol);
+int ReceiveInteger(int sock, int* rc);
+float ReceiveFloat(int sock, int* rc);
+char* ReceiveString(int sock, int* rc);
+
+
+#endif
