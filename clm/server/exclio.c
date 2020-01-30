@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)exclio.c	1.6 1/28/92";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)exclio.c	1.6 1/28/92";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Thomas Spandoeck
@@ -34,7 +34,7 @@ static char sccsid[] = "@(#)exclio.c	1.6 1/28/92";
 #include <sys/types.h>
 #include <stdio.h>
 #include "io.h"
-#include <lisp.h>  /* Allegro supplied file */
+// #include <lisp.h>  /* Allegro supplied file */
 
 
 /*  Read a number of bytes from the socket.
@@ -44,17 +44,19 @@ static char sccsid[] = "@(#)exclio.c	1.6 1/28/92";
 
 extern int do_read();
 
-#define READ_BYTES(n_bytes, buf) if( do_read(sock, buf, n_bytes) == -1) \
-				     { *rc = -1; return(0); } else *rc = 0
+#define READ_BYTES(n_bytes, buf) \
+  if(do_read(sock, (buf), (n_bytes)) == -1) {	\
+    *rc = -1;					\
+    return 0;					\
+  } else {					\
+    *rc = 0;					\
+  }
 
-char *ReceiveEXCLString(sock, index, length, rc)
-int  sock;
-int *rc;
-{
+char* ReceiveEXCLString(int sock, int index, int length, int* rc) {
     char *string_area;
 
-    string_area = (char *) Vecdata(SymbolValue(lisp_value(index)));
+    string_area = (char*)Vecdata(SymbolValue(lisp_value(index)));
     READ_BYTES(length, string_area);
     /* *(string_area+length) = '\0'; */
-    return((char *) SymbolValue(lisp_value(index)));
+    return (char*)SymbolValue(lisp_value(index));
 }

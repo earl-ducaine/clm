@@ -51,6 +51,7 @@ static char sccsid[] = "@(#)td.c	1.8 9/9/93";
 #include <signal.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #ifdef rs6000
 #include <sys/m_wait.h>
@@ -100,6 +101,9 @@ struct t_child {
 
 TChild child_list = {0,0,NULL,NULL,&child_list,&child_list};
 
+void close_sockets();
+void add_child(int pid, struct sockaddr* sa, int sa_len);
+
 /* controls whether we connect to a server and display stuff */
 
 int display_status = 1 ;
@@ -116,13 +120,13 @@ int dont_dump = TD_DONT_DUMP;
 int dont_dump = 0;
 #endif
 
-void fork_server(client_data,sock,id)
+void fork_server(client_data, sock,id)
 caddr_t client_data;
 int *sock;
 XtInputId *id;
 {
     int pid;
-    int desc;
+    unsigned char desc;
     struct sockaddr sa;
     int sa_len = sizeof(struct sockaddr);
     int i;
@@ -142,10 +146,10 @@ XtInputId *id;
 	    for(i=(FD_SETSIZE-1); i>2; i--)
 #else
 	    for(i=getdtablesize()-1; i>2; i--)
-#endif hpux
+#endif
 		if( i != desc )
 		    close(i);
-            sprintf(socket_str,"%1d",desc);
+            sprintf(socket_str, "%1d", desc);
 	    execve( server_path, args, environ);
 	    perror("execve");
 	    close_sockets();
@@ -176,11 +180,7 @@ caddr_t call_data;
     XtSetValues(widget,arg,1);
 }
 
-add_child(pid,sa,sa_len)
-int pid;
-struct sockaddr *sa;
-int sa_len;
-{
+void add_child(int pid, struct sockaddr* sa, int sa_len) {
     TChild *new;
     char *child_name;
     Arg arg[1];
@@ -228,35 +228,31 @@ int pid;
     fflush(stderr);
 }
 
-reset_sig_child_handler()
-{
-    int sigchld_handler();
+void sigchld_handler(int sig);
 
+void reset_sig_child_handler() {
     signal(SIGCHLD, sigchld_handler);
 }
 
-int sigchld_handler(sig,code,scp,addr)
-int sig,code;
-struct sigcontext *scp;
-char *addr;
-{
-    int pid;
-    union wait w;
-
-    if( (pid = wait3(&w.w_status,WNOHANG,NULL)) == -1 )
-	perror("wait3");
-    if( pid == 0 ) {
-	fprintf(stderr,"wait3: nothing to report (PID == 0)\n");
-	fflush(stderr);
+void sigchld_handler(int sig) {
+  int pid;
+  int status;
+  // union wait w;
+  // if( (pid = wait3(&w.w_status, WNOHANG, NULL)) == -1 )
+  if( (pid = wait3(&status, WNOHANG, NULL)) == -1 )
+    perror("wait3");
+  if( pid == 0 ) {
+    fprintf(stderr,"wait3: nothing to report (PID == 0)\n");
+    fflush(stderr);
+  } else {
+    if (display_status) {
+      delete_child(pid);
     }
-    else {
-	if (display_status)
-	    delete_child(pid);
-    }
-    reset_sig_child_handler();
+  }
+  reset_sig_child_handler();
 }
 
-close_sockets() {
+void close_sockets() {
     extern int errno;
 
     if( ! dont_dump )
@@ -302,13 +298,9 @@ caddr_t call_data;
 }
 
 
-
-main(argc,argv)
-int argc;
-char **argv;
-{
+void main(int argc, char** argv) {
 #ifdef UNIXCONN
-    struct sockaddr_un sa_un;
+    struct sockaddr sa_un;
 #endif
     struct sockaddr_in sa_in;
     long mask;
@@ -391,11 +383,11 @@ char **argv;
 #ifdef UNIXCONN
     /* Bind unix socket to a path in the directory hierarchie */
     if (socket_path) {
-	sa_un.sun_family = AF_UNIX;
-	strcpy(sa_un.sun_path, socket_path);
+	sa_un.sa_family = AF_UNIX;
+	strcpy(sa_un.sa_data, socket_path);
 
-	for( retries = 0; retries <= TD_RETRIES; retries++ ) {
-	    if( bind(unix_socket,&sa_un,strlen(SOCKET_PATH)+2) < 0 ) {
+	for(retries = 0; retries <= TD_RETRIES; retries++) {
+	    if( bind(unix_socket, &sa_un, strlen(SOCKET_PATH)+2) < 0 ) {
 		if( errno == EADDRINUSE ) {
 		    if( retries == 0 )
 			unlink(socket_path);  /* try to remove clm_socket */
@@ -512,19 +504,32 @@ char **argv;
 	XtRealizeWidget(shell);
 #ifdef UNIXCONN
 	if (socket_path)
-	    XtAppAddInput(app_context, unix_socket,XtInputReadMask,fork_server,NULL);
+	    XtAppAddInput(app_context,
+			  unix_socket,
+			  (XtPointer)XtInputReadMask,
+			  fork_server,
+			  NULL);
 #endif
 	if (socket_port)
-	    XtAppAddInput(app_context, inet_socket,XtInputReadMask,fork_server,NULL);
+	    XtAppAddInput(app_context,
+			  inet_socket,
+			  (XtPointer)XtInputReadMask,
+			  fork_server,
+			  NULL);
 
 	XtAppMainLoop(app_context);
     }
     else {
 	while (1) {
-	    int fdset = inet_socket_mask | unix_socket_mask;
+	  fd_set rfds;
+
+	    FD_ZERO(&rfds);
+	  FD_SET(0, &rfds);
+	  FD_SET(inet_socket_mask, &rfds);
+	  FD_SET(unix_socket_mask, &rfds);
 	    int n;
 	    /*printf("calling select %d\n", fdset);*/
-	    n = select(32, &fdset, NULL, NULL, NULL);
+	    n = select(32, &rfds, NULL, NULL, NULL);
 	    /*printf("select returned %d\n",n);*/
 	    if ((n < 0)) {
                 if ( (errno == EINTR))
@@ -536,11 +541,14 @@ char **argv;
 /*	    printf("masks are %d %d %d\n", fdset,
 		   inet_socket_mask,
 		   unix_socket_mask); */
-	    if (socket_path &&  (unix_socket_mask & fdset)) {
+	    // if (socket_path &&  (unix_socket_mask & rfds)) {
+	    if (socket_path && FD_ISSET(unix_socket_mask, &rfds)) {
+
 		/*printf("starting unix socket\n");*/
 		fork_server(NULL, &unix_socket);
 	    }
-	    if  (socket_port && (inet_socket_mask & fdset)) {
+	    // if  (socket_port && (inet_socket_mask & fdset)) {
+	    if (socket_path && FD_ISSET(inet_socket_mask, &rfds)) {
 		/*printf("starting inet socket\n");*/
 		fork_server(NULL,&inet_socket);
 	    }

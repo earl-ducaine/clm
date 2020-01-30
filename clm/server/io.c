@@ -269,7 +269,7 @@ int do_read(int sock, char* ptr, int size) {
 void integer_to_bytes (int integer, unsigned char* bytes) {
   int number_bytes = sizeof(int);
   int bits_to_shift;
-  for (int i = 0; i < number_bytes; i--) {
+  for (int i = 0; i < number_bytes; i++) {
     bytes[i] = (integer >> (i * 8)) & 0xFF;
   }
 }
@@ -291,7 +291,7 @@ float bytes_to_float (unsigned char* bytes) {
   return 0;
 }
 
-int receiveinteger(int sock, int* rc) {
+int ReceiveInteger(int sock, int* rc) {
   int buffer_size = sizeof(int);
   char value[buffer_size];
   int n;
@@ -330,7 +330,7 @@ char* ReceiveString(int sock, int* rc) {
     }
   }
   // Is this a retry?
-  READ_BYTES(length, readstrb);
+  READ_BYTES(buffer_size, readstrb);
   *(readstrb + buffer_size) = '\0';
   return readstrb;
 }
