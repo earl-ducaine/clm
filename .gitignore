@@ -1,4 +1,9 @@
 
 
 
+ClassTable.inc
+clm-server
+GenTable
+clm-td
+
 *.o

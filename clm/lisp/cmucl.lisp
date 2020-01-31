@@ -6,44 +6,22 @@
 
 (export 'clm-error)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; This code is executed whenever the compiled CLM code is loaded
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; This code is executed whenever the compiled CLM code is loaded
+
 
 ;; Ensure that foreign object code is loaded exactly once
+
 (unless (member :motif-server *features*)
   (ext:load-foreign (list "unixsocket.o" "io.o")
 		      :libraries '("-lc" "-lm")))
 (pushnew :motif-server *features*)
 (pushnew :clm-has-handler *features*)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; The files that need to be compiled for CLM
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *clm-files*
-  '(("pkg")
-    ("defs")
-    ("cmucl" "defs")
-    ("low" "cmucl" "defs")
-    ("files" "defs")
-    ("display" "defs")
-    ("convenience" "defs")
-    ("widgets" "defs")
-    ("text" "defs")
-    ("callbacks" "defs")
-    ("events" "defs")
-    ("transl" "defs")
-    ("dialogs" "defs")
-    ("cursor" "defs")
-    ("color" "defs")
-    ("listw" "defs")
-    ("timers" "defs")
-    ("graph" "defs")))
+;;; The files that need to be compiled for CLM
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;
@@ -56,7 +34,7 @@
 
 (defun binary-file-name (file-name)
   (format nil "~a~a" file-name ".sparcf"))
-   
+
 ;; ld loads a binary file. The source is compiled if necessary
 ;; The source is also compiled if the depends-on file was modified after
 ;; source was compiled
@@ -78,13 +56,13 @@
 ;;;;;
 ;;;;;   Save a lisp image
 ;;;;;
-;;;;;   After calling (save-lisp "world") two files 
+;;;;;   After calling (save-lisp "world") two files
 ;;;;;   "world.core" and "world.obj" are saved.
 ;;;;;   For loading the world both files are needed in the current directory.
-;;;;;   To resume the saved world call: 
+;;;;;   To resume the saved world call:
 ;;;;;   lisp -core world.core [-init my-inits]
 ;;;;;   Looks for my-inits in the home-dir of user (if specified)
-;;;;;   or init.<obj.type> or init.lisp in the home-dir of user 
+;;;;;   or init.<obj.type> or init.lisp in the home-dir of user
 ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -92,7 +70,7 @@
   "saves a world under current directory"
   (setq name-core-file   (format nil "~a.core" name))
   (setq name-object-file (format nil "~a.obj"  name))
-  (ext:run-program "/bin/sh" 
+  (ext:run-program "/bin/sh"
     (list "-c"
      (format nil "cp ~a ~a" system::*previous-linked-object-file* name-object-file)))
   (user::gc t)
@@ -187,7 +165,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;
 ;;;;; Kill a running process
-;;;;; 
+;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro process-kill (process)
@@ -201,7 +179,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;
 ;;;;; Test whether the given path is a directory
-;;;;; 
+;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (alien:def-alien-routine is-directory
@@ -211,7 +189,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;
 ;;;;; Listen for input on the Motif server's connection
-;;;;; 
+;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (alien:def-alien-routine listen-to-socket
@@ -226,13 +204,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;
-;;;;; Listen to the Motif server 
+;;;;; Listen to the Motif server
 ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun wait-for-input-from-server (connection wait-function)
   (unless (funcall wait-function connection)
-    (system:wait-until-fd-usable (toolkit-connection-stream connection) 
+    (system:wait-until-fd-usable (toolkit-connection-stream connection)
 				 :input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -246,7 +224,7 @@
   (host c-call:c-string)
   (port c-call:int))
 
-(alien:def-alien-routine connect-directly-to-toolkits 
+(alien:def-alien-routine connect-directly-to-toolkits
     c-call:int
   (binary c-call:c-string))
 
@@ -262,7 +240,7 @@
 
 (defun open-motif-stream (connection host)
   (if host
-      
+
       ;; try to connect  via socket to existing clmd on host
       (let ((fd (connect-to-toolkit-server host *xt-tcp-port*)))
 	(declare (fixnum fd))
@@ -296,7 +274,7 @@
       (mapc #'try-dir dirs)
       (error "Could not find the binary ~S in any of ~{~A ~}"
 	     binary dirs))))
-      
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;
 ;;;;; Close the stream
@@ -317,7 +295,7 @@
 ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(alien:def-alien-routine ("SendHeader" send-header) 
+(alien:def-alien-routine ("SendHeader" send-header)
     c-call:int
   (stream c-call:int)
   (code   c-call:int)
@@ -366,13 +344,13 @@
   ;;; and because the C io functions must not be interrupted
   ;;% was mp:without-scheduling
   (when (eql (system:without-interrupts
-	      (xt-send-command (toolkit-connection-stream *motif-connection*) 
+	      (xt-send-command (toolkit-connection-stream *motif-connection*)
 			       code serial list-of-args)
 	      (flush-buffer (toolkit-connection-stream *motif-connection*)))
 	     -1)
     (clm-error "xt-send-command failed~%")))
 
-(alien:def-alien-routine ("ReceiveInteger" receive-integer)  
+(alien:def-alien-routine ("ReceiveInteger" receive-integer)
     c-call:int
   (stream c-call:int)
   (rc (* c-call:int) :out))
@@ -441,8 +419,8 @@
   (let ((fd (toolkit-connection-stream *motif-connection*)))
     (when (assoc fd *active-clm-handlers*)
 	(break "Hey, there's already a handler for fd=~d." fd))
-    
-    (push (cons fd 
+
+    (push (cons fd
 		(system:add-fd-handler
 		 fd
 		 :input
@@ -482,11 +460,3 @@
 	  (t
 	   (clm-error
 	    "Cannot remove handler (fd=~d) because there is none." fd)))))
-
-
-
-
-
-
-
-
