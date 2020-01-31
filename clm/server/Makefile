@@ -23,11 +23,11 @@ EXCL_INCLUDE = -I/vol/allegro/lib/misc
 LIB_PATH = -L/usr/lib
 
 # Any additional CFLAGS
-ADD_CFLAGS = -D_NO_PROTO -ggdb
+ADD_CFLAGS = -D_NO_PROTO -ggdb -DGC_LINUX_THREADS -D_REENTRANT -fPIC -pipe -Wall
 # CFLAGS only for the foreign functions loaded into Lisp
 LISP_CFLAGS =
 # Additional flags for loader operation
-ADD_LFLAGS = -O
+ADD_LFLAGS = -O -L. -Wl,-R -Wl,.
 
 # Any additional libraries
 ADD_LIBS =
@@ -39,7 +39,8 @@ ENUMSETGET = EnumSetGet
 # The following variables are site-specific
 
 # Comment this line out if you don't compile with Allegro Lisp
-LISP_OBJECTS = exclio.o runstatus.o
+# LISP_OBJECTS = exclio.o runstatus.o
+LISP_OBJECTS = runstatus.o
 
 # Directories where CLM should be installed
 # Directory where the Lisp code and the foreign function code should be inst.
@@ -66,9 +67,11 @@ include Makefile.$(ARCH)
 # The following variables normally need not to be changed:
 
 CC = gcc
-CFLAGS= -ggdb -c -O $(ADD_CFLAGS) $(XBAB_FLAGS) -D$(ARCH)
+CFLAGS = -c -O $(ADD_CFLAGS) $(XBAB_FLAGS) -D$(ARCH)
 
-LFLAGS= $(ADD_LFLAGS)
+LFLAGS = $(ADD_LFLAGS)
+
+SHARED_LFLAGS =
 
 XM_LIB = -lXm
 XT_LIB = -lXt
@@ -103,10 +106,19 @@ INCLUDE = $(XBAB_INCLUDE) $(XM_INCLUDE) $(XT_INCLUDE)
 
 HEADER = interface.h functions.h opcodes.h externals.h
 
-all: $(DEST) $(DAEMON) unixsocket.o io.o $(LISP_OBJECTS)
+all: $(DEST) $(DAEMON) unixsocket.o io.o $(LISP_OBJECTS) libclm_client.so
 
 $(DEST): $(OBJECTS)
 	$(CC) $(LFLAGS) $(OBJECTS) -o $(DEST) $(LIBRARIES)
+
+libclm_client.so: unixsocket.o io.o
+	$(CC) -shared -Wl,-soname,libclm_client.so $(LFLAGS) -o libclm_client.so unixsocket.o io.o  $(LIBRARIES)
+
+test_unix_sockets.o: test_unix_sockets.c $(HEADER)
+	$(CC) $(CFLAGS) $(INCLUDE) test_unix_sockets.c
+
+test_unix_sockets: libclm_client.so test_unix_sockets.o
+	$(CC) $(LFLAGS) test_unix_sockets.o -o test_unix_sockets $(LIBRARIES) -lclm_client
 
 inc-test:
 	/lib/cpp -H $(INCLUDE) GenTable.c /dev/null
@@ -272,6 +284,9 @@ unixsocket.o: unixsocket.c
 	$(CC) $(CFLAGS) $(LISP_CFLAGS) $(INCLUDE) unixsocket.c -DSOCKET_PATH=$(CLM_SOCKET)
 	if test ! -f ../lisp/unixsocket.o; then ln -s ../server/unixsocket.o ../lisp; fi
 
+TAGS: all
+	find . -name "*.[chCH]" -print | etags -
+
 install: all
 	-@mkdir $(CLM_LIB) $(CLM_BIN)
 	cp unixsocket.o io.o $(LISP_OBJECTS) $(CLM_LIB)
@@ -285,7 +300,7 @@ echo:
 	echo $(CLM_BIN)/$(DAEMON) '$$*' -server $(CLM_BIN)/$(DEST) -tcp $(TCP_SOCKET)'&' > $(CLM_BIN)/clmd
 
 clean:
-	rm -f *.o *~ core GenTable $(DEST) $(DAEMON)
+	rm -f *.so *.o *~ core GenTable $(DEST) $(DAEMON)
 
 sccs:
 	@for f in SCCS/s.* ; do \

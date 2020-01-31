@@ -13,11 +13,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; this may also be a list of directories that are searched
-(defparameter *clm-binary-directory* 
-    "/vol/gina/bin")
+(defparameter *clm-binary-directory*
+     "/home/rett/dev/common-lisp/cl-motif/cl-motif.git/clm/server/")
 
 ;; only used in AKCL, this may be a list of directories to find object files
-(defparameter *clm-library-directory* 
+(defparameter *clm-library-directory*
     '("." "/pubbay/cl/clm/sun4/lib"))
 
 (defparameter *xt-tcp-port* 7000)
@@ -35,7 +35,7 @@
 (defvar *motif-connection*)
 (defvar *x-display*)
 
-;; EXPORT ((*default-server-host* 
+;; EXPORT ((*default-server-host*
 ;;	  *default-display-host*
 ;;	  *default-display-number*
 ;;	  *default-screen-number*
@@ -62,7 +62,7 @@
 ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defstruct toolkit-connection 
+(defstruct toolkit-connection
   (stream nil)
   (motif-version nil)
   #+lucid (lisp-stream nil)
@@ -142,3 +142,8 @@
   (declare (special *motif-connection*))
   (incf (toolkit-connection-serial *motif-connection*)))
 
+(defun str (&rest rest)
+  (apply #'concatenate 'string rest))
+
+;; (defmacro str (&rest rest)
+;;   `(apply #'concatenate 'string ,rest))

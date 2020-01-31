@@ -119,13 +119,9 @@ char *get_temp_string_buffer(int len) {
     return(temp);
 }
 
-char* strupcase(string, length)
-char* string;
-int length;
-{
+char* strupcase(char* string, int length) {
     char* otemp = get_temp_string_buffer(length);
     char *temp = otemp;
-    char *ostring = string;
     int i = 0;
     for (; i < length ; i++) {
 	char c = *(string++);
@@ -136,14 +132,9 @@ int length;
     return(otemp);
 }
 
-
-char* strdowncase(string, length)
-char* string;
-int length;
-{
+char* strdowncase(char* string, int length) {
     char* otemp = get_temp_string_buffer(length);
     char *temp = otemp;
-    char *ostring = string;
     int i = 0;
     for (; i < length ; i++) {
 	char c = *(string++);
@@ -217,33 +208,46 @@ int FlushBuffer(int sock) {
     return(0);
 }
 
-/*  Read a number of bytes from the socket.
- *  Try again on partial reads.
- *  Return -1 on failure
- */
-
-int do_read(int sock, char* ptr, int size) {
-    int not_read, n, n_intr = 0;
-
-    not_read = size;
-    errno  = 0;
-    while ( (n = read(sock, ptr + size-not_read, not_read)) != not_read) {
-	if( n > 0 ) {
-	    not_read -= n;
-	}
-	else {
-	    if( errno == EINTR && n_intr < 10) {
-		n_intr++;
-		/* fprintf(stderr, "Interupt %d in \n", n_intr); */
-		errno = 0;
-	    }
-	    else {
-/*		perror("read");*/
-		return(-1);
-	    }
-	}
+// Read a number of bytes from the socket. Try again on partial
+// reads. Return -1 on failure. If returned number does not equal size
+// we are at the end of the file, if returned number equals size,
+// there may be more data to read.
+int do_read(int socket_fd, unsigned char* ptr, int size) {
+  int not_read = size;
+  int n;
+  int n_intr = 0;
+  errno  = 0;
+  while ((n = read(socket_fd, ptr + size - not_read, not_read)) != not_read) {
+    if (n > 0) {
+      not_read -= n;
+    } else if (n < 0) {
+      if (errno == EINTR && n_intr < 10) {
+	n_intr++;
+	fprintf(stderr, "Interupt %d in \n", n_intr);
+	errno = 0;
+      } else {
+	// unexpected error.
+	fprintf(stderr, "Unexpected error reading from client (%d).\n",
+		n_intr);
+	perror("read");
+	return -1;
+      }
+    } else if (n == 0) {
+      if (size != 0) {
+	fprintf(stderr,
+		"Insufficient bytes available to read. from client (%d).\n",
+		n_intr);
+	perror("read");
+	return -1;
+      } else {
+	// Read 0 bytes from socket
+	fprintf(stderr, "Warning: request to read 0 bytes from socket (%d)\n",
+		n_intr);
+	return 0;
+      }
     }
-    return(0);
+  }
+  return 0;
 }
 
 #define READ_BYTES(n_bytes, buf) \
@@ -268,7 +272,6 @@ int do_read(int sock, char* ptr, int size) {
 // bytes should be array of bytes of size(int).
 void integer_to_bytes (int integer, unsigned char* bytes) {
   int number_bytes = sizeof(int);
-  int bits_to_shift;
   for (int i = 0; i < number_bytes; i++) {
     bytes[i] = (integer >> (i * 8)) & 0xFF;
   }
@@ -277,7 +280,6 @@ void integer_to_bytes (int integer, unsigned char* bytes) {
 // bytes should be array of bytes of size(int).
 int bytes_to_integer (unsigned char* bytes) {
   int number_bytes = sizeof(int);
-  int bits_to_shift;
   int integer = 0;
   for (int i = number_bytes - 1; i == 0; i--) {
     integer = (integer << 8) | bytes[i];
@@ -293,8 +295,7 @@ float bytes_to_float (unsigned char* bytes) {
 
 int ReceiveInteger(int sock, int* rc) {
   int buffer_size = sizeof(int);
-  char value[buffer_size];
-  int n;
+  unsigned char value[buffer_size];
   READ_BYTES(sizeof(int), (value));
   *rc = 0;
   return bytes_to_integer(value);
@@ -303,34 +304,106 @@ int ReceiveInteger(int sock, int* rc) {
 // Clearly not right
 float ReceiveFloat(int sock, int* rc) {
   int buffer_size = sizeof(float);
-  char value[buffer_size];
+  unsigned char value[buffer_size];
   *rc = 0;
   READ_BYTES(sizeof(float), (value));
   return bytes_to_float(value);
 }
 
-char *readstrb = NULL;
-  int readblength = -1;
+char* g_readstrb = NULL;
+int readblength = -1;
 
-char* ReceiveString(int sock, int* rc) {
+
+// Read string in chunks, communicate the size of the string by
+// returning a string that can be sized with strlen. Only
+// ReceiveString should modify g_readstrb or readblength, which are
+// only increased, i.e. never resized lower or freed.
+char* ReceiveString(int socket_fd, int* rc) {
   int buffer_size = 256;
-  char value[buffer_size];
+  unsigned char value[buffer_size];
+  int current_position = 0;
   int n;
-  READ_BYTES(buffer_size, value);
-  if (buffer_size >= readblength) {
-    if (readblength != -1) {
-      free (readstrb);
-    }
-    readblength = buffer_size + 50;
-    readstrb = malloc(readblength);
-    if(readstrb == NULL) {
-      perror("malloc");
-      *rc = -1;
-      return NULL;
+  // If we haven't already created our shared string buffer, create
+  // it.
+  if (readblength == -1) {
+    readblength = buffer_size;
+    // add one extra byte for string termination
+    g_readstrb = malloc(readblength);
+  }
+  memset(value, '\0', sizeof(value));
+  memset(g_readstrb, '\0', readblength);
+  // I.e. do until the number of bytes read, possible 0, does not
+  // equal the number we tried to read. This is how do_read indicates
+  // there's no more data to read, since it handles interupts.
+  for (;;) {
+    n = do_read(socket_fd, value, sizeof(value));
+    // Note, if in previous read n == value, n could legitamentely ==
+    // 0, meaning we're at the end of the buffer. The read wasn't in
+    // error, even though n !> 0.
+    if (n > 0) {
+      // Make sure we have room, if not alocate more.
+      if ((current_position + n) > readblength) {
+	int new_readblength =+ readblength;
+	// add one extra byte for string termination
+	char* new_g_readstrb = malloc(new_readblength + 1);
+	memset(new_g_readstrb, '\0', new_readblength);
+	// Copy the contents of current buffer to the new buffer,
+	// including junk (which should actually be
+	// '\0'. current_position still remains valid in the new
+	// buffer.
+	memcpy(new_g_readstrb, g_readstrb, readblength);
+	readblength = new_readblength;
+	free(g_readstrb);
+	g_readstrb = new_g_readstrb;
+      }
+      memcpy(g_readstrb + current_position, value, n);
+      if (n == sizeof(value)) {
+	// We read a buffer's worth, update currentposition and read
+	// more.
+	current_position =+ n;
+      } else {
+	// The read was successful (n >= 0) and all that was there to
+	// read was less than the buffer size, meaning that we're
+	// done. Note, we're making the possibly invalid assumption
+	// that all the bytes of the string that the client wanted to
+	// send have arrived.
+	break;
+      }
+    } else if (n < 0) {
+      // Encountered error reading from socket
+      fprintf(stderr, "Encountered error reading from socket%d\n", n);
+      break;
     }
   }
-  // Is this a retry?
-  READ_BYTES(buffer_size, readstrb);
-  *(readstrb + buffer_size) = '\0';
-  return readstrb;
+  // Note, not truly valid. On some platforms char *might* be unsigned
+  // therefor this would make n always non-negative,
+  // i.e. ReceiveString can never return an error.
+
+  // I.e. return the error code if there is one, otherwise the number
+  // of bytes returned including trailing '\0'
+  *rc = n < 0 ? n : current_position + 2;
+  return g_readstrb;
 }
+
+
+/* char* ReceiveString(int sock, int* rc) { */
+/*   int buffer_size = 256; */
+/*   unsigned char value[buffer_size]; */
+/*   READ_BYTES(buffer_size, value); */
+/*   if (buffer_size >= readblength) { */
+/*     if (readblength != -1) { */
+/*       free(readstrb); */
+/*     } */
+/*     readblength = buffer_size + 50; */
+/*     readstrb = malloc(readblength); */
+/*     if(readstrb == NULL) { */
+/*       perror("malloc"); */
+/*       *rc = -1; */
+/*       return NULL; */
+/*     } */
+/*   } */
+/*   // Is this a retry? */
+/*   READ_BYTES(buffer_size, readstrb); */
+/*   *(readstrb + buffer_size) = '\0'; */
+/*   return readstrb; */
+/* } */

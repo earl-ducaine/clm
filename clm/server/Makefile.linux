@@ -13,7 +13,7 @@ LIB_PATH = -L/usr/share/lintian/overrides/libmotif-dev -L/usr/lib/X11
 
 # Any additional CFLAGS
 # ADD_CFLAGS = -D_NO_PROTO -DMULTI_FONT
-ADD_CFLAGS =
+ADD_CFLAGS := $(ADD_CFLAGS)
 # CFLAGS only for the foreign functions loaded into Lisp
 LISP_CFLAGS =
 # Additional flags for loader operation

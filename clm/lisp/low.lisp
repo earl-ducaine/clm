@@ -4,11 +4,9 @@
 
 (setq *sccsid* "@(#)low.lisp	1.21 9/8/93")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Open a connection to the Motif server
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Open a connection to the Motif server
+
 
 ;; EXPORT (toolkit-initialize)
 (defun toolkit-initialize (display-string app-name app-class-name
@@ -24,7 +22,7 @@
 		       :num-results 1))
     (setf (toolkit-connection-motif-version new-connection)
       (when (listp (toolkit-connection-motif-version new-connection))
-	(first (toolkit-connection-motif-version new-connection)))))      
+	(first (toolkit-connection-motif-version new-connection)))))
   new-connection)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -47,8 +45,8 @@
   (loop until (or (toolkit-connection-dispatcher-terminated *motif-connection*)
                   (toolkit-connection-closed *motif-connection*))
       do (wait-for-input-from-server *motif-connection* #'any-input-available)
-	 (handle-pending-events recursive)))     
-	      
+	 (handle-pending-events recursive)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;
 ;;;;; Dispatch callbacks for an applications with a clx connection
@@ -92,7 +90,7 @@
 			  *motif-connection*) t))))
 	   ((other-input-available *motif-connection*)
 	       (if (toolkit-connection-other-input-handler *motif-connection*)
-		   (funcall (toolkit-connection-other-input-handler 
+		   (funcall (toolkit-connection-other-input-handler
 			     *motif-connection*))))
 	   (t
 	       (return-from handle-pending-events)))
@@ -127,7 +125,7 @@
   #+clm-needs-clx
   (when *x-display*
     (xlib:close-display *x-display*)))
-  
+
 (defun run-main-process (connection display init-function init-arguments)
   (let ((*motif-connection* connection)
 	(*x-display* display)
@@ -159,7 +157,7 @@
 	      (add-clm-handler)
 	      (setq error-occurred nil))
 	  (when error-occurred (cleanup-actions)))))))
-  
+
 ;; EXPORT (run-motif-application)
 (defun run-motif-application (init-function
 			      &key (init-arguments nil)
@@ -185,16 +183,16 @@
   #-(or :clm-has-processes :clm-has-handler) (declare (ignore extra-process))
   (when init-function
     #+clm-needs-clx
-    (setf x-display 
-      (and use-clx 
-	   (xlib::open-display 
+    (setf x-display
+      (and use-clx
+	   (xlib::open-display
 	    (subseq display-host 0 (or (position #\: display-host)
 				       (length display-host)))
 	    :display display-number)))
     #-clm-needs-clx
     (setf x-display nil)
     (setf connection
-      (toolkit-initialize (default-display-components display-host 
+      (toolkit-initialize (default-display-components display-host
 						      display-number
 						      screen-number)
 			  application-name application-class
@@ -224,7 +222,7 @@
     (run-main-process connection x-display init-function init-arguments)
   ))
 
-(defun default-display-components (display-string 
+(defun default-display-components (display-string
 				   display-number
 				   display-screen)
   (unless (position #\: display-string)
@@ -299,6 +297,7 @@
    ;; Process callbacks which are sent during execution of the request.
    (when confirm
      (setq result (dispatch-callbacks-until-confirmation serial))
+     (break)
      (case (first result)
        ((28) ;; Confirmation message
 	t)
@@ -308,66 +307,59 @@
 	      ((numberp num-results)
 	       (if (equal num-results (length (cdr result)))
 		   (return-from execute-request (cdr result))
-		 (clm-error 
+		 (clm-error
 		        "Illegal number of results received: ~a instead of ~a~%"
 			(length (cdr result)) num-results)))
 	      ((eq num-results :arbitrary)
 	       (return-from execute-request (cdr result)))))))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Dispatch callbacks until a confirmation message is received
-;;;;; A confirmation message is either a confirmation, a result, an error, or
-;;;;; a warning message.
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Dispatch callbacks until a confirmation message is received A
+;; confirmation message is either a confirmation, a result, an error,
+;; or a warning message.
 (defun dispatch-callbacks-until-confirmation (serial &aux result)
   ;; loop macro in allegro is buggy
   (do () ((setq result (callback-dispatcher :allow-confirmation t
 					    :serial serial))))
   result)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Receive a callback command from the Motif server
-;;;;; Allow confirmation messages if :allow-confirmation it t
-;;;;; Returns :confirmation if a confirmation message is received.
-;;;;; Returns nil if a destroy-widget message is received.
-;;;;; Raises an error under the following conditions:
-;;;;;    - The received message is not a callback and not a destroy-widget
-;;;;;      message and :allow-confirmation is nil
-;;;;;    - The received message is not a callback and not a destroy-widget
-;;;;;      and not a confirmation message when :allow-confirmation is t
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Receive a callback command from the Motif server Allow confirmation
+;; messages if :allow-confirmation it t Returns :confirmation if a
+;; confirmation message is received.  Returns nil if a destroy-widget
+;; message is received.  Raises an error under the following
+;; conditions:
+;;    - The received message is not a callback and not a
+;;      destroy-widget message and :allow-confirmation is nil
+;;    - The received message is not a callback and not a
+;;      destroy-widget and not a confirmation message when
+;;      :allow-confirmation is t
 (defun receive-callback-or-event (&key (allow-confirmation nil)
-				       (called-from-main-loop nil)
+				    (called-from-main-loop nil)
 				  &aux return-code serial-and-num-args)
   (declare (special *motif-connection*))
-  
-  ;; Get a blocked callback if called from the main loop
-  ;; Otherwise wait for a callback from the Motif server
+  ;; Get a blocked callback if called from the main loop Otherwise
+  ;; wait for a callback from the Motif server
   (if (and called-from-main-loop
 	   (toolkit-connection-blocked-callback *motif-connection*))
       (progn
-	(setq return-code 
-	  (first (toolkit-connection-blocked-callback *motif-connection*)))
-	(setq serial-and-num-args 
-	  (second (toolkit-connection-blocked-callback *motif-connection*)))
-      	;;(format t "using blocked callback: ~a ~a ~%"
-		;;return-code serial-and-num-args)
+	(setq return-code
+	      (first (toolkit-connection-blocked-callback *motif-connection*)))
+	(setq serial-and-num-args
+	      (second (toolkit-connection-blocked-callback *motif-connection*)))
+      	(log-format "using blocked callback: ~a ~a ~%"
+		    return-code serial-and-num-args)
 	(setf (toolkit-connection-blocked-callback *motif-connection*) nil))
-    (let ((input-error t))
-      (unwind-protect
-	  (progn
-	    (multiple-value-setq (return-code serial-and-num-args)
-	      (toolkit-receive-command))
-	    (setq input-error nil))
-	(when input-error (close-motif-stream *motif-connection*)))))
-  
+      (let ((input-error t))
+	(unwind-protect
+	     (progn
+	       (multiple-value-setq (return-code serial-and-num-args)
+		 (toolkit-receive-command))
+	       (log-format "using toolkit-receive-command: ~a ~a ~%"
+			   return-code serial-and-num-args)
+	       (setq input-error nil))
+	  (when input-error (close-motif-stream *motif-connection*)))))
   ;; Verify that we really received what we want.
   (case (first return-code)
     ((27)  ;; Message is a callback or an event
@@ -376,14 +368,14 @@
 	   (clean-up-tables (cddr return-code))
 	   (return-from receive-callback-or-event
 	     (values :destroy-notify nil nil)))
-       ;; Else:: Callback, event, protocol callback or action
-       (return-from receive-callback-or-event
-	 (values :callback return-code serial-and-num-args))))
+	 ;; Else:: Callback, event, protocol callback or action
+	 (return-from receive-callback-or-event
+	   (values :callback return-code serial-and-num-args))))
     ((28 31)  ;; Confirmation message
      (if allow-confirmation
 	 (return-from receive-callback-or-event
 	   (values :confirmation return-code serial-and-num-args))
-       (clm-error "unexpected confirmation message: ~a~%" return-code)))
+	 (clm-error "unexpected confirmation message: ~a~%" return-code)))
     (t
      (clm-error "unexpected message: ~a~%" return-code))))
 
@@ -397,7 +389,7 @@
 ;;;;; a confirmation is received instead of a callback.
 ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
+
 (defun callback-dispatcher (&key (allow-confirmation nil)
 				 (called-from-main-loop nil)
 				 (serial 0)
@@ -405,13 +397,13 @@
 				 serial-and-num-args timer-args
 				 (server-loop-terminated nil))
   (declare (special *motif-connection*))
-  
+
   ;; Return immediately if there is nothing to dispatch
   ;; This may happen after a callback has collided with a confirmation
   (when (and called-from-main-loop
 	     (not (input-available *motif-connection*)))
     (return-from callback-dispatcher nil))
-  
+
   ;;; get callback or event from stream
   (multiple-value-setq (message-type message serial-and-num-args)
 			(receive-callback-or-event
@@ -425,7 +417,7 @@
   ;; Destroy-notify events are handled in 'receive-callback-or-event
   (when (eq message-type :destroy-notify)
     (return-from callback-dispatcher nil))
-  
+
   ;;; Test whether the callback must be blocked here
   (when (and allow-confirmation
 	     (eq message-type :callback)
@@ -436,15 +428,15 @@
       (list message serial-and-num-args))
     ;;(format t "Blocking callback: ~a ~a ~%" message serial-and-num-args)
     (return-from callback-dispatcher nil))
-  
+
   ;;; Callback format: (major-opcode minor-opcode <data>)
   (case (second message)
     ((0) ;;; Callback
      (unwind-protect
 	 (dolist
 	     (cb (lookup-callback-functions (third message) (fourth message)))
-	   (if called-from-main-loop 
-	       (without-process-lock 
+	   (if called-from-main-loop
+	       (without-process-lock
 		((toolkit-connection-lock *motif-connection*))
 		(setq result
 		  (apply (first cb)
@@ -462,8 +454,8 @@
     ((1)   ;;; Event
      (unwind-protect
 	 (dolist (ev (lookup-event-functions (third message) (fourth message)))
-	   (if called-from-main-loop 
-	       (without-process-lock 
+	   (if called-from-main-loop
+	       (without-process-lock
 		((toolkit-connection-lock *motif-connection*))
 		(apply (first ev)
 		       (cons (third message)
@@ -476,17 +468,17 @@
        (terminate nil)))
     ((2)   ;;; protocol callback
      (unwind-protect
-	 (dolist 
-	     (cb (lookup-callback-functions 
+	 (dolist
+	     (cb (lookup-callback-functions
 		  (third message) (list (fourth message) (fifth message))))
-	   (if called-from-main-loop 
-	       (without-process-lock 
+	   (if called-from-main-loop
+	       (without-process-lock
 		((toolkit-connection-lock *motif-connection*))
-		(apply (first cb) 
+		(apply (first cb)
 		       (cons (third message)
 			     (cons (second cb)
 				   (cdr (cddddr message))))))
-	     (apply (first cb) 
+	     (apply (first cb)
 		       (cons (third message)
 			     (cons (second cb)
 				   (cdr (cddddr message)))))))
@@ -529,7 +521,7 @@
      (return-from callback-dispatcher '(:error)))
     ((9) ;; main loop termination message
      (setq server-loop-terminated t)))
-  
+
   ;;; Test if application is terminated and return t
   ;;; Otherwise return nil
   (when (and (eq called-from-main-loop t)
@@ -585,7 +577,7 @@
 
 (defun clean-up-tables (widgets &aux events callback)
   (declare (special *motif-connection*))
-  (dolist (widget widgets) 
+  (dolist (widget widgets)
     (setf events nil)
     ;; Find Event-Handler wich are to be removed from the hash table
     (maphash #'(lambda (key val)
@@ -594,9 +586,9 @@
 		     (push key events)))
 	     (toolkit-connection-event-table *motif-connection*))
     ;; Remove Event-Handler from hash table
-    (dolist (ev events) 
+    (dolist (ev events)
       (remhash ev (toolkit-connection-event-table *motif-connection*)))
-    
+
     (setq callback nil)
     ;; Find callbacks which are to be removed from the hash table
     (maphash #'(lambda (key val)
@@ -605,12 +597,12 @@
 		     (push key callback)))
 	     (toolkit-connection-callback-table *motif-connection*))
     ;; Remove Callbacks from hash table
-    (dolist (cb callback) 
+    (dolist (cb callback)
       (remhash cb (toolkit-connection-callback-table *motif-connection*)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;
-;;;;; A predifined callback function which terminates the callback dispatcher 
+;;;;; A predifined callback function which terminates the callback dispatcher
 ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -618,4 +610,3 @@
   (declare (ignore widget client-data call-data))
   (execute-request 1 nil)
   (terminate-dispatcher))
-

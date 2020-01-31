@@ -188,102 +188,94 @@ char *path;
 }
 
 int connect_directly_to_toolkits (char* toolkits) {
-    int sv[2];
-    int exit_status;
-    extern char **environ;
-
-    /* made this static because of the problem on SunOS 4.0 that
-       seemed to trash the parent variable in the parent thread! */
-
-    static int parent_fd, child_fd;
-
-    if (!socketpair(AF_UNIX,SOCK_STREAM,0,sv))
-    {
-	int pid;
+  int sv[2];
+  int exit_status;
+  extern char **environ;
+  // made this static because of the problem on SunOS 4.0 that
+  // seemed to trash the parent variable in the parent thread!
+  static int parent_fd;
+  static int child_fd;
+  if (!socketpair(AF_UNIX,SOCK_STREAM,0,sv)) {
+    int pid;
 #ifndef NOCHLD
-        void (*old_handler)();
+    void (*old_handler)();
 #endif
-
-	parent_fd = sv[0]; child_fd = sv[1];
-
-/*	printf("child fd = %d, parent fd = %d\n",
-	       child_fd, parent_fd);*/
-
-	fcntl(parent_fd, F_SETFD, 1);
-
+    parent_fd = sv[0]; child_fd = sv[1];
+    fprintf(stderr, "child fd = %d, parent fd = %d\n",
+	    child_fd, parent_fd);
+    fcntl(parent_fd, F_SETFD, 1);
 #ifndef NOCHLD
-        /* reset the SIGCHLD signal handler because Lucid seems
-           to catch it and gets all sorts of wrong ideas */
-        old_handler = signal(SIGCHLD, SIG_DFL);
+    // reset the SIGCHLD signal handler because Lucid seems to
+    // catch it and gets all sorts of wrong ideas
+    old_handler = signal(SIGCHLD, SIG_DFL);
 #endif
-
 #ifdef NOVFORK
-	pid = fork ();
+    pid = fork ();
 #else
-	pid = vfork ();
+    pid = vfork ();
 #endif
-
-
-	switch (pid) {
-	case 0: {
-	    /* child case */
-            /* fork a grandchild with the clm-server to prevent
-               zombies when closing the socket */
+    switch (pid) {
+    case 0: {
+      // child case -- fork a grandchild with the clm-server to
+      // prevent zombies when closing the socket
 #ifdef NOVFORK
-	    pid = fork ();
+      pid = fork ();
 #else
-	    pid = vfork ();
+      pid = vfork ();
 #endif
-	    switch (pid) {
-	      case 0: {
-		  /* grandchild case */
-		  char x[100];
-		  char *argv[3];
-		  argv[0] = toolkits;
-		  argv[1] = x;
-		  argv[2] = (char*)NULL;
-		  {
-		    // int i = getpid();
-		    // set calling process PGID to its process ID
-		    setpgrp();
-		  }
-		  sprintf(x, "%d", child_fd);
-		  execve(toolkits, argv, environ);
-		  perror("exece:");
-		  return (-1); }
-	      case -1 : {
-		  perror("fork:");
-		  _exit (-1);
-	      }
-	      default:
-		/* child case */
-		_exit(0);
-	    }
+      switch (pid) {
+      case 0: {
+	// grandchild case
+	char x[100];
+	char *argv[3];
+	argv[0] = toolkits;
+	argv[1] = x;
+	argv[2] = (char*)NULL;
+	{
+	  // int i = getpid();
+	  // set calling process PGID to its process ID
+	  setpgrp();
 	}
-	case -1 : {
-	    perror("fork:");
-#ifndef NOCHLD
-            signal (SIGCHLD, old_handler);
-#endif
-	    return (-1);
-	}
-	default:
-	    close (child_fd);
-	    /* wait for child to exit */
-            /* if no child there, set exit_status to 0 */
-            exit_status = 0;
-	    waitpid(pid, &exit_status, 0);
-#ifndef NOCHLD
-            signal (SIGCHLD, old_handler);
-#endif
-	    if (exit_status == 0)
-		return (parent_fd);
-	    else
-		return (-1);
-	}
+	sprintf(x, "%d", child_fd);
+	execve(toolkits, argv, environ);
+	// execve doesn't return on success, so we should never get
+	// here.
+	perror("exece:");
+	return -1;
+      }
+      case -1 : {
+	perror("fork:");
+	_exit(-1);
+      }
+      default:
+	// child case
+	_exit(0);
+      }
     }
-    else {
-	perror("socketpair");
-	return (-1);
+    case -1 : {
+      perror("fork:");
+#ifndef NOCHLD
+      signal (SIGCHLD, old_handler);
+#endif
+      return -1;
     }
+    default:
+      close (child_fd);
+      // wait for child to exit, if there is no child, set exit_status
+      // to 0, i.e. success.
+      exit_status = 0;
+      waitpid(pid, &exit_status, 0);
+#ifndef NOCHLD
+      signal (SIGCHLD, old_handler);
+#endif
+      if (exit_status == 0) {
+	return (parent_fd);
+      } else {
+	return -1;
+      }
+    }
+  } else {
+    perror("socketpair");
+    return  -1;
+  }
 }
