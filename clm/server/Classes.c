@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)Classes.c	1.7 1/30/92";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)Classes.c	1.7 1/30/92";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -27,6 +27,7 @@ static char sccsid[] = "@(#)Classes.c	1.7 1/30/92";
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include CLASS_TABLE_MODULE
 
@@ -73,7 +74,7 @@ char *resource_type;
 {
     int i;
 
-    for(i=0; TypeTable[i].resource_type != NULL; i++ ) 
+    for(i=0; TypeTable[i].resource_type != NULL; i++ )
 	if( ! strcmp(TypeTable[i].resource_type, resource_type) )
 	    return(i);
     return(-1);
@@ -84,7 +85,7 @@ char *InitializeClassTable()
     int i;
 
     for( i=0; i<num_classes; i++)
-	ClassTable[i].class = 
+	ClassTable[i].class =
 	  (WidgetClass)(*(WidgetClass *)(ClassTable[i].class));
 }
 
@@ -115,7 +116,3 @@ register char *name;
     *msg_ptr = msg;
     return(-1);
 }
-
-
-
-

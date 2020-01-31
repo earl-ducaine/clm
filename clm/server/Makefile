@@ -3,7 +3,7 @@
 # Architecture
 # This variable determines which of the architecture-specific Makefiles
 # (Makefile.<ARCH>) is included later.
-ARCH=sun4
+ARCH=linux
 
 #----------------------------------------------------------------------------
 # The following variables are usually overridden in an architecture-specific
@@ -22,13 +22,8 @@ EXCL_INCLUDE = -I/vol/allegro/lib/misc
 # Make sure you're using the Motif toolkit library and NOT the X Toolkit library
 LIB_PATH = -L/usr/lib
 
-# Use this when you don't have unix domain sockets (System V OS)
-#UNIXCONN =
-# Use this when unix domain sockets are available
-UNIXCONN = -DUNIXCONN
-
 # Any additional CFLAGS
-ADD_CFLAGS = -D_NO_PROTO
+ADD_CFLAGS = -D_NO_PROTO -ggdb
 # CFLAGS only for the foreign functions loaded into Lisp
 LISP_CFLAGS =
 # Additional flags for loader operation
@@ -70,8 +65,8 @@ include Makefile.$(ARCH)
 #----------------------------------------------------------------------------
 # The following variables normally need not to be changed:
 
-CC = cc
-CFLAGS= -c -O $(ADD_CFLAGS) $(XBAB_FLAGS) -D$(ARCH)
+CC = gcc
+CFLAGS= -ggdb -c -O $(ADD_CFLAGS) $(XBAB_FLAGS) -D$(ARCH)
 
 LFLAGS= $(ADD_LFLAGS)
 
@@ -110,7 +105,7 @@ HEADER = interface.h functions.h opcodes.h externals.h
 
 all: $(DEST) $(DAEMON) unixsocket.o io.o $(LISP_OBJECTS)
 
-$(DEST): $(OBJECTS) 
+$(DEST): $(OBJECTS)
 	$(CC) $(LFLAGS) $(OBJECTS) -o $(DEST) $(LIBRARIES)
 
 inc-test:
@@ -126,10 +121,9 @@ td.o: td.c
 	                -DTD_DONT_DUMP=$(TD_DONT_DUMP) \
 	                -DTD_RETRIES=$(TD_RETRIES) \
 			-DAPPNAME=$(APPLICATION) \
-			$(UNIXCONN) \
 			-DAPPCLASS=$(CLASS)  td.c
 
-$(DAEMON): td.o 
+$(DAEMON): td.o
 	$(CC) $(LFLAGS) td.o -o $(DAEMON) $(LIBRARIES)
 
 main.o: main.c $(HEADER)
@@ -257,7 +251,7 @@ GinaView.o: GinaView.c $(HEADER)
 	$(CC) $(CFLAGS) $(INCLUDE) GinaView.c
 
 $(TABLE_INCLUDE): GenTable
-	GenTable -c
+	./GenTable -c
 
 exclio.o: exclio.c io.h
 	$(CC) $(CFLAGS) $(LISP_CFLAGS) $(EXCL_INCLUDE) exclio.c
@@ -274,8 +268,8 @@ io.o: io.c io.h
 unixio.o: unixio.c $(HEADER)
 	$(CC) $(CFLAGS) $(LISP_CFLAGS) $(INCLUDE) unixio.c
 
-unixsocket.o: unixsocket.c 
-	$(CC) $(CFLAGS) $(LISP_CFLAGS) $(INCLUDE) unixsocket.c $(UNIXCONN) -DSOCKET_PATH=$(CLM_SOCKET)
+unixsocket.o: unixsocket.c
+	$(CC) $(CFLAGS) $(LISP_CFLAGS) $(INCLUDE) unixsocket.c -DSOCKET_PATH=$(CLM_SOCKET)
 	if test ! -f ../lisp/unixsocket.o; then ln -s ../server/unixsocket.o ../lisp; fi
 
 install: all
@@ -293,7 +287,7 @@ echo:
 clean:
 	rm -f *.o *~ core GenTable $(DEST) $(DAEMON)
 
-sccs: 
+sccs:
 	@for f in SCCS/s.* ; do \
             n=`expr $$f : "SCCS/s.\(.*\)"` ;\
             if [ ! -f $$n ] ; then \
