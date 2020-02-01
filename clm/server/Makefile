@@ -23,11 +23,11 @@ EXCL_INCLUDE = -I/vol/allegro/lib/misc
 LIB_PATH = -L/usr/lib
 
 # Any additional CFLAGS
-ADD_CFLAGS = -D_NO_PROTO -ggdb
+ADD_CFLAGS = -D_NO_PROTO -ggdb -DGC_LINUX_THREADS -D_REENTRANT -fPIC -pipe -Wall
 # CFLAGS only for the foreign functions loaded into Lisp
 LISP_CFLAGS =
 # Additional flags for loader operation
-ADD_LFLAGS = -O
+ADD_LFLAGS = -O -L. -Wl,-R -Wl,.
 
 # Any additional libraries
 ADD_LIBS =
@@ -66,9 +66,11 @@ include Makefile.$(ARCH)
 # The following variables normally need not to be changed:
 
 CC = gcc
-CFLAGS= -ggdb -c -O $(ADD_CFLAGS) $(XBAB_FLAGS) -D$(ARCH)
+CFLAGS = -c -O $(ADD_CFLAGS) $(XBAB_FLAGS) -D$(ARCH)
 
-LFLAGS= $(ADD_LFLAGS)
+LFLAGS = $(ADD_LFLAGS)
+
+SHARED_LFLAGS =
 
 XM_LIB = -lXm
 XT_LIB = -lXt
@@ -103,10 +105,13 @@ INCLUDE = $(XBAB_INCLUDE) $(XM_INCLUDE) $(XT_INCLUDE)
 
 HEADER = interface.h functions.h opcodes.h externals.h
 
-all: $(DEST) $(DAEMON) unixsocket.o io.o $(LISP_OBJECTS)
+all: $(DEST) $(DAEMON) unixsocket.o io.o $(LISP_OBJECTS) libclm_client.so
 
 $(DEST): $(OBJECTS)
 	$(CC) $(LFLAGS) $(OBJECTS) -o $(DEST) $(LIBRARIES)
+
+libclm_client.so: unixsocket.o io.o
+	$(CC) -shared -Wl,-soname,libclm_client.so $(LFLAGS) -o libclm_client.so unixsocket.o io.o  $(LIBRARIES)
 
 inc-test:
 	/lib/cpp -H $(INCLUDE) GenTable.c /dev/null
@@ -270,6 +275,7 @@ unixio.o: unixio.c $(HEADER)
 
 unixsocket.o: unixsocket.c
 	$(CC) $(CFLAGS) $(LISP_CFLAGS) $(INCLUDE) unixsocket.c -DSOCKET_PATH=$(CLM_SOCKET)
+	echo $(CFLAGS)
 	if test ! -f ../lisp/unixsocket.o; then ln -s ../server/unixsocket.o ../lisp; fi
 
 install: all
@@ -285,7 +291,7 @@ echo:
 	echo $(CLM_BIN)/$(DAEMON) '$$*' -server $(CLM_BIN)/$(DEST) -tcp $(TCP_SOCKET)'&' > $(CLM_BIN)/clmd
 
 clean:
-	rm -f *.o *~ core GenTable $(DEST) $(DAEMON)
+	rm -f *.so *.o *~ core GenTable $(DEST) $(DAEMON)
 
 sccs:
 	@for f in SCCS/s.* ; do \

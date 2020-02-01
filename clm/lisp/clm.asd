@@ -39,7 +39,7 @@
 ;; go to the documents directory and click onto the documents ...
 
 (asdf:defsystem :clm
-  :depends-on (:cffi)
+  :depends-on (:cffi :clx)
   :components
   ((:file pkg)
    (:file defs)
@@ -50,7 +50,7 @@
 	    ((:file "pkg")
 	     (:file "defs")
 	     ;; (:file "genera")
-	     (:file "cmucl")
+	     (:file "sbcl" :depends-on (low))
 	     (:file "low" )
 	     (:file "files" )
 	     (:file "display" )
