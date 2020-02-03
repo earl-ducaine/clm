@@ -4,7 +4,7 @@
 
 (setq *sccsid* "@(#)cmucl.lisp	1.6 9/8/93")
 
-(export 'clm-error)
+;; (export 'clm-error)
 
 
 ;;; This code is executed whenever the compiled CLM code is loaded

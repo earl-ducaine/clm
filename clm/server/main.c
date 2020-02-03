@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)main.c	1.8 9/21/93";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)main.c	1.8 9/21/93";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -53,13 +53,13 @@ extern ClmCommand *ClmFconvenience();
 extern ClmCommand *ClmFupdateDisplay();
 
 /* Functions from WidgetMgr.c */
-extern ClmCommand *ClmFcreate(), *ClmFdestroy(), 
+extern ClmCommand *ClmFcreate(), *ClmFdestroy(),
                   *ClmFrealize(), *ClmFgetWindowID(), *ClmFgetParent(),
                   *ClmFsetManaged(), *ClmFsetMap(), *ClmFsetSensitivity(),
                   *ClmFcreatePopupShell(), *ClmFraiseWindow();
 
 /* Functions from AppMgr.c */
-extern ClmCommand *ClmFcreateApplication(), *ClmFdestroyApplication(), 
+extern ClmCommand *ClmFcreateApplication(), *ClmFdestroyApplication(),
                   *ClmFterminate(), *ClmFmainLoop(), *ClmFshutdown(),
                   *ClmFclose(), *ClmFforcedOutputMode();
 
@@ -67,7 +67,7 @@ extern ClmCommand *ClmFcreateApplication(), *ClmFdestroyApplication(),
 extern ClmCommand *ClmFsetValues(), *ClmFgetValues(), *ClmFgetResources();
 
 /* Functions from PopupMgr.c */
-extern ClmCommand *ClmFpopup(), *ClmFpopdown(), *ClmFmanagePopupChild(), 
+extern ClmCommand *ClmFpopup(), *ClmFpopdown(), *ClmFmanagePopupChild(),
                   *ClmFunmanagePopupChild();
 
 /* Functions from TranslationMgr.c */
@@ -76,7 +76,7 @@ extern ClmCommand *ClmFaugmentTranslations(), *ClmFoverrideTranslations(),
                   *ClmFpushTranslations(), *ClmFpopTranslations();
 
 /* Functions from GeometryMgr.c */
-extern ClmCommand *ClmFmove(), *ClmFresize(), *ClmFconfigure(), 
+extern ClmCommand *ClmFmove(), *ClmFresize(), *ClmFconfigure(),
                   *ClmFtranslateCoords(), *ClmFgetScreenSize();
 
 /* Functions from EventMgr.c */
@@ -94,8 +94,8 @@ extern ClmCommand *ClmFlistSetItems(), *ClmFlistGetItems(), *ClmFlistAddItem(),
                   *ClmFlistAddItemUnselected(), *ClmFlistDeleteItem(),
                   *ClmFlistDeletePos(), *ClmFlistDeselectItem(),
                   *ClmFlistDeselectAllItems(), *ClmFlistSelectItem(),
-                  *ClmFlistSetHorizPos(), *ClmFlistSetItem(), 
-                  *ClmFlistSetPos(), *ClmFlistSetBottomItem(), 
+                  *ClmFlistSetHorizPos(), *ClmFlistSetItem(),
+                  *ClmFlistSetPos(), *ClmFlistSetBottomItem(),
                   *ClmFlistSetBottomPos(), *ClmFlistSelectPos(),
                   *ClmFlistDeselectPos();
 
@@ -385,7 +385,7 @@ ClmCommand *ReceiveAndExecute()
     if( (cmd = ReceiveCommand(global.socket)) == NULL )
 	exit(1);
 
-    if( cmd->command < 0 || 
+    if( cmd->command < 0 ||
         (cmd->command > ClmMaxID && cmd->command < 1024) ||
         cmd->command > UserMaxID ||
         (cmd->command < 1024 && FunctionTable[cmd->command] == NULL ) ||
@@ -429,7 +429,7 @@ ClmCommand *ClmCallbackCommandLoop()
 	fprintf(stderr, "WARNING: Callback loop already terminated !\n");
 	fflush(stderr);
     }
-    
+
     while( ! global.terminated ) {
 	cmd = ReceiveAndExecute();
 	if( ! global.terminated )
@@ -449,7 +449,7 @@ XtInputId  id;
 
 XtInputId StartListeningToLisp()
 {
-    global.input_id = XtAppAddInput(global.app_context, global.socket, 
+    global.input_id = XtAppAddInput(global.app_context, global.socket,
 		                    XtInputReadMask, DoOneCommand, NULL);
 }
 
@@ -461,16 +461,13 @@ void DiscontinueLisp()
 static ClmArg       version[1];
 static ClmCommand   version_cmd = {ClmReturnValues, -1, 1, version};
 
-main(argc, argv)
-int    argc;
-char **argv;
-{
+int main(int argc, char** argv) {
     int          rc, dummy_argc=0;
     char        *dummy;
     ClmCommand  *cmd;
     XEvent       event;
 
-    
+
     /*malloc_debug(2);*/
 
     if( argc != 2 ) {
@@ -494,7 +491,7 @@ char **argv;
 
     XtToolkitInitialize();
     global.app_context = XtCreateApplicationContext();
-    
+
     XtAppSetErrorHandler(global.app_context, ClmErrorHandler);
     XtAppSetWarningHandler(global.app_context, ClmWarningHandler);
 
@@ -540,7 +537,7 @@ char **argv;
     InitializeClassTable();
 
     StartListeningToLisp();
-    
+
     for(;;) {
 	XtAppNextEvent(global.app_context, &event);
 	XtDispatchEvent(&event);
@@ -551,7 +548,3 @@ char **argv;
     }
     /* NOTREACHED */
 }
-
-
-
-

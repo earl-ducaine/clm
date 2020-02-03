@@ -39,7 +39,8 @@ ENUMSETGET = EnumSetGet
 # The following variables are site-specific
 
 # Comment this line out if you don't compile with Allegro Lisp
-LISP_OBJECTS = exclio.o runstatus.o
+# LISP_OBJECTS = exclio.o runstatus.o
+LISP_OBJECTS = runstatus.o
 
 # Directories where CLM should be installed
 # Directory where the Lisp code and the foreign function code should be inst.
@@ -112,6 +113,12 @@ $(DEST): $(OBJECTS)
 
 libclm_client.so: unixsocket.o io.o
 	$(CC) -shared -Wl,-soname,libclm_client.so $(LFLAGS) -o libclm_client.so unixsocket.o io.o  $(LIBRARIES)
+
+test_unix_sockets.o: test_unix_sockets.c $(HEADER)
+	$(CC) $(CFLAGS) $(INCLUDE) test_unix_sockets.c
+
+test_unix_sockets: libclm_client.so test_unix_sockets.o
+	$(CC) $(LFLAGS) test_unix_sockets.o -o test_unix_sockets $(LIBRARIES) -lclm_client
 
 inc-test:
 	/lib/cpp -H $(INCLUDE) GenTable.c /dev/null
@@ -275,8 +282,10 @@ unixio.o: unixio.c $(HEADER)
 
 unixsocket.o: unixsocket.c
 	$(CC) $(CFLAGS) $(LISP_CFLAGS) $(INCLUDE) unixsocket.c -DSOCKET_PATH=$(CLM_SOCKET)
-	echo $(CFLAGS)
 	if test ! -f ../lisp/unixsocket.o; then ln -s ../server/unixsocket.o ../lisp; fi
+
+TAGS: all
+	find . -name "*.[chCH]" -print | etags -
 
 install: all
 	-@mkdir $(CLM_LIB) $(CLM_BIN)

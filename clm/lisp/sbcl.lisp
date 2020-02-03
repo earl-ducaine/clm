@@ -4,7 +4,7 @@
 
 (setq *sccsid* "@(#)cmucl.lisp	1.6 9/8/93")
 
-(export 'clm-error)
+;; (export 'clm-error)
 
 
 ;;; This code is executed whenever the compiled CLM code is loaded
@@ -100,13 +100,18 @@
 ;;; not invoked when an error occurs in CLM.
 
 (define-condition clm-error (error)
-  ((format-string)
-   (format-arguments))
+  ((format-string :reader format-string :initarg :format-string)
+   (format-arguments :reader format-arguments :initarg :format-arguments))
   (:documentation "An error has occurred in the CLM code.")
   (:report (lambda (condition stream)
-	     (with-slots (format-string format-arguments) condition
 	     (format stream "A CLM error has occurred.~%~?"
-		     format-string format-arguments)))))
+		     (format-string condition) (format-arguments condition)))))
+
+;; Why is it so hard to get conditions to print the way I want?
+(defmethod print-object ((error clm-error) stream)
+  (format t "A CLM error has occurred.~%~?"
+	  (format-string error) (format-arguments error)))
+
 
 ;;; CLM-ERROR -- Internal
 ;;;
@@ -170,12 +175,7 @@
   (declare (ignore lock))
   `(progn ,@body))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Kill a running process
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; Kill a running process
 (defmacro process-kill (process)
   (declare (ignore process))
   nil)
@@ -183,7 +183,6 @@
 (defmacro process-wait (string function app)
   (declare (ignore string function app))
   nil)
-
 
 ;; Test whether the given path is a directory
 (cffi:defcfun is-directory :int
@@ -205,9 +204,7 @@
 (defun wait-for-input-from-server (connection wait-function)
   (unless (funcall wait-function connection)
     (sb-sys:wait-until-fd-usable (toolkit-connection-stream connection)
-    				 :input)
-    ))
-
+    				 :input)))
 
 ;; C function to create a socket
 (cffi:defcfun connect-to-toolkit-server :int
@@ -220,28 +217,23 @@
 (cffi:defcfun perror :int
   (msg :string))
 
-
-;;; Create a bidirectional stream
+;; Create a bidirectional stream
 (defun open-motif-stream (connection host)
   (if host
-
       ;; try to connect  via socket to existing clmd on host
       (let ((fd (connect-to-toolkit-server host *xt-tcp-port*)))
 	(declare (fixnum fd))
+	(break)
 	(when (minusp fd)
 	  (clm-error "Failed to connect to server: ~A~%" host))
-	(setf (toolkit-connection-stream connection) fd)
-	)
-
+	(setf (toolkit-connection-stream connection) fd))
       ;; directly fork clm-server as child of Lisp process
       (let* ((binary-name (get-clm-binary-name))
-	     (fd (connect-directly-to-toolkits binary-name))
-	     )
-	(declare (fixnum fd))
+	     (fd (connect-directly-to-toolkits binary-name)))
+	(break)
 	(when (minusp fd)
 	  (perror "Failed to fork clm-server:")
-	  (clm-error "Failed to fork clm-server from Lisp")
-	  )
+	  (clm-error "Failed to fork clm-server from Lisp"))
 	(setf (toolkit-connection-stream connection) fd)
 	))
   )
@@ -342,6 +334,9 @@
 	  (code (receive-integer stream rc))
 	  (serial (receive-integer stream rc))
 	  (num-args (receive-integer stream rc)))
+      (log-format
+       (str "xt-receive-command: receiving command -- code ~s, serial ~s, num-args ~s~%")
+       code serial num-args)
       (dotimes (i num-args)
 	(push (case (receive-integer stream rc)
 		(0 (receive-integer stream rc))

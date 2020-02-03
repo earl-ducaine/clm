@@ -7,3 +7,5 @@ GenTable
 clm-td
 
 *.o
+*.so
+TAGS

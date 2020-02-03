@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)GenTable.c	1.9 9/8/93";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)GenTable.c	1.9 9/8/93";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -67,15 +67,18 @@ static char sccsid[] = "@(#)GenTable.c	1.9 9/8/93";
 #include <Xm/SeparatoG.h>
 #include <Xm/Separator.h>
 #include <Xm/Text.h>
+#include <stdlib.h>
+
 #if XmREVISION != 0
 #include <Xm/TextF.h>
 #endif
+
 #include <Xm/ToggleB.h>
 #include <Xm/ToggleBG.h>
 
 #ifdef GRAPHWIDGET
 #include <Xbab/Graph.h>
-#endif GRAPHWIDGET
+#endif
 
 #include "interface.h"
 #include "functions.h"
@@ -86,73 +89,58 @@ static int num_classes;
 ClassEntry ClassTable[MAXCLASSES];
 char       *PointerNames[MAXCLASSES];
 
-static int BootClass(name, class, pointer_name)
-char        *name;
-WidgetClass  class;
-char        *pointer_name;
-{
-    int i;
-
-    /* test table overflow */
-    if( num_classes == MAXCLASSES ) {
-        fprintf(stderr,"Class table overflow\n");
-        exit(1);
-    }
-
+static int BootClass(char* name, WidgetClass class,
+		     char* pointer_name) {
+  // test table overflow
+  if(num_classes == MAXCLASSES) {
+    fprintf(stderr,"Class table overflow\n");
+    exit(1);
+  }
 #if XmREVISION != 0
-    XtInitializeWidgetClass(class);
+  XtInitializeWidgetClass(class);
 #endif
-
-    /* insert class at end of table */
-    ClassTable[num_classes].class           = class;
-    ClassTable[num_classes].total_resources = 0;
-    ClassTable[num_classes].name            = name;
-    PointerNames[num_classes]               = pointer_name;
-    return(num_classes++);
+  // insert class at end of table
+  ClassTable[num_classes].class = class;
+  ClassTable[num_classes].total_resources = 0;
+  ClassTable[num_classes].name = name;
+  PointerNames[num_classes] = pointer_name;
+  return num_classes++;
 }
 
-/*
- *   Convert resource name to external name
- *   keyboardFocusType --> KEYBOARD-FOCUS-TYPE
- */
+// Convert resource name to external name keyboardFocusType -->
+// KEYBOARD-FOCUS-TYPE
 
-extern abort();
-
-char *ExternalName(name)
-register char *name;
-{
-    register char *s = name, *external_name;
-    int length=0;
-
-    while(*s) {
-	if( isupper(*s) && s != name )
-	    length ++;
-	length++;
-	s++;
+char *ExternalName(char* name) {
+  char* s = name;
+  char* external_name;
+  int length=0;
+  while(*s) {
+    if(isupper(*s) && s != name )
+      length ++;
+    length++;
+    s++;
+  }
+  if((external_name = (char *)malloc(length+1)) == NULL) {
+    perror("malloc");
+    exit(1);
+  }
+  s = external_name;
+  while(*name) {
+    if( islower(*name) ) {
+      *s = toupper(*name);
     }
-
-    if( (external_name = (char *)malloc(length+1)) == NULL ) {
-	perror("malloc");
-	exit(1);
+    else {
+      if( isupper(*name) && s != external_name ) {
+	*s = '-';
+	++s;
+      }
+      *s = *name;
     }
-
-    s = external_name;
-    while(*name) {
-	if( islower(*name) ) {
-	    *s = toupper(*name);
-	}
-	else {
-	    if( isupper(*name) && s != external_name ) {
-		*s = '-';
-		++s;
-	    }
-	    *s = *name;
-	}
-	s++;
-	name++;
-    }
-    *s = '\0';
-    return(external_name);
+    s++;
+    name++;
+  }
+  *s = '\0';
+  return(external_name);
 }
 
 /* Get index of resource type (String) in type table */
@@ -162,7 +150,7 @@ char *resource_type;
 {
     int i;
 
-    for(i=0; TypeTable[i].resource_type != NULL; i++ ) 
+    for(i=0; TypeTable[i].resource_type != NULL; i++ )
 	if( ! strcmp(TypeTable[i].resource_type, resource_type) )
 	    return(i);
     return(-1);
@@ -212,7 +200,7 @@ char *InitializeClassTable()
 
     XtToolkitInitialize();
     /* app_context = XtCreateApplicationContext(); */
-    if( (display = XtOpenDisplay(NULL /*app_context*/, NULL, 
+    if( (display = XtOpenDisplay(NULL /*app_context*/, NULL,
 				 "gentable", "GenTable",
 				 NULL, 0, &dummy, NULL)) == NULL ) {
 	fprintf(stderr,"FATAL: XtOpenDisplay failed"); fflush(stderr);
@@ -221,11 +209,11 @@ char *InitializeClassTable()
 
     /* MUST be sorted alphabeticaly by first argument */
 
-    BootClass("APPLICATION-SHELL", applicationShellWidgetClass, 
+    BootClass("APPLICATION-SHELL", applicationShellWidgetClass,
 	      "applicationShellWidgetClass");
-    BootClass("ARROW-BUTTON", xmArrowButtonWidgetClass, 
+    BootClass("ARROW-BUTTON", xmArrowButtonWidgetClass,
 	      "xmArrowButtonWidgetClass");
-    BootClass("ARROW-BUTTON-GADGET", xmArrowButtonGadgetClass, 
+    BootClass("ARROW-BUTTON-GADGET", xmArrowButtonGadgetClass,
 	      "xmArrowButtonGadgetClass");
     BootClass("BULLETIN-BOARD", xmBulletinBoardWidgetClass,
 	      "xmBulletinBoardWidgetClass");
@@ -291,13 +279,13 @@ char *InitializeClassTable()
 
     /* Beginning of constain code */
     /* Do this here because constraints get messed up - so it seems */
-    
+
     for( i=0; i<num_classes; i++ ) {
 	ClassTable[i].constraint_list = NULL;
 	ClassTable[i].total_constraints = 0;
 
 	/* Check if class is subclass of Constraint */
-	for( class = ClassTable[i].class; 
+	for( class = ClassTable[i].class;
 	     class && class != constraintWidgetClass;
 	     class = class->core_class.superclass );
 
@@ -307,14 +295,14 @@ char *InitializeClassTable()
 	    ClassTable[i].total_constraints = ((ConstraintWidgetClass)
 		ClassTable[i].class)->constraint_class.num_resources;
 	    size =  ClassTable[i].total_constraints * sizeof(XtResource);
-	    ClassTable[i].constraint_list = 
+	    ClassTable[i].constraint_list =
 		(XtResourceList) XtMalloc((unsigned) size);
 	    bcopy((char *)(((ConstraintWidgetClass)
 		  ClassTable[i].class)->constraint_class.resources),
 		  (char *)(ClassTable[i].constraint_list), size);
 	}
     }
-    
+
     /* End of constraint code */
 
     /* Add this to cause the class to get initialized */
@@ -365,10 +353,10 @@ char *InitializeClassTable()
     }
 
     for( i=0; i<num_classes; i++ ) {
-	XtGetResourceList(ClassTable[i].class, 
+	XtGetResourceList(ClassTable[i].class,
 			  &(ClassTable[i].resource_list),
 			  &(ClassTable[i].total_resources) );
-/*	XtGetConstraintResourceList(ClassTable[i].class, 
+/*	XtGetConstraintResourceList(ClassTable[i].class,
 			  &(ClassTable[i].constraint_list),
 			  &(ClassTable[i].total_constraints) ) */;
     }
@@ -379,10 +367,10 @@ char *InitializeClassTable()
 
 	/* Get some mem ... */
 	/* Get extra memory for additional resources */
-	if( (ClassTable[i].all_resources = 
+	if( (ClassTable[i].all_resources =
 		     (ClmResourceDesc *) XtMalloc(sizeof(ClmResourceDesc)*
 		     (ClassTable[i].total_resources+100))) == NULL ||
-	    (ClassTable[i].all_constraints = 
+	    (ClassTable[i].all_constraints =
 		     (ClmResourceDesc *) XtMalloc(sizeof(ClmResourceDesc)*
 		     (ClassTable[i].total_constraints+100))) == NULL )
 	    perror("malloc");
@@ -422,7 +410,7 @@ char *InitializeClassTable()
 	    AddExtraResource(i, XmNscrollLeftSide, XmRBoolean);
 	    AddExtraResource(i, XmNscrollTopSide, XmRBoolean);
 	}
-	    
+
 
 	/* Build resource descriptors for constraints */
 
@@ -449,7 +437,6 @@ char *InitializeClassTable()
     int i,j, k, n, total_resources, dummy=0, size;
     Display *display;
     Arg arg[10];
-    WidgetClass class;
     XtAppContext app_context;
 
     XtToolkitInitialize();
@@ -468,11 +455,11 @@ char *InitializeClassTable()
 
     /* MUST be sorted alphabeticaly by first argument */
 
-    BootClass("APPLICATION-SHELL", applicationShellWidgetClass, 
+    BootClass("APPLICATION-SHELL", applicationShellWidgetClass,
 	      "applicationShellWidgetClass");
-    BootClass("ARROW-BUTTON", xmArrowButtonWidgetClass, 
+    BootClass("ARROW-BUTTON", xmArrowButtonWidgetClass,
 	      "xmArrowButtonWidgetClass");
-    BootClass("ARROW-BUTTON-GADGET", xmArrowButtonGadgetClass, 
+    BootClass("ARROW-BUTTON-GADGET", xmArrowButtonGadgetClass,
 	      "xmArrowButtonGadgetClass");
     BootClass("BULLETIN-BOARD", xmBulletinBoardWidgetClass,
 	      "xmBulletinBoardWidgetClass");
@@ -493,7 +480,7 @@ char *InitializeClassTable()
     BootClass("FRAME", xmFrameWidgetClass, "xmFrameWidgetClass");
 #ifdef GRAPHWIDGET
     BootClass("GRAPH", xmGraphWidgetClass, "xmGraphWidgetClass");
-#endif GRAPHWIDGET
+#endif
     BootClass("LABEL", xmLabelWidgetClass, "xmLabelWidgetClass");
     BootClass("LABEL-GADGET", xmLabelGadgetClass, "xmLabelGadgetClass");
     BootClass("LIST", xmListWidgetClass, "xmListWidgetClass");
@@ -541,10 +528,10 @@ char *InitializeClassTable()
     XSetErrorHandler(abort);
 
     for( i=0; i<num_classes; i++ ) {
-	XtGetResourceList(ClassTable[i].class, 
+	XtGetResourceList(ClassTable[i].class,
 			  &(ClassTable[i].resource_list),
 			  &(ClassTable[i].total_resources) );
-	XtGetConstraintResourceList(ClassTable[i].class, 
+	XtGetConstraintResourceList(ClassTable[i].class,
 			  &(ClassTable[i].constraint_list),
 			  &(ClassTable[i].total_constraints) );
     }
@@ -553,10 +540,10 @@ char *InitializeClassTable()
 
 	/* Get some mem ... */
 	/* Get extra memory for additional resources */
-	if( (ClassTable[i].all_resources = 
+	if( (ClassTable[i].all_resources =
 		     (ClmResourceDesc *) XtMalloc(sizeof(ClmResourceDesc)*
 		     (ClassTable[i].total_resources+100))) == NULL ||
-	    (ClassTable[i].all_constraints = 
+	    (ClassTable[i].all_constraints =
 		     (ClmResourceDesc *) XtMalloc(sizeof(ClmResourceDesc)*
 		     (ClassTable[i].total_constraints+100))) == NULL )
 	    perror("malloc");
@@ -602,7 +589,7 @@ char *InitializeClassTable()
 	    AddExtraResource(i, XmNscrollLeftSide, XmRBoolean);
 	    AddExtraResource(i, XmNscrollTopSide, XmRBoolean);
 	}
-	    
+
 
 	/* Build resource descriptors for constraints */
 
@@ -648,16 +635,16 @@ int              left, right;
 	    --j;
 	}
     } while ( i <= j );
-    
+
     if( left < j )
 	SortResources(rp, left, j);
     if( i < right )
 	SortResources(rp, i, right);
 }
-    
+
 #define SKIP fputs("\n", module)
 
-static void PrintClassTable() 
+static void PrintClassTable()
 {
     FILE *module, *lisp_module;
     int   i, j;
@@ -751,7 +738,7 @@ static void PrintClassTable()
 	fprintf(module, "    { \"%s\",\n", ClassTable[i].name);
 	fprintf(module, "      (WidgetClass)(&%s),\n", PointerNames[i]);
 	fprintf(module, "      NULL, 0,\n");
-        fprintf(module, "      NULL, %sResources, %d,\n", 
+        fprintf(module, "      NULL, %sResources, %d,\n",
 			PointerNames[i], ClassTable[i].total_resources);
 
 	fprintf(module, "      NULL, %s%s, %d},\n",
@@ -772,4 +759,3 @@ char **argv;
     PrintClassTable();
     exit(0); /* to make make happy */
 }
-

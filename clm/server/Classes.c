@@ -80,26 +80,22 @@ char *resource_type;
     return(-1);
 }
 
-char *InitializeClassTable()
-{
-    int i;
-
-    for( i=0; i<num_classes; i++)
-	ClassTable[i].class =
-	  (WidgetClass)(*(WidgetClass *)(ClassTable[i].class));
+void InitializeClassTable() {
+  int i;
+  for( i=0; i<num_classes; i++) {
+    ClassTable[i].class =
+      (WidgetClass)(*(WidgetClass *)(ClassTable[i].class));
+  }
 }
 
-int ClassPointerToIndex(class)
-register WidgetClass class;
-{
-    register int i;
-
-    for( i=0; i<num_classes; i++ )
-	if( ClassTable[i].class == class )
-	    return(i);
-    fprintf (stderr, "Implementation error: widget class not in table.");
-    fflush (stderr);
-    abort();
+int ClassPointerToIndex(WidgetClass class) {
+  int i;
+  for( i=0; i<num_classes; i++ )
+    if( ClassTable[i].class == class )
+      return(i);
+  fprintf (stderr, "Implementation error: widget class not in table.");
+  fflush (stderr);
+  abort();
 }
 
 int ClassNameToIndex(name, msg_ptr)

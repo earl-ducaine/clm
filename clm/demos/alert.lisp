@@ -1,16 +1,17 @@
 ;;; -*- Mode:lisp; Syntax:Common-Lisp; Package:(alert (lisp)); Base:10 -*-
 
-(in-package 'alert)
-(use-package 'xtk)
+(defpackage :alert
+  (:use cl))
+
+(in-package :alert)
+(use-package :xtk)
 
 (defvar *sccsid* "@(#)alert.lisp	1.3 11/27/91")
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Main program
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Main program
+
 
 '(run-motif-application 'alert::alert-test)
 

@@ -1,0 +1,35 @@
+
+
+
+* CL Motif Internals
+
+** Client Server -- Unix Sockets
+
+   Unix Sockes are essentially a cross between pipes and TCP/IP
+   sockets. Roughly, the semantics of TCP/IP and the performance of
+   pipes, but limited to local processes.
+
+   
+** Description of actions
+
+   
+*** connect_directly_to_toolkits
+
+    The lisp process call the C function connect_directly_to_toolkits
+    using the CFFI interface. It first loads the shared library
+    server/libclm_client.so using the form cffi:define-foreign-library
+    and cffi:use-foreign-library. It then calls
+    connect-directly-to-toolkits, the CFFI wrapper of the C function,
+    with the directory path of the server binary, server/clm-server
+
+    The C function connect_directly_to_toolkits then creates a Unix
+    Domain Socket passing back the fd of one end as the return value
+    of connect-directly-to-toolkits and passing the fd of the other
+    end to clm-server as a command-line argument which is started as a
+    child-of-a-child process, via fork, of the originating Lisp
+    process using execve
+
+
+*** server/clm-server startup
+
+    

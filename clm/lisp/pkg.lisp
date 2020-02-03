@@ -4,12 +4,13 @@
 
 
 (defpackage :xtk
- (:use :common-lisp)
-  (:nicknames :clm)
+ (:use common-lisp)
+  (:nicknames clm)
   (:export
-    :motif-version
-    :ld
-    :add-callback
+    motif-version
+    ld
+    add-callback
+    clm-error
     :remove-callback
     :remove-all-callbacks
     :has-callbacks
