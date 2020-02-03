@@ -72,6 +72,6 @@ int SendHeader(int sock, int code, int serial, int length);
 int SendString(int sock, char* string);
 int SendSymbol(int sock, char* symbol);
 int SendSymbolL(int sock, char* symbol);
-int do_read(int sock, char* ptr, int size);
+int do_read(int sock, unsigned char* ptr, int size);
 
 #endif

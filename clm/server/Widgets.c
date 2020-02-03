@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)Widgets.c	1.7 1/30/92";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)Widgets.c	1.7 1/30/92";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -63,7 +63,7 @@ int expr;
     return(0);
 }
 
-void InitializeWidgetTable() 
+void InitializeWidgetTable()
 {
     register int i;
 
@@ -86,12 +86,12 @@ int          parent_class_id, class_id;
     Widget      test_widget;
 
     if (LookupWidget (id, &test_widget, NULL, NULL) == NULL) {
-	fprintf (stderr, 
+	fprintf (stderr,
 		 "Warning: ID %d inserted twice in widget table.\n", id);
 	fflush (stderr);
     }
     l_slot = id%HASH_TABLE_SIZE;
-    w_slot = (((unsigned int)widget)>>2)%HASH_TABLE_SIZE;
+    w_slot = (((unsigned int)widget) >> 2) % HASH_TABLE_SIZE;
     new = (WidgetNode *)ClmMalloc(sizeof(WidgetNode));
     new->id              = id;
     new->widget          = widget;
@@ -157,32 +157,26 @@ int      *parent_class_id;
     return(NULL);
 }
 
-WidgetID FindWidget(widget)
-Widget widget;
-{
-    register int         w_slot = (((unsigned int)widget)>>2)%HASH_TABLE_SIZE;
-    register WidgetNode *node   = WidgetTable[w_slot].w_next;
+WidgetID FindWidget(Widget widget) {
+  int w_slot = (((unsigned int)widget)>>2)%HASH_TABLE_SIZE;
+  register WidgetNode *node   = WidgetTable[w_slot].w_next;
 
-    while( node->widget != widget && node != WidgetTable+w_slot )
-	node = node->w_next;
+  while( node->widget != widget && node != WidgetTable+w_slot )
+    node = node->w_next;
 
-    if( node == WidgetTable+w_slot )
-	return(-1);
-    return(node->id);
+  if( node == WidgetTable+w_slot )
+    return(-1);
+  return(node->id);
 }
 
-static WidgetNode *FindNode(widget)
-Widget widget;
-{
-    register int         w_slot = (((unsigned int)widget)>>2)%HASH_TABLE_SIZE;
-    register WidgetNode *node   = WidgetTable[w_slot].w_next;
-
-    while( node->widget != widget && node != WidgetTable+w_slot )
-	node = node->w_next;
-
-    if( node == WidgetTable+w_slot )
-	return(NULL);
-    return(node);
+static WidgetNode *FindNode(Widget widget) {
+  int w_slot = (((unsigned int)widget)>>2)%HASH_TABLE_SIZE;
+  register WidgetNode *node   = WidgetTable[w_slot].w_next;
+  while( node->widget != widget && node != WidgetTable+w_slot )
+    node = node->w_next;
+  if( node == WidgetTable+w_slot )
+    return(NULL);
+  return(node);
 }
 
 void DestroyWidget(widget,client_data,call_data)

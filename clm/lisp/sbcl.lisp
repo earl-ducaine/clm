@@ -12,9 +12,17 @@
 
 ;; Ensure that foreign object code is loaded exactly once
 
-(unless (member :motif-server *features*)
-  (ext:load-foreign (list "unixsocket.o" "io.o")
-		      :libraries '("-lc" "-lm")))
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (cffi:define-foreign-library lib-clm-client
+    (:unix
+     "/home/rett/dev/common-lisp/cl-motif/cl-motif.git/clm/server/libclm_client.so"))
+
+  (cffi:use-foreign-library lib-clm-client))
+
+;; (unless (member :motif-server *features*)
+;;   (ext:load-foreign (list "unixsocket.o" "io.o")
+;; 		      :libraries '("-lc" "-lm")))
+
 (pushnew :motif-server *features*)
 (pushnew :clm-has-handler *features*)
 
@@ -48,7 +56,7 @@
 	          do (when (> (file-write-date (source-file-name file))
 			  (file-write-date binary-file))
 	          (return t))))
-      (compile-file source-file :error-file t))
+      (compile-file source-file))
   (load binary-file))
 
 
@@ -70,20 +78,20 @@
   "saves a world under current directory"
   (setq name-core-file   (format nil "~a.core" name))
   (setq name-object-file (format nil "~a.obj"  name))
-  (ext:run-program "/bin/sh"
+  (uiop:run-program "/bin/sh"
     (list "-c"
-     (format nil "cp ~a ~a" system::*previous-linked-object-file* name-object-file)))
-  (user::gc t)
-  (extensions::save-lisp name-core-file :purify t
-           :init-function
-           (coerce
-	    `(lambda ()
-               (setq system::*previous-linked-object-file* nil
-                     system::*foreign-segment-free-pointer* #xC00000)
-               (system::load-object-file ,name-object-file)
-               (throw 'lisp::top-level-catcher nil))
-	    'function)
-	    :load-init-file t)
+     (format nil "cp ~a ~a" "system::*previous-linked-object-file*" name-object-file)))
+  ;; (user::gc t)
+  ;; (extensions::save-lisp name-core-file :purify t
+  ;;          :init-function
+  ;;          (coerce
+  ;; 	    `(lambda ()
+  ;;              (setq system::*previous-linked-object-file* nil
+  ;;                    system::*foreign-segment-free-pointer* #xC00000)
+  ;;              (system::load-object-file ,name-object-file)
+  ;;              (throw 'lisp::top-level-catcher nil))
+  ;; 	    'function)
+  ;; 	    :load-init-file t)
   (format nil "Generated: ~a ~a" name-core-file name-object-file))
 
 
@@ -92,13 +100,18 @@
 ;;; not invoked when an error occurs in CLM.
 
 (define-condition clm-error (error)
-  ((format-string)
-   (format-arguments))
+  ((format-string :reader format-string :initarg :format-string)
+   (format-arguments :reader format-arguments :initarg :format-arguments))
   (:documentation "An error has occurred in the CLM code.")
   (:report (lambda (condition stream)
 	     (format stream "A CLM error has occurred.~%~?"
-		     (clm-error-format-string condition)
-		     (clm-error-format-arguments condition)))))
+		     (format-string condition) (format-arguments condition)))))
+
+;; Why is it so hard to get conditions to print the way I want?
+(defmethod print-object ((error clm-error) stream)
+  (format t "A CLM error has occurred.~%~?"
+	  (format-string error) (format-arguments error)))
+
 
 ;;; CLM-ERROR -- Internal
 ;;;
@@ -162,12 +175,7 @@
   (declare (ignore lock))
   `(progn ,@body))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Kill a running process
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; Kill a running process
 (defmacro process-kill (process)
   (declare (ignore process))
   nil)
@@ -176,25 +184,13 @@
   (declare (ignore string function app))
   nil)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Test whether the given path is a directory
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Test whether the given path is a directory
+(cffi:defcfun is-directory :int
+  (path :string))
 
-(alien:def-alien-routine is-directory
-    c-call:int
-  (path c-call:c-string))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Listen for input on the Motif server's connection
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(alien:def-alien-routine listen-to-socket
-    c-call:int
-  (socket c-call:int))
+;; Listen for input on the Motif server's connection
+(cffi:defcfun listen-to-socket :int
+  (socket :int))
 
 (defun listen-for-input (connection)
   (let ((status (listen-to-socket (toolkit-connection-stream connection))))
@@ -202,62 +198,42 @@
       (clm-error "Read error on stream"))
     (plusp status)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Listen to the Motif server
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Listen to the Motif server
+;; todo -- Needs to be reworked
 (defun wait-for-input-from-server (connection wait-function)
   (unless (funcall wait-function connection)
-    (system:wait-until-fd-usable (toolkit-connection-stream connection)
-				 :input)))
+    (sb-sys:wait-until-fd-usable (toolkit-connection-stream connection)
+    				 :input)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; C function to create a socket
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; C function to create a socket
+(cffi:defcfun connect-to-toolkit-server :int
+  (host :string)
+  (port :int))
 
-(alien:def-alien-routine connect-to-toolkit-server
-    c-call:int
-  (host c-call:c-string)
-  (port c-call:int))
+(cffi:defcfun connect-directly-to-toolkits :int
+  (binary :string))
 
-(alien:def-alien-routine connect-directly-to-toolkits
-    c-call:int
-  (binary c-call:c-string))
+(cffi:defcfun perror :int
+  (msg :string))
 
-(alien:def-alien-routine perror
-    c-call:int
-  (msg c-call:c-string))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Create a bidirectional stream
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; Create a bidirectional stream
 (defun open-motif-stream (connection host)
   (if host
-
       ;; try to connect  via socket to existing clmd on host
       (let ((fd (connect-to-toolkit-server host *xt-tcp-port*)))
 	(declare (fixnum fd))
+	(break)
 	(when (minusp fd)
 	  (clm-error "Failed to connect to server: ~A~%" host))
-	(setf (toolkit-connection-stream connection) fd)
-	)
-
+	(setf (toolkit-connection-stream connection) fd))
       ;; directly fork clm-server as child of Lisp process
       (let* ((binary-name (get-clm-binary-name))
-	     (fd (connect-directly-to-toolkits binary-name))
-	     )
-	(declare (fixnum fd))
+	     (fd (connect-directly-to-toolkits binary-name)))
+	(break)
 	(when (minusp fd)
 	  (perror "Failed to fork clm-server:")
-	  (clm-error "Failed to fork clm-server from Lisp")
-	  )
+	  (clm-error "Failed to fork clm-server from Lisp"))
 	(setf (toolkit-connection-stream connection) fd)
 	))
   )
@@ -275,47 +251,36 @@
       (error "Could not find the binary ~S in any of ~{~A ~}"
 	     binary dirs))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Close the stream
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(alien:def-alien-routine ("CloseStream" close-xt-stream)
-    c-call:int
-  (stream c-call:int))
+;;; Close the stream
+(cffi:defcfun ("CloseStream" close-xt-stream) :int
+  (stream :int))
 
 (defun close-motif-stream (connection)
   (setf (toolkit-connection-closed connection) t)
   (close-xt-stream (toolkit-connection-stream connection)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Read/Write a data object from/to the stream
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(alien:def-alien-routine ("SendHeader" send-header)
-    c-call:int
-  (stream c-call:int)
-  (code   c-call:int)
-  (serial c-call:int)
-  (length c-call:int))
+;;; Read/Write a data object from/to the stream
 
-(alien:def-alien-routine ("SendInteger" send-integer)
-    c-call:int
-  (stream c-call:int)
-  (value c-call:int))
 
-(alien:def-alien-routine ("SendString" send-string)
-    c-call:int
-  (steam c-call:int)
-  (value c-call:c-string))
+(cffi:defcfun ("SendHeader" send-header) :int
+  (stream :int)
+  (code :int)
+  (serial :int)
+  (length :int))
 
-(alien:def-alien-routine ("SendSymbol" send-symbol)
-    c-call:int
-  (stream c-call:int)
-  (value c-call:c-string))
+(cffi:defcfun ("SendInteger" send-integer) :int
+  (stream :int)
+  (value :int))
+
+(cffi:defcfun ("SendString" send-string) :int
+  (steam :int)
+  (value :string))
+
+(cffi:defcfun ("SendSymbol" send-symbol) :int
+  (stream :int)
+  (value :string))
 
 (defun xt-send-command (stream code serial list-of-arguments)
   (declare (list list-of-arguments))
@@ -327,90 +292,84 @@
       (symbol  (send-symbol stream (symbol-name value)))
       (t       (clm-error "illegal argument type")))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Send a command to the toolkit server
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Send a command to the toolkit server
 
 
-(alien:def-alien-routine ("FlushBuffer" flush-buffer)
-    c-call:int
-  (socket c-call:int))
+(cffi:defcfun ("FlushBuffer" flush-buffer) :int
+  (socket :int))
 
 (defun toolkit-send-command (code serial list-of-args)
   (declare (special *motif-connection*))
   ;;; scheduling must be inhibited because we have only one output buffer
   ;;; and because the C io functions must not be interrupted
   ;;% was mp:without-scheduling
-  (when (eql (system:without-interrupts
+  (when (eql (sb-sys:without-interrupts
 	      (xt-send-command (toolkit-connection-stream *motif-connection*)
 			       code serial list-of-args)
 	      (flush-buffer (toolkit-connection-stream *motif-connection*)))
 	     -1)
     (clm-error "xt-send-command failed~%")))
 
-(alien:def-alien-routine ("ReceiveInteger" receive-integer)
-    c-call:int
-  (stream c-call:int)
-  (rc (* c-call:int) :out))
+(cffi:defcfun ("ReceiveInteger" receive-integer) :int
+  (stream :int)
+  (rc :pointer :int))
 
 (defun receive-lisp-string (stream)
-  (let* ((length (receive-integer stream))
-	 (string (make-string length)))
-    (multiple-value-bind
-	(okay errno)
-	(system:without-gcing
-	 (unix:unix-read stream (ext::vector-sap string) length))
-      (unless okay
-	(clm-error "receive-lisp-string failed: ~A"
-		   (unix:get-unix-error-msg errno)))
-      string)))
+  (cffi:with-foreign-object (rc :int 1)
+    (let* ((length (receive-integer stream rc))
+	   (string (make-string length)))
+      (multiple-value-bind
+	    (okay errno)
+	  (sb-sys:without-gcing
+	    (sb-posix:read stream (sb-sys:vector-sap string) length))
+	(unless okay
+	  (clm-error "receive-lisp-string failed: ~A"
+		     (sb-int:strerror errno)))
+	string))))
 
 (defun xt-receive-command (stream)
-  (let ((list-of-args nil)
-	(code (receive-integer stream))
-	(serial (receive-integer stream))
-	(num-args (receive-integer stream)))
-    (dotimes (i num-args)
-      (push (case (receive-integer stream)
-	      (0 (receive-integer stream))
-	      (1 (receive-lisp-string stream))
-	      (2
-	       (let ((print-name (receive-lisp-string stream)))
-		 (cond ((equal print-name "NIL") nil)
-		       ((equal print-name "T") t)
-		       (t (intern print-name 'keyword)))))
-	      (t
-	       (clm-error "Illegal type")))
-	    list-of-args))
-    (values (cons code (nreverse list-of-args))
-	    (list serial num-args))))
+  (cffi:with-foreign-object (rc :int 1)
+    (let ((list-of-args nil)
+	  (code (receive-integer stream rc))
+	  (serial (receive-integer stream rc))
+	  (num-args (receive-integer stream rc)))
+      (log-format
+       (str "xt-receive-command: receiving command -- code ~s, serial ~s, num-args ~s~%")
+       code serial num-args)
+      (dotimes (i num-args)
+	(push (case (receive-integer stream rc)
+		(0 (receive-integer stream rc))
+		(1 (receive-lisp-string stream))
+		(2
+		 (let ((print-name (receive-lisp-string stream)))
+		   (cond ((equal print-name "NIL") nil)
+			 ((equal print-name "T") t)
+			 (t (intern print-name 'keyword)))))
+		(t
+		 (clm-error "Illegal type")))
+	      list-of-args))
+      (values (cons code (nreverse list-of-args))
+	      (list serial num-args)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; Receive a command from the toolkit server
-;;;;; Do a passive wait until input is available
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Receive a command from the toolkit server Do a passive wait until
+;; input is available
 (defun toolkit-receive-command ()
   (declare (special *motif-connection*))
   ;; Suspend process until input is available
   (wait-for-input-from-server *motif-connection* #'listen-for-input)
   ;; Get a message from the motif server
   ;; %% was mp:without-scheduling
-  (system:without-interrupts
+  (sb-sys:without-interrupts
    (multiple-value-bind
        (r1 r2)
        (xt-receive-command (toolkit-connection-stream *motif-connection*))
      (values r1 r2))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;
-;;;;; fd handlers
-;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; fd handlers
+
 
 (defvar *active-clm-handlers* ()
   "alist of (fd . System FD handlers returned by system:add-fd-handler).")
@@ -418,10 +377,9 @@
 (defun add-clm-handler ()
   (let ((fd (toolkit-connection-stream *motif-connection*)))
     (when (assoc fd *active-clm-handlers*)
-	(break "Hey, there's already a handler for fd=~d." fd))
-
+      (break "Hey, there's already a handler for fd=~d." fd))
     (push (cons fd
-		(system:add-fd-handler
+		(sb-sys:add-fd-handler
 		 fd
 		 :input
 		 (let ((mc *motif-connection*)
@@ -433,9 +391,9 @@
 			     (*x-display* xd)
 			     (thrown-out-of-callback t))
 			 (unwind-protect
-			     (progn
-			       (wrapper-apply #'handle-pending-events '(nil))
-			       (setq thrown-out-of-callback nil))
+			      (progn
+				(wrapper-apply #'handle-pending-events '(nil))
+				(setq thrown-out-of-callback nil))
 			   ;; cleanup:
 			   (when (or thrown-out-of-callback
 				     (toolkit-connection-dispatcher-terminated
@@ -453,7 +411,7 @@
 (defun remove-clm-handler (fd)
   (let ((handler (cdr (assoc fd *active-clm-handlers*))))
     (cond (handler
-	   (system:remove-fd-handler handler)
+	   (sb-sys:remove-fd-handler handler)
 	   (setf *active-clm-handlers* (remove fd *active-clm-handlers*
 					       :key #'car :test #'=))
 	   handler)
