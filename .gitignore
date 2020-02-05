@@ -9,3 +9,4 @@ clm-td
 *.o
 *.so
 TAGS
+*test_unix_sockets

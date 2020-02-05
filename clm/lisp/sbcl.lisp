@@ -10,14 +10,6 @@
 ;;; This code is executed whenever the compiled CLM code is loaded
 
 
-;; Ensure that foreign object code is loaded exactly once
-
-(eval-when (:execute :load-toplevel :compile-toplevel)
-  (cffi:define-foreign-library lib-clm-client
-    (:unix
-     "/home/rett/dev/common-lisp/cl-motif/cl-motif.git/clm/server/libclm_client.so"))
-
-  (cffi:use-foreign-library lib-clm-client))
 
 ;; (unless (member :motif-server *features*)
 ;;   (ext:load-foreign (list "unixsocket.o" "io.o")
@@ -26,9 +18,7 @@
 (pushnew :motif-server *features*)
 (pushnew :clm-has-handler *features*)
 
-
 ;;; The files that need to be compiled for CLM
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -184,14 +174,6 @@
   (declare (ignore string function app))
   nil)
 
-;; Test whether the given path is a directory
-(cffi:defcfun is-directory :int
-  (path :string))
-
-;; Listen for input on the Motif server's connection
-(cffi:defcfun listen-to-socket :int
-  (socket :int))
-
 (defun listen-for-input (connection)
   (let ((status (listen-to-socket (toolkit-connection-stream connection))))
     (when (minusp status)
@@ -205,17 +187,6 @@
   (unless (funcall wait-function connection)
     (sb-sys:wait-until-fd-usable (toolkit-connection-stream connection)
     				 :input)))
-
-;; C function to create a socket
-(cffi:defcfun connect-to-toolkit-server :int
-  (host :string)
-  (port :int))
-
-(cffi:defcfun connect-directly-to-toolkits :int
-  (binary :string))
-
-(cffi:defcfun perror :int
-  (msg :string))
 
 ;; Create a bidirectional stream
 (defun open-motif-stream (connection host)
@@ -252,35 +223,10 @@
 	     binary dirs))))
 
 
-;;; Close the stream
-(cffi:defcfun ("CloseStream" close-xt-stream) :int
-  (stream :int))
 
 (defun close-motif-stream (connection)
   (setf (toolkit-connection-closed connection) t)
   (close-xt-stream (toolkit-connection-stream connection)))
-
-
-;;; Read/Write a data object from/to the stream
-
-
-(cffi:defcfun ("SendHeader" send-header) :int
-  (stream :int)
-  (code :int)
-  (serial :int)
-  (length :int))
-
-(cffi:defcfun ("SendInteger" send-integer) :int
-  (stream :int)
-  (value :int))
-
-(cffi:defcfun ("SendString" send-string) :int
-  (steam :int)
-  (value :string))
-
-(cffi:defcfun ("SendSymbol" send-symbol) :int
-  (stream :int)
-  (value :string))
 
 (defun xt-send-command (stream code serial list-of-arguments)
   (declare (list list-of-arguments))
@@ -291,13 +237,6 @@
       (string  (send-string stream value))
       (symbol  (send-symbol stream (symbol-name value)))
       (t       (clm-error "illegal argument type")))))
-
-
-;;; Send a command to the toolkit server
-
-
-(cffi:defcfun ("FlushBuffer" flush-buffer) :int
-  (socket :int))
 
 (defun toolkit-send-command (code serial list-of-args)
   (declare (special *motif-connection*))
@@ -310,48 +249,6 @@
 	      (flush-buffer (toolkit-connection-stream *motif-connection*)))
 	     -1)
     (clm-error "xt-send-command failed~%")))
-
-(cffi:defcfun ("ReceiveInteger" receive-integer) :int
-  (stream :int)
-  (rc :pointer :int))
-
-(defun receive-lisp-string (stream)
-  (cffi:with-foreign-object (rc :int 1)
-    (let* ((length (receive-integer stream rc))
-	   (string (make-string length)))
-      (multiple-value-bind
-	    (okay errno)
-	  (sb-sys:without-gcing
-	    (sb-posix:read stream (sb-sys:vector-sap string) length))
-	(unless okay
-	  (clm-error "receive-lisp-string failed: ~A"
-		     (sb-int:strerror errno)))
-	string))))
-
-(defun xt-receive-command (stream)
-  (cffi:with-foreign-object (rc :int 1)
-    (let ((list-of-args nil)
-	  (code (receive-integer stream rc))
-	  (serial (receive-integer stream rc))
-	  (num-args (receive-integer stream rc)))
-      (log-format
-       (str "xt-receive-command: receiving command -- code ~s, serial ~s, num-args ~s~%")
-       code serial num-args)
-      (dotimes (i num-args)
-	(push (case (receive-integer stream rc)
-		(0 (receive-integer stream rc))
-		(1 (receive-lisp-string stream))
-		(2
-		 (let ((print-name (receive-lisp-string stream)))
-		   (cond ((equal print-name "NIL") nil)
-			 ((equal print-name "T") t)
-			 (t (intern print-name 'keyword)))))
-		(t
-		 (clm-error "Illegal type")))
-	      list-of-args))
-      (values (cons code (nreverse list-of-args))
-	      (list serial num-args)))))
-
 
 ;; Receive a command from the toolkit server Do a passive wait until
 ;; input is available
@@ -406,7 +303,6 @@
     (when (toolkit-connection-blocked-callback *motif-connection*)
       ;; (format t "in add-clm-handler: extra clm-main-loop~%")
       (wrapper-apply #'handle-pending-events '(nil)))))
-
 
 (defun remove-clm-handler (fd)
   (let ((handler (cdr (assoc fd *active-clm-handlers*))))

@@ -106,7 +106,7 @@ INCLUDE = $(XBAB_INCLUDE) $(XM_INCLUDE) $(XT_INCLUDE)
 
 HEADER = interface.h functions.h opcodes.h externals.h
 
-all: $(DEST) $(DAEMON) unixsocket.o io.o $(LISP_OBJECTS) libclm_client.so
+all: $(DEST) $(DAEMON) unixsocket.o io.o $(LISP_OBJECTS) libclm_client.so test_unix_sockets
 
 $(DEST): $(OBJECTS)
 	$(CC) $(LFLAGS) $(OBJECTS) -o $(DEST) $(LIBRARIES)
@@ -118,7 +118,7 @@ test_unix_sockets.o: test_unix_sockets.c $(HEADER)
 	$(CC) $(CFLAGS) $(INCLUDE) test_unix_sockets.c
 
 test_unix_sockets: libclm_client.so test_unix_sockets.o
-	$(CC) $(LFLAGS) test_unix_sockets.o -o test_unix_sockets $(LIBRARIES) -lclm_client
+	$(CC) $(LFLAGS) -L. -Wl,-R -Wl,. test_unix_sockets.o -o test_unix_sockets $(LIBRARIES) -lclm_client
 
 inc-test:
 	/lib/cpp -H $(INCLUDE) GenTable.c /dev/null

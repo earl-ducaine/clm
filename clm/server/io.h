@@ -69,9 +69,25 @@ int FlushBuffer(int sock);
 int ReceiveInteger(int sock, int* rc);
 int SendFloat(int sock, float value);
 int SendHeader(int sock, int code, int serial, int length);
+int SendInteger(int sock, int value);
 int SendString(int sock, char* string);
 int SendSymbol(int sock, char* symbol);
 int SendSymbolL(int sock, char* symbol);
 int do_read(int sock, unsigned char* ptr, int size);
+void float_to_bytes (float fl, unsigned char* bytes);
+void integer_to_bytes (int integer, unsigned char* bytes);
+
+// Limits, for use by the client software, which might not have any
+// other way to find these.
+
+int max_int ();
+int min_int ();
+unsigned int max_unsigned_int ();
+long max_long ();
+long min_long ();
+unsigned long max_unsigned_long ();
+float max_float ();
+double max_double ();
+long double max_long_double ();
 
 #endif

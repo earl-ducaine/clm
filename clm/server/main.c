@@ -378,7 +378,7 @@ char *message;
     strcat(global.warning_message, message);
 }
 
-ClmCommand *ReceiveAndExecute()
+ClmCommand* ReceiveAndExecute()
 {
     ClmCommand *cmd, *rc;
 
@@ -416,8 +416,9 @@ ClmCommand *ReceiveAndExecute()
 
 void ClmCommandLoop()
 {
-    while( ! global.closed )
-	ClmFreeCommand(ReceiveAndExecute());
+  while(! global.closed) {
+    ClmFreeCommand(ReceiveAndExecute());
+  }
 }
 
 ClmCommand *ClmCallbackCommandLoop()

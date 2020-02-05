@@ -35,70 +35,104 @@ static char sccsid[] = "@(#)io.c	1.7 7/20/92";
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <limits.h>
+#include <float.h>
+#include <stdlib.h>
 
-void* realloc(void*, long unsigned int);
-void* malloc(long unsigned int);
 
 int FlushBuffer(int sock);
 
-#define SERVER_BUFSIZ BUFSIZ
+// #define SERVER_BUFSIZ BUFSIZ
+
+#define SERVER_BUFSIZ 12
 
 struct {
     int pos;
     char buf[SERVER_BUFSIZ];
 } output_buffer;
 
-/*  Append a number of bytes to the output buffer.
- *  Flush output buffer if an overflow is detected.
- */
+// depends on client and sever be the same (or at least compatible)
+// platforms.
+typedef union {
+  unsigned char chars[sizeof(float)];
+  float the_number;
+} float_encode;
 
-int send_bytes(ptr, size, sock)
-char *ptr;
-int size;
-int sock;
-{
-    int to_send = size;
-    int n_bytes;
+// Depends on client and sever be the same (or at least compatible)
+// platforms.
+typedef union {
+  unsigned char chars[sizeof(int)];
+  int the_number;
+} int_encode;
 
-    while(to_send > 0) {
-	n_bytes = to_send > SERVER_BUFSIZ - output_buffer.pos ?
-		  SERVER_BUFSIZ - output_buffer.pos : to_send;
-	if( n_bytes > 0)
-	    bcopy(ptr + size-to_send, output_buffer.buf + output_buffer.pos,
-		  n_bytes);
-        output_buffer.pos += n_bytes;
-	if(output_buffer.pos == SERVER_BUFSIZ) {
-	    if( FlushBuffer(sock) == -1)
-		return -1;
-	}
-        to_send -= n_bytes;
+// Append a number of bytes to the output buffer. Flush output buffer
+// if an overflow is detected.
+int send_bytes(unsigned char* ptr, int size, int sock) {
+  int to_send = size;
+  int n_bytes;
+  while(to_send > 0) {
+    n_bytes = to_send > SERVER_BUFSIZ - output_buffer.pos ?
+      SERVER_BUFSIZ - output_buffer.pos : to_send;
+    if(n_bytes > 0) {
+      bcopy(ptr + size-to_send, output_buffer.buf + output_buffer.pos,
+	    n_bytes);
     }
-    return(0);
+    output_buffer.pos += n_bytes;
+    if(output_buffer.pos == SERVER_BUFSIZ) {
+      if(FlushBuffer(sock) == -1)
+	return -1;
+    }
+    to_send -= n_bytes;
+  }
+  return(0);
 }
 
-#define SEND_BYTES(ptr, size) { if( send_bytes(ptr, size, sock) == -1) \
-				return(-1); }
-
-/* Send a String */
+#define SEND_BYTES(ptr, size)			\
+  { if (send_bytes(ptr, size, sock) == -1) {	\
+      return -1; }}
 
 static int ArgIsString  = ClmArgString;
 static int ArgIsInteger = ClmArgInteger;
 static int ArgIsSymbol  = ClmArgSymbol;
 static int ArgIsFloat   = ClmArgFloat;
 
-int SendInteger(sock, value )
-int sock;
-int value;
-{
-    SEND_BYTES(&ArgIsInteger,sizeof(int));
-    SEND_BYTES(&value,sizeof(int));
-    return(0);
+int SendInteger(int socket_fd, int value) {
+  unsigned char buffer[sizeof(int)];
+  integer_to_bytes(ArgIsInteger, buffer);
+  int rc = send_bytes(buffer, sizeof(int), socket_fd);
+  if (rc >= 0) {
+    // success!
+    integer_to_bytes(value, buffer);
+    int rc = send_bytes(buffer, sizeof(int), socket_fd);
+    if (rc < 0) {
+      fprintf(stderr, "Failed to send bytes. rc: %d\n", rc);
+    }
+  } else {
+    fprintf(stderr, "Failed to send bytes. rc: %d\n", rc);
+  }
+    return rc;
 }
 
-int SendFloat(int sock, float value) {
-    SEND_BYTES(&ArgIsFloat,sizeof(int));
-    SEND_BYTES(&value,sizeof(float));
-    return(0);
+int SendFloat(int socket_fd, float value) {
+  // float_encode fl;
+  unsigned char type_buffer[sizeof(int)];
+  unsigned char float_buffer[sizeof(float)];
+  integer_to_bytes(ArgIsFloat, type_buffer);
+  int rc = send_bytes(type_buffer, sizeof(int), socket_fd);
+  if (rc >= 0) {
+    // success!
+    float_to_bytes(value, float_buffer);
+    int rc = send_bytes(float_buffer, sizeof(float), socket_fd);
+    if (rc < 0) {
+      fprintf(stderr, "Failed to send bytes. rc: %d\n", rc);
+    }
+  } else {
+    fprintf(stderr, "Failed to send bytes. rc: %d\n", rc);
+  }
+  return rc;
+  /* SEND_BYTES(&ArgIsFloat,sizeof(int)); */
+  /* SEND_BYTES(&value,sizeof(float)); */
+  /* return 0; */
 }
 
 /* uppercasing version */
@@ -145,16 +179,41 @@ char* strdowncase(char* string, int length) {
     return(otemp);
 }
 
+int send_int_as_bytes(int ArgIsSymbol, int sock) {
+  int length = sizeof(int);
+  unsigned char bytes[length];
+  integer_to_bytes (ArgIsSymbol, bytes);
+  return send_bytes(bytes, length, sock);
+}
 
 int SendSymbolL(int sock, char* symbol) {
-    int length = (symbol ? (*symbol ? strlen(symbol) : 0) : 0);
-    char  *string = strupcase(symbol,length);
-
-    SEND_BYTES(&ArgIsSymbol,sizeof(int));
-    SEND_BYTES(&length,sizeof(int));
-    if( length > 0)
-	SEND_BYTES(string ,length);
-    return(0);
+  int length = 0;
+  int rc = 0;
+  if (symbol != NULL) {
+    length = strlen(symbol);
+    if (length > 0) {
+      char* string = strupcase(symbol, length);
+      int rc = send_int_as_bytes(ArgIsSymbol, sock);
+      if (rc >= 0) {
+	// don't forget '\0'. Treat as unsigned bytes over the wire,
+	// but the reader of the bytes will convert them back into
+	// chars (usually signed bytes) on the other side.
+	int rc = send_bytes((unsigned char*)string, length + 1, sock);
+	if (rc < 0) {
+	  fprintf(stderr, "Error: unable to send data rc(%d)\n", rc);
+	}
+      } else {
+	fprintf(stderr, "Error: unable to send header rc(%d)\n", rc);
+      }
+    } else {
+      fprintf(stderr, "Error, trying to send a symbol of 0 length");
+      rc = -1;
+    }
+  } else {
+    fprintf(stderr, "Error, trying to send a NULL pointer as a symbol");
+    rc = -1;
+  }
+  return rc;
 }
 
 int SendSymbol(int sock, char* symbol) {
@@ -259,38 +318,45 @@ int do_read(int socket_fd, unsigned char* ptr, int size) {
   }
 
 
-/* int bytes_to_integer (unsigned char* bytes) { */
-/*   unsigned char bytes[4]; */
-/*   unsigned long n = 175; */
-
-/*   bytes[0] = (n >> 24) & 0xFF; */
-/*   bytes[1] = (n >> 16) & 0xFF; */
-/*   bytes[2] = (n >> 8) & 0xFF; */
-/*   bytes[3] = n & 0xFF; */
-/* } */
-
-// bytes should be array of bytes of size(int).
+// Bytes should be array of bytes of size(int), allocated by the
+// caller. someday use htonl, unfortunately these only work for
+// unsigned so we have to handle signed integerers manually.
 void integer_to_bytes (int integer, unsigned char* bytes) {
-  int number_bytes = sizeof(int);
-  for (int i = 0; i < number_bytes; i++) {
-    bytes[i] = (integer >> (i * 8)) & 0xFF;
-  }
+  int_encode i;
+  // These should be the same, if not, it might indicate an alignment
+  // problem
+  printf("float_encode size: %d, int size: %d\n",
+	 sizeof(int_encode), sizeof(int));
+  memset(&i, 0, sizeof(int_encode));
+  i.the_number = integer;
+  memcpy(bytes, i.chars, sizeof(int_encode));
 }
 
 // bytes should be array of bytes of size(int).
 int bytes_to_integer (unsigned char* bytes) {
-  int number_bytes = sizeof(int);
-  int integer = 0;
-  for (int i = number_bytes - 1; i == 0; i--) {
-    integer = (integer << 8) | bytes[i];
-  }
-  return integer;
+  int_encode i;
+  printf("float_encode size: %d, int size: %d\n",
+	 sizeof(int_encode), sizeof(int));
+  memset(&i, 0, sizeof(int_encode));
+  memcpy(i.chars, bytes, sizeof(int_encode));
+  return i.the_number;
+}
+
+void float_to_bytes (float fl, unsigned char* bytes) {
+  float_encode f;
+  printf("float_encode size: %d\n", sizeof(float_encode));
+  memset(&f, 0, sizeof(float_encode));
+  f.the_number = fl;
+  memcpy(bytes, f.chars, sizeof(float_encode));
 }
 
 // bytes should be array of bytes of size(int).
 float bytes_to_float (unsigned char* bytes) {
-  fprintf (stderr, "Error: bytes_to_float not implemented");
-  return 0;
+  float_encode f;
+  printf("float_encode size: %d\n", sizeof(float_encode));
+  memset(&f, 0, sizeof(float_encode));
+  memcpy(f.chars, bytes, sizeof(float));
+  return f.the_number;
 }
 
 int ReceiveInteger(int sock, int* rc) {
@@ -384,6 +450,51 @@ char* ReceiveString(int socket_fd, int* rc) {
   *rc = n < 0 ? n : current_position + 2;
   return g_readstrb;
 }
+
+// Misc info functions.
+
+int max_int () {
+  return INT_MAX;
+}
+
+int min_int () {
+  return INT_MIN;
+}
+
+unsigned int max_unsigned_int () {
+  return UINT_MAX;
+}
+
+long max_long () {
+  return LONG_MAX;
+}
+
+long min_long () {
+  return LONG_MIN;
+}
+
+unsigned long max_unsigned_long () {
+  return ULONG_MAX;
+}
+
+// Note, for all floating point types, maximum and minimum are the
+// same. The only reason they're not so in integers is because of the
+// peculiarities of twos compliment integer encoding -- rather than a
+// straight-forward sign-bit, which is what all float representations
+// have.
+
+float max_float () {
+  return FLT_MAX;
+}
+
+double max_double () {
+  return DBL_MAX;
+}
+
+long double max_long_double () {
+  return LDBL_MAX;
+}
+
 
 
 /* char* ReceiveString(int sock, int* rc) { */

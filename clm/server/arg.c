@@ -1,7 +1,7 @@
 static char sccsid[] = "@(#)arg.c	1.6 1/28/92";
 
 /*
- * Copyright 1989, 1990 GMD 
+ * Copyright 1989, 1990 GMD
  *                      (German National Research Center for Computer Science)
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -18,7 +18,7 @@ static char sccsid[] = "@(#)arg.c	1.6 1/28/92";
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Andreas Baecker (baecker@gmdzi.gmd.de)
@@ -68,11 +68,7 @@ static char sccsid[] = "@(#)arg.c	1.6 1/28/92";
 #define CheckSymbolArg(cmd, n) { return(cmd->args[n].v.symbol_value); }
 #endif
 
-void arg_error(cmd, expected, arg_no)
-ClmCommand *cmd;
-char *expected;
-int arg_no;
-{
+void arg_error(ClmCommand* cmd, char* expected, int arg_no) {
     fprintf(stderr,
 	    "Illegal argument type for argument at position %d.\n", arg_no);
     fprintf(stderr, "Expected type: %s.\n", expected);

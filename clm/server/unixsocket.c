@@ -269,7 +269,7 @@ int connect_directly_to_toolkits (char* toolkits) {
       signal (SIGCHLD, old_handler);
 #endif
       if (exit_status == 0) {
-	return (parent_fd);
+	return parent_fd;
       } else {
 	return -1;
       }
